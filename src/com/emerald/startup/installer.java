@@ -351,12 +351,7 @@ public class installer extends Activity implements OnClickListener {
 						// pp = Runtime.getRuntime().exec(func);
 						pp = Runtime.getRuntime().exec(func, env, home);
 						pp.waitFor();
-						
-
-						
-						
-						//move and extract the emerald file
-				
+										
 
 
 						// Make a few initial folders
@@ -403,7 +398,10 @@ public class installer extends Activity implements OnClickListener {
 								"mv " + home.getPath() + "/system/em_output" + " " + home.getPath() + "/emerald"
 								, env, home);
 						pp.waitFor(); 
-
+						pp = Runtime.getRuntime().exec(
+								"mv " + home.getPath() + "/system/emerald_programs" + " " + home.getPath() + "/emerald_programs"
+								, env, home);
+						pp.waitFor(); 
 
 						
 						
