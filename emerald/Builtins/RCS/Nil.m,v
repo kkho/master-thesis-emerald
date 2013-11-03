@@ -1,0 +1,113 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.3
+	immel_start:1.2;
+locks; strict;
+
+
+1.5
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.19.22.42.38;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.08.17.17.02.25;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.44.43;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.44.41;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.5
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)Nil.m	1.2  3/6/91
+%
+export None to "Builtins"
+
+const None <- immutable object None builtin 0x1007
+  const NoneType <- immutable typeobject NoneType builtin 0x1607
+  end NoneType
+  export function getSignature -> [result : Signature]
+    result <- NoneType
+  end getSignature
+  export operation create -> [ n : NoneType ]
+    n <- immutable object aNil builtin 0x1407
+    end aNil
+  end create
+end None
+@
+
+
+1.4
+log
+@Stop using mutable objects with no state, changed the name of instanceFlags
+@
+text
+@d6 2
+a7 2
+const None == immutable object None builtin 0x1007
+  const NoneType == immutable typeobject NoneType builtin 0x1607
+@
+
+
+1.3
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d13 1
+a13 1
+    n <- object aNil builtin 0x1407
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d12 4
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Nil.m	1.1  3/6/91
+d7 1
+a7 1
+  const NoneType == immutable type NoneType builtin 0x1607
+@

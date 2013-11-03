@@ -1,0 +1,1853 @@
+head	1.31;
+access;
+symbols
+	105alpha:1.30
+	104alpha:1.30
+	103alpha:1.30
+	102alpha:1.30
+	101alpha:1.30
+	100alpha:1.30
+	DIKU_0:1.27
+	carlton_start:1.22
+	immel_start:1.8;
+locks; strict;
+
+
+1.31
+date	2007.06.11.01.39.21;	author norm;	state Exp;
+branches;
+next	1.30;
+
+1.30
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.29;
+
+1.29
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.28;
+
+1.28
+date	95.06.23.22.16.28;	author norm;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	94.08.22.23.44.16;	author norm;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	94.08.17.16.51.49;	author norm;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	94.06.10.05.21.58;	author norm;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	93.12.20.21.09.40;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	93.07.20.18.40.55;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	93.06.25.15.52.18;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.06.11.20.23.04;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.06.11.03.18.51;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.06.10.15.51.27;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.03.21.06.33.03;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.12.24.08.23.21;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.12.16.21.27.42;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.11.01.08.40;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.12.10.21.16.03;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.05.23.16.24.41;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.05.14.15.55.21;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.04.22.22.58.36;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.58.34;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.58.32;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.58.31;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.29;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.28;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.31
+log
+@Check in current version
+@
+text
+@export SymbolTable, Symbol, hasST
+export SUnknown, SConst, SVar, SParam, SResult, SOpName, SImport, SExternal
+export CATLit, CObLit, COpSig, COpDef, CUnavailableHandler, CComp, CBlock, COutside
+
+const Templ <- typeobject Templ
+  operation addOne[Character, String]
+end Templ
+
+const STKind <- Integer
+const SUnknown <- 0
+const SConst <- 1
+const SVar <- 2
+const SParam <- 3
+const SResult <- 4
+const SOpName <- 5
+const SImport <- 6
+const SExternal <- 7
+
+const STContext <- Integer
+
+const CATLit <- 0
+const CObLit <- 1
+const COpSig <- 2
+const COpDef <- 3
+const CUnavailableHandler <- 4
+const CComp <- 5
+const CBlock <- 6
+const COutside <- 7
+
+const Tree <- typeobject Tree
+  operation copy [i : Integer] -> [r : Tree]
+  function asString -> [String]
+end Tree
+
+const XTree <- typeobject XTree
+  operation copy [i : Integer] -> [r : Tree]
+  function asString -> [String]
+  function variableSize -> [Integer]
+  function getBrand -> [Character]
+end XTree
+
+const ObLit <- typeobject ObLit
+  function  getIsMonitored -> [Boolean]
+  function  getIsSynchronized -> [Boolean]
+  function  getMonitorMayBeElided -> [Boolean]
+  operation setST [SymbolTable]
+end ObLit
+
+const envtype <- typeobject envtype
+  operation pass [String, RISA]
+  operation tallocation[String, RISA]
+  operation printf [String, RISA]
+  operation Warning [Integer, String, RISA]
+  operation SemanticError [Integer, String, RISA]
+  function  getCompilingBuiltins -> [Boolean]
+  function  getWarnShadows -> [Boolean]
+  function getGenerateConcurrent -> [Boolean]
+  function getAny -> [Tree]
+  function getTraceSymbols -> [Boolean]
+  function getTraceAllocation -> [Boolean]
+  function getImplicitlyDefineExternals -> [Boolean]
+  function getITable -> [LookupIdent]
+end envtype
+
+const Environment <- immutable object Environment
+  export operation getenv -> [env : envtype]
+    primitive var "GETENV" [env] <- []
+  end getenv
+end Environment
+
+const Symbol <- class Symbol [xk : STKind, xi : Ident, xst : SymbolTable]
+    field mykind : STKind <- xk
+% If doing moves/visits
+%    field ismove : Boolean <- false
+%    field isvisit : Boolean <- false
+
+    field flags : Integer <- 0
+    const isattached_f <- 0
+    const isSelf_f <- 1
+    const isNotManifest_f <- 2
+    const isUsedOutsideInitially_f <- 3
+    const isTypeVariable_f <- 4
+    const isCTKnown_f <- 5
+    const hasPointer_f <- 6
+    const isInstVariable_f <- 7
+    const hasConstraint_f <- 8
+    const willHaveConstraint_f <- 9
+    field offset : Integer
+    field size : Integer <- 8
+    field base : Character
+
+    field myident : Ident <- xi
+    field ATinfo : Tree
+    field CTinfo : Tree
+    field Value  : Tree
+
+    export function getIsAttached -> [r : Boolean]
+      r <- flags.getBit[isAttached_f]
+    end getIsAttached
+    export operation setIsAttached [v : Boolean]
+      flags <- flags.setBit[isAttached_f, v]
+    end setIsAttached
+
+    export function getisSelf -> [r : Boolean]
+      r <- flags.getBit[isSelf_f]
+    end getisSelf
+    export operation setisSelf [v : Boolean]
+      flags <- flags.setBit[isSelf_f, v]
+    end setisSelf
+
+    export function getisNotManifest -> [r : Boolean]
+      r <- flags.getBit[isNotManifest_f]
+    end getisNotManifest
+    export operation setisNotManifest [v : Boolean]
+      flags <- flags.setBit[isNotManifest_f, v]
+    end setisNotManifest
+
+    export function getisUsedOutsideInitially -> [r : Boolean]
+      r <- flags.getBit[isUsedOutsideInitially_f]
+    end getisUsedOutsideInitially
+    export operation setisUsedOutsideInitially [v : Boolean]
+      flags <- flags.setBit[isUsedOutsideInitially_f, v]
+    end setisUsedOutsideInitially
+
+    export function getisTypeVariable -> [r : Boolean]
+      r <- flags.getBit[isTypeVariable_f]
+    end getisTypeVariable
+    export operation setisTypeVariable [v : Boolean]
+      flags <- flags.setBit[isTypeVariable_f, v]
+    end setisTypeVariable
+
+    export function getisCTKnown -> [r : Boolean]
+      r <- flags.getBit[isCTKnown_f]
+    end getisCTKnown
+    export operation setisCTKnown [v : Boolean]
+      flags <- flags.setBit[isCTKnown_f, v]
+    end setisCTKnown
+
+    export function gethasPointer -> [r : Boolean]
+      r <- flags.getBit[hasPointer_f]
+    end gethasPointer
+    export operation sethasPointer [v : Boolean]
+      flags <- flags.setBit[hasPointer_f, v]
+    end sethasPointer
+
+    export function getisInstVariable -> [r : Boolean]
+      r <- flags.getBit[isInstVariable_f]
+    end getisInstVariable
+    export operation setIsInstVariable [v : Boolean]
+      flags <- flags.setBit[isInstVariable_f, v]
+    end setIsInstVariable
+
+    export function gethasConstraint -> [r : Boolean]
+      r <- flags.getBit[hasConstraint_f]
+    end gethasConstraint
+    export operation sethasConstraint [v : Boolean]
+      flags <- flags.setBit[hasConstraint_f, v]
+    end sethasConstraint
+
+    export function getwillHaveConstraint -> [r : Boolean]
+      r <- flags.getBit[willHaveConstraint_f]
+    end getwillHaveConstraint
+    export operation setwillHaveConstraint [v : Boolean]
+      flags <- flags.setBit[willHaveConstraint_f, v]
+    end setwillHaveConstraint
+
+    export operation copy [i : Integer] -> [r : Symbol]
+      if i == 0 then		% delete symbols
+	r <- nil
+      elseif i == 1 or i == 2 then
+	var nid : Ident
+	var it : LookupIdent
+	const env <- Environment$env
+	it <- env.getITable
+	if myident !== nil then nid <- it.Lookup[myident.asString, 999] end if
+	r <- symbol.create[mykind, nid, nil]
+% If doing move/visit
+	r$isattached <- self$isattached
+%	r$ismove <- self$ismove
+%	r$isvisit <- self$isvisit
+	r$isUsedOutsideInitially <- self$isUsedOutsideInitially
+	r$isSelf <- self$isself
+	r$isNotManifest <- self$isNotManifest
+	r$isInstVariable <- self$isInstVariable
+	r$hasConstraint <- self$hasConstraint
+
+	if i == 1 then		% reset symbols
+	  r$ATinfo <- nil
+	  r$CTinfo <- nil
+	  r$Value  <- nil
+	else
+	  r$ATinfo <- ATinfo
+	  r$CTinfo <- CTinfo
+	  r$Value  <- value
+	end if
+      else
+	assert false
+      end if
+    end copy
+    export function asString -> [r : String]
+      var me : Integer
+      var a : Any <- self
+
+      r <- "asymbol"
+      if myident !== nil then
+	r <- r || " \""|| myident.asString || "\""
+      end if
+%      primitive  [me] <- [a]
+%      r <- r || " " || me.asString
+      if self$isUsedOutsideInitially then
+	r <- r || " uoi"
+      else
+	r <- r || " !uoi"
+      end if
+      if base !== nil and offset !== nil then
+	r <- r || " " || base.asString || "@@" || offset.asString
+      end if
+    end asString
+  export operation Print [s : OutStream]
+    s.putstring[self.asString[]]
+  end Print
+  initially
+    if xst !== nil then self.setIsInstVariable[xst.isLiteral] end if
+  end initially
+end Symbol
+
+const vosymbol <- Vector.of[Symbol]
+const aosymboltable <- Array.of[SymbolTable]
+
+const SymbolTable <- class SymbolTable [xouter : SymbolTable, cx : STContext]
+    var tablesize : Integer <- 4
+    var upb : Integer <- ~1
+    field context : STContext <- cx
+    field kind : STKind
+    field localSize : Integer <- 0
+    field instanceSize : Integer <- 0
+    field depth : Integer <- 0
+    var inInitially : Boolean <- true
+    var table : vosymbol <- vosymbol.create[4]
+    const field inner : aosymboltable <- aosymboltable.create[~4]
+    field mytree : Tree
+    var outer : SymbolTable <- xouter
+
+    operation getInInitially -> [r : Boolean]
+      r <- inInitially
+    end getInInitially
+
+    export operation setInInitially[b : Boolean]
+      inInitially <- b
+      if context != CATLit and context != CObLit then
+	outer$inInitially <- b
+      end if
+    end setInInitially
+
+    operation iLookup [id : Ident] -> [r : Symbol]
+      var s : Symbol
+      for i : Integer <- upb while i >= 0 by i <- i - 1
+	s <- table[i]
+	if s$myident == id then
+	  r <- s
+	  if !inInitially then r$isUsedOutsideInitially <- true end if
+	  return
+	end if
+      end for
+    end iLookup
+
+    export function getOuter -> [r : SymbolTable]
+      r <- outer
+    end getOuter
+
+    export function isLiteral -> [r : Boolean]
+      r <- context = CObLit or context = CATLit
+    end isLiteral
+
+    operation grow
+      const newsize <- tablesize * 2
+      const newtable <- vosymbol.create[newsize]
+      var i : Integer <- 0
+      loop
+	exit when i >= tablesize
+	newtable[i] <- table[i]
+	i <- i + 1
+      end loop
+      table <- newtable
+      tablesize  <- newsize
+    end grow
+
+    operation iDefine [id : Ident, thekind : STKind, isAttached : Boolean] -> [r : Symbol]
+      r <- Symbol.create[thekind, id, self]
+% If doing move/visit
+      r$isattached <- isattached
+      upb <- upb + 1
+      if upb = tablesize then self.grow end if
+      table[upb] <- r
+    end iDefine
+    export operation Insert [s : Symbol]
+      upb <- upb + 1
+      if upb = tablesize then self.grow end if
+      table[upb] <- s
+    end Insert
+    export operation Print [s : OutStream, indent : Integer]
+      s.putString["a symbol table, depth = "]
+      s.putInt[depth, 0]
+      s.putString[" localSize = "]
+      s.putInt[localSize, 0]
+      s.putString[" instanceSize = "]
+      s.putInt[instanceSize, 0]
+      s.putString["\n"]
+      for i : Integer <- 0 while i < indent + 2 by i <- i + 1
+	s.putchar[' ']
+      end for
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+	const asym : Symbol <- table[i]
+	asym.print[s]
+	s.putChar[' ']
+      end for
+      for i : Integer <- 0 while i <= inner.upperbound by i <- i + 1
+	s.putchar['\n']
+	for j : Integer <- 0 while j < indent + 4 by j <- j + 1
+	  s.putchar[' ']
+	end for
+	inner[i].print[s, indent+2]
+      end for
+    end Print
+
+    export operation Allocate [ao:Integer, io:Integer, lo:Integer, cx : STContext]
+      -> [nao:Integer, nio:Integer, nlo:Integer]
+      var s : Symbol
+      var st  : SymbolTable
+      var size : Integer
+      var info : XTree
+      const env <- Environment$env
+      const tallocation <- env$traceallocation
+
+      nao, nio, nlo <- ao, io, lo
+      if cx !== nil and (context = CATLit or context = CObLit) then
+	return 
+      end if
+      if context = COpDef or context = COpSig then
+	nao <- 0
+	nlo <- 0
+      end if
+
+      % Look for monitors
+      if env$generateConcurrent and context = CObLit then
+	const myobj <- view mytree as ObLit
+	if myobj$isMonitored and ! myobj$monitorMayBeElided or myobj$isSynchronized then
+	  size <- 8
+	  nio <- nio + size
+	end if
+      end if
+
+      % Go through the first time forwards, catching Ls and Os
+
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+	s <- table[i]
+	if s$isSelf then 
+	  % no allocation needed
+	  if tallocation then env.printf["  %s is self\n", {s.asString}] end if
+	elseif ! s$isNotManifest and 
+	      (s$mykind != SParam or context != COpDef) then
+	  % a manifest symbol, no allocation
+	  if tallocation then env.printf["  %s is manifest\n", {s.asString}] end if
+	elseif s$mykind = SExternal then
+	  % an external symbol, no allocation
+	  if tallocation then env.printf["  %s is external\n", {s.asString}] end if
+	else
+	  if s$mykind = SParam or s$mykind = SResult then
+	  elseif s$mykind = SImport and ! s$isUsedOutsideInitially then
+	    % We don't need to allocate real space for this one, but how do
+	    % I find the param?
+	  else
+	    if tallocation then env.printf["  %s is not manifest\n", {s.asString}] end if
+	    if s$CTInfo !== nil then
+	      info <- view s$CTInfo as XTree
+	      if tallocation then env.printf["  has CT %s %d\n", {info.asString, info.variableSize}] end if
+	      size <- info.variableSize
+% TODO generate 4 byte thingies
+%	      if size < 8 then s$isCTKnown <- true end if
+	    elseif s$ATInfo !== nil then
+	      info <- view s$ATInfo as XTree
+	      if tallocation then env.printf["  has AT %s %d\n", {info.asString, info.variableSize}] end if
+	      size <- info.variableSize
+% TODO generate 4 byte thingies
+%	      if size < 8 then s$hasPointer <- true end if
+	    else
+	      if tallocation then env.printf["  has no info 8\n", nil] end if
+	      size <- 8
+	    end if
+	    if size = 1 then size <- 4 end if
+	    s$size <- size
+
+	    if context = CObLit or context = CATLit then
+	      s$base <- 'O'
+	      s$offset <- nio + 4
+	      nio <- nio + size
+	    else
+	      s$base <- 'L'
+	      s$offset <- nlo
+	      nlo <- nlo + size
+	    end if
+	  end if
+	end if
+      end for
+
+      % This time, catch arguments
+
+      for i : Integer <- upb while i >= 0 by i <- i - 1
+	s <- table[i]
+	if s$isSelf then 
+	  % no allocation needed
+	  if tallocation then env.printf["  %s is self\n", {s.asString}] end if
+	elseif ! s$isNotManifest and context != COpDef then
+	  % a manifest symbol, no allocation
+	  if tallocation then env.printf["  %s is manifest\n", {s.asString}] end if
+	elseif s$mykind = SExternal then
+	  % an external symbol, no allocation
+	  if tallocation then env.printf["  %s is external\n", {s.asString}] end if
+	elseif s$mykind = SParam then
+	  if tallocation then env.printf["  %s is a param\n", {s.asString}] end if
+	  if s$CTInfo !== nil then
+	    info <- view s$CTInfo as XTree
+	    if tallocation then env.printf["  has CT %s %d\n", {info.asString, info.variableSize}] end if
+	    size <- info.variableSize
+	  elseif s$ATInfo !== nil then
+	    info <- view s$ATInfo as XTree
+	    if tallocation then env.printf["  has AT %s %d\n", {info.asString, info.variableSize}] end if
+	    size <- info.variableSize
+	  else
+	    if tallocation then env.printf["  has no info 8\n", nil] end if
+	    size <- 8
+	  end if
+	  if size = 1 then size <- 4 end if
+	  s$size <- size
+	  s$base <- 'A'
+	  s$offset <- nao
+	  nao <- nao + 8
+	end if
+      end for
+
+      % Finally, catch results
+
+      size <- 8
+      for i : Integer <- upb while i >= 0 by i<-i-1
+	s <- table[i]
+	if s$mykind = SResult then
+	  s$base <- 'A'
+	  s$offset <- nao
+	  nao <- nao + size
+	  s$size <- size
+	end if
+      end for
+
+      for i : Integer <- 0 while i <= inner.upperbound by i<-i+1
+	st <- inner[i]
+	nao, nio, nlo <- st.Allocate[nao, nio, nlo, context]
+      end for
+      if context = COpDef or context = COpSig then
+	localSize <- nlo
+	nao <- ao
+	nlo <- lo
+      else
+	localSize <- nlo
+	instanceSize <- nio
+      end if
+    end Allocate
+
+    export operation writeTemplate[thetemplate : Templ, thekind : Character]
+      var st  : SymbolTable
+      var brand : Character
+      const env <- Environment$env
+
+      % Look for monitors
+      if env$generateConcurrent and context = CObLit then
+	const myobj <- view mytree as ObLit
+	if myobj$isMonitored and ! myobj$monitorMayBeElided or myobj$isSynchronized then
+	  thetemplate.addOne['m', "monitor@@O4"]
+	end if
+      end if
+
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+	const s : Symbol <- table[i]
+	const base <- s$base
+	if base == thekind then
+	  if s$CTInfo !== nil then
+	    brand <- (view s$CTInfo as XTree).getBrand
+	  elseif s$ATInfo !== nil then
+	    brand <- (view s$ATInfo as XTree).getBrand
+	  else
+	    brand <- 'v'
+	  end if
+	  if s$isAttached then
+	    brand <- Character.Literal[brand.ord - 'a'.ord + 'A'.ord]
+	  end if
+	  thetemplate.addOne[brand,
+	    s$myident.asString || "@@" || base.asString || s$offset.asString]
+	end if
+      end for
+
+      if thekind = 'L' then
+	for i : Integer <- 0 while i <= inner.upperbound by i<-i+1
+	  st <- inner[i]
+	  if !st.isLiteral then
+	    st.writeTemplate[thetemplate, thekind]
+	  end if
+	end for
+
+	for i : Integer <- 0 while i <= upb by i <- i + 1
+	  const s : Symbol <- table[i]
+	  const base <- s$base
+	  if base == 'A' then
+	    thetemplate.addOne['Z', 
+	      s$myident.asString || "@@" || base.asString || s$offset.asString]
+	  end if
+	end for
+      end if
+    end writeTemplate
+
+    export operation discard 
+      var st, stx : SymbolTable
+      var upbx : Integer <- inner.upperbound
+% Also avoid doing this to every tree, keep sts for oblits
+%      const myobj <- view mytree as hasST
+%      if myobj !== nil and nameof myobj != "anoblit" then
+%	myobj$st <- nil
+%      end if
+
+      loop
+	exit when upbx < 0
+	st <- inner[upbx]
+	inner[upbx] <- nil
+	stx <- inner.removeUpper
+	upbx <- upbx - 1
+	st.discard
+      end loop
+% Don't trash this one, cause invocs need it
+% Evaluating a manifest invocation on an old object needs to be able to find
+% the symbol table.
+%      outer <- nil
+    end discard
+
+    initially
+      if outer !== nil then
+	outer$inner.addUpper[self]
+	depth <- outer$depth +  1
+      end if
+    end initially
+
+  export function asString -> [r : String]
+    r <- "a symbol table"
+  end asString
+
+  export operation Lookup [ln : Integer, id : Ident, deep : Boolean] -> [r : Symbol]
+    var s : Symbol
+
+    r <- self.iLookup[id]
+    if deep == false then
+      return
+    elseif deep == nil then
+      if self.isLiteral or outer == nil or outer$outer == nil then return end if
+      const outersymbol <- outer.Lookup[ln, id, deep]
+      if outerSymbol !== nil then
+	const env <- Environment$env
+	if env$warnShadows then
+	  env.Warning[ln, "Definition of symbol \"%S\" shadows previous definition", { id }]
+	end if
+      end if
+      return
+    elseif r !== nil then
+      return
+    end if
+    if outer !== nil then
+      r <- outer.Lookup[ln, id, deep]
+      if r !== nil and self.isLiteral[] and r$mykind != SExternal then
+	const t <- view self.getmytree[] as typeobject T
+	  operation buildSetq [Symbol] -> [Symbol]
+	end T
+	% do the setq stuff
+	s <- t.buildSetq[r]
+	s$value <- r$value
+	r <- s
+	if !inInitially then r$isUsedOutsideInitially <- true end if
+      end if
+    else 
+      % outer is nil, so if implicitlyDefineExternals is set 
+      % then define as an external
+      const env <- Environment$env
+
+      if env$implicitlyDefineExternals then
+	if env$traceSymbols then 
+	  env.printf["  Defining external symbol %s\n", { id$name }]
+	end if
+	r <- Symbol.create[SExternal, id, nil]
+	r$isattached <- false
+	r$isNotManifest <- true
+	r$size <- 8
+	r$ATInfo <- env.getAny
+      end if
+    end if
+  end Lookup
+
+  export operation Define [ln : Integer, id : Ident, thekind : STKind, isAttached : Boolean] -> [r : Symbol]
+    if self.Lookup[ln, id, nil] == nil then
+      r <- self.iDefine[id, thekind, isAttached]
+    else
+      Environment.getEnv.SemanticError[ln, "Redefinition of symbol \"%S\"",
+	{ id } ]
+    end if
+  end Define
+
+  export operation reInitialize 
+    const i <- self$inner
+    var junk : Any
+    loop
+      exit when i.upperbound < i.lowerbound
+      junk <- i.removeUpper
+    end loop
+  end reInitialize
+end SymbolTable
+
+const hasST <- typeobject hasST
+  function getST -> [SymbolTable]
+  operation setST [SymbolTable]
+end hasST
+
+@
+
+
+1.30
+log
+@Many changes
+@
+text
+@d44 1
+d347 1
+a347 1
+	if myobj$isMonitored and ! myobj$monitorMayBeElided then
+d476 1
+a476 1
+	if myobj$isMonitored and ! myobj$monitorMayBeElided then
+@
+
+
+1.29
+log
+@Make type stuff work
+@
+text
+@d86 1
+d158 7
+@
+
+
+1.28
+log
+@Implement defered type checking of manifest invocs
+@
+text
+@d85 1
+d151 7
+d176 1
+@
+
+
+1.27
+log
+@August 94 Checkpoint II
+@
+text
+@d504 5
+a508 4
+      const myobj <- view mytree as hasST
+      if myobj !== nil then
+	myobj$st <- nil
+      end if
+d518 4
+a521 1
+      outer <- nil
+@
+
+
+1.26
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d43 3
+a45 3
+  function getIsMonitored -> [Boolean]
+  function getMonitorMayBeElided -> [Boolean]
+  function setST [SymbolTable]
+d53 1
+d55 1
+d542 3
+a544 1
+	env.Warning[ln, "Definition of symbol \"%S\" shadows previous definition", { id }]
+d583 3
+@
+
+
+1.25
+log
+@Reinstalled support for monitored objects and conditions
+@
+text
+@d42 5
+d52 2
+d57 1
+d62 6
+d82 4
+a90 4
+    field myst : SymbolTable <- xst
+    field base : Character
+    field offset : Integer
+    field size : Integer <- 8
+d141 6
+a146 3
+    export function isInstVariable -> [r : Boolean]
+      r <- myst.isLiteral
+    end isInstVariable
+a152 1
+	var xany : Any
+d154 1
+a154 3
+	var env : envtype
+	primitive var "GETENV" [xany] <- []
+	env <- view xany as envtype
+d157 1
+a157 1
+	r <- symbol.create[mykind, nid, myst]
+d165 2
+a198 6
+    export operation discard 
+      ATinfo <- nil
+      CTinfo <- nil
+      Value <- nil
+      myst <- nil
+    end discard
+d202 3
+a211 1
+    var table : vosymbol <- vosymbol.create[4]
+a212 1
+    const field inner : aosymboltable <- aosymboltable.create[~4]
+a214 1
+    field mytree : Tree
+a216 1
+    var outer : SymbolTable <- xouter
+d219 4
+d247 1
+a247 1
+    function getOuter -> [r : SymbolTable]
+d268 2
+a269 2
+    operation iDefine [id : Ident, kind : STKind, isAttached : Boolean] -> [r : Symbol]
+      r <- Symbol.create[kind, id, self]
+a310 2
+      var xany : Any
+      var env : envtype
+d312 2
+a313 2
+      primitive var "GETENV" [xany] <- []
+      env <- view xany as envtype
+d326 1
+a326 5
+	const U <- typeobject U
+	  function getIsMonitored -> [Boolean]
+	  function getMonitorMayBeElided -> [Boolean]
+	end U
+	const myobj <- view mytree as U
+d339 3
+a341 2
+	  env.tallocation["  %s is self\n", {s.asString}]
+	elseif ! s$isNotManifest then
+d343 1
+a343 1
+	  env.tallocation["  %s is manifest\n", {s.asString}]
+d346 1
+a346 1
+	  env.tallocation["  %s is external\n", {s.asString}]
+d353 1
+a353 1
+	    env.tallocation["  %s is not manifest\n", {s.asString}]
+d356 1
+a356 1
+	      env.tallocation["  has CT %s %d\n", {info.asString, info.variableSize}]
+d362 1
+a362 1
+	      env.tallocation["  has AT %s %d\n", {info.asString, info.variableSize}]
+d367 1
+a367 1
+	      env.tallocation["  has no info 8\n", nil]
+d392 2
+a393 2
+	  env.tallocation["  %s is self\n", {s.asString}]
+	elseif ! s$isNotManifest then
+d395 1
+a395 1
+	  env.tallocation["  %s is manifest\n", {s.asString}]
+d398 1
+a398 1
+	  env.tallocation["  %s is external\n", {s.asString}]
+d400 1
+a400 1
+	  env.tallocation["  %s is a param\n", {s.asString}]
+d403 1
+a403 1
+	    env.tallocation["  has CT %s %d\n", {info.asString, info.variableSize}]
+d407 1
+a407 1
+	    env.tallocation["  has AT %s %d\n", {info.asString, info.variableSize}]
+d410 1
+a410 1
+	    env.tallocation["  has no info 8\n", nil]
+d448 1
+a448 1
+    export operation writeTemplate[thetemplate : Templ, kind : Character]
+d451 1
+a451 4
+      var xany : Any
+      var env : envtype
+      primitive var "GETENV" [xany] <- []
+      env <- view xany as envtype
+d455 1
+a455 5
+	const U <- typeobject U
+	  function getIsMonitored -> [Boolean]
+	  function getMonitorMayBeElided -> [Boolean]
+	end U
+	const myobj <- view mytree as U
+d464 1
+a464 1
+	if base == kind then
+d480 1
+a480 1
+      if kind = 'L' then
+d483 3
+a485 1
+	  st.writeTemplate[thetemplate, kind]
+a500 1
+      var s  : Symbol
+d502 5
+d529 1
+a529 2
+  export operation Lookup [id : Ident, deep : Boolean] -> [r : Symbol]
+    const outer <- self.getOuter[]
+d533 13
+a545 1
+    if r !== nil or !deep then return end if
+d547 1
+a547 1
+      r <- outer.Lookup[id, deep]
+d561 1
+a561 4
+      var xany : Any
+      var env : envtype
+      primitive var "GETENV" [xany] <- []
+      env <- view xany as envtype
+d576 3
+a578 3
+  export operation Define [id : Ident, kind : STKind, isAttached : Boolean] -> [r : Symbol]
+    if self.Lookup[id, false] == nil then
+      r <- self.iDefine[id, kind, isAttached]
+d594 1
+@
+
+
+1.24
+log
+@First attempt at abcons
+@
+text
+@d313 13
+d443 16
+@
+
+
+1.23
+log
+@Finalized merge with Mark Immels version
+@
+text
+@d1 1
+a1 1
+export SymbolTable, Symbol
+a18 4
+const lookupId <- typeobject lookupId
+  operation Lookup[String, Integer] -> [Ident]
+end lookupId
+
+d35 19
+d137 2
+a138 5
+	var it : LookupId
+	const getITable <- typeobject getITable
+	  function getITable -> [LookupId]
+	end getITable
+	var env : getITable
+d140 1
+a140 1
+	env <- view xany as getITable
+d299 2
+a300 17
+      const RISA <- typeobject RISA
+	function lowerbound -> [Integer]
+	function upperbound -> [Integer]
+	function getElement [Integer] -> [Any]
+      end RISA
+      const pass <- typeobject pass
+	operation pass [String, RISA]
+	operation tallocation[String, RISA]
+	operation printf [String, RISA]
+	function getGenerateConcurrent -> [Boolean]
+      end pass
+      var env : pass
+      const infotype <- typeobject t
+	function variableSize ->[Integer]
+	function asString -> [String]
+      end t
+      var info : infotype
+d302 1
+a302 1
+      env <- view xany as pass
+d334 1
+a334 1
+	      info <- view s$CTInfo as infotype
+d340 1
+a340 1
+	      info <- view s$ATInfo as infotype
+d381 1
+a381 1
+	    info <- view s$CTInfo as infotype
+d385 1
+a385 1
+	    info <- view s$ATInfo as infotype
+a431 1
+	const infotype <- typeobject t function getBrand ->[Character] end t
+d436 1
+a436 1
+	    brand <- (view s$CTInfo as infotype).getBrand
+d438 1
+a438 1
+	    brand <- (view s$ATInfo as infotype).getBrand
+a514 11
+      const RISA <- typeobject RISA
+	function lowerbound -> [Integer]
+	function upperbound -> [Integer]
+	function getElement [Integer] -> [Any]
+      end RISA
+      const envtype <- typeobject envtype
+	operation printf [String, RISA]
+	function getTraceSymbols -> [Boolean]
+	function getImplicitlyDefineExternals -> [Boolean]
+	function getBuiltinLit -> [r : typeobject x op create[Integer, Integer] -> [Tree] end x]
+      end envtype
+d527 1
+a527 3
+% Set r$ATinfo to Any
+% We have to find Builtinlit through the environment.
+	r$ATInfo <- (view env$builtinlit.create[0, 1] as typeobject t function getInstAT -> [Tree] end t).getInstAT % ANYI
+d547 5
+@
+
+
+1.22
+log
+@Better clean up of junk
+@
+text
+@d182 3
+a185 1
+    const vosymbol <- Vector.of[Symbol]
+d189 1
+a189 1
+    const field inner : Array.of[SymbolTable] <- Array.of[SymbolTable].create[~4]
+@
+
+
+1.21
+log
+@Type checking errors repaired
+@
+text
+@a481 8
+      loop
+	exit when upb < 0
+	s <- table[upb]
+	s.discard
+	table[upb] <- nil
+	upb <- upb - 1
+      end loop
+      mytree <- nil
+@
+
+
+1.20
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d550 1
+a550 1
+	r$ATInfo <- env$builtinlit.create[0, 1].getInstAT % ANYI
+@
+
+
+1.19
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d211 1
+a211 1
+	s <- table(i)
+d234 1
+a234 1
+	newtable(i) <- table(i)
+d247 1
+a247 1
+      table(upb) <- r
+d252 1
+a252 1
+      table(upb) <- s
+d266 1
+a266 1
+	const asym : Symbol <- table(i)
+d275 1
+a275 1
+	inner(i).print[s, indent+2]
+d317 1
+a317 1
+	s <- table(i)
+d369 1
+a369 1
+	s <- table(i)
+d405 1
+a405 1
+	s <- table(i)
+d415 1
+a415 1
+	st <- inner(i)
+d434 1
+a434 1
+	const s : Symbol <- table(i)
+d454 1
+a454 1
+	  st <- inner(i)
+d459 1
+a459 1
+	  const s : Symbol <- table(i)
+d475 2
+a476 2
+	st <- inner(upbx)
+	inner(upbx) <- nil
+d484 1
+a484 1
+	s <- table(upb)
+d486 1
+a486 1
+	table(upb) <- nil
+@
+
+
+1.18
+log
+@Better error messages related to externals
+@
+text
+@d178 1
+a178 1
+    s.putstring[asString[]]
+d504 1
+a504 1
+    const outer <- getOuter[]
+d507 1
+a507 1
+    r <- iLookup[id]
+d511 2
+a512 2
+      if r !== nil and isLiteral[] and r$mykind != SExternal then
+	const t <- view getmytree[] as typeobject T
+d556 2
+a557 2
+    if Lookup[id, false] == nil then
+      r <- iDefine[id, kind, isAttached]
+@
+
+
+1.17
+log
+@Add type checking of externs and extern decls
+@
+text
+@d522 2
+a523 2
+      % outer is nil, so if implicitlyDefineExternals is set and
+      % externalDirectory is defined then define as an external
+a532 1
+	function getExternalDirectory -> [Directory]
+a536 1
+      var dir : Directory
+a538 1
+      dir <- env$externalDirectory
+d540 1
+a540 1
+      if env$implicitlyDefineExternals and dir !== nil then
+@
+
+
+1.16
+log
+@Implement external dictionary for symbol lookups
+@
+text
+@d324 3
+d376 3
+d522 2
+a523 1
+      % outer is nil, so if directory is set then look there
+d534 2
+d543 1
+a543 2
+      if dir !== nil then
+	var answer : Any
+d545 1
+a545 1
+	  env.printf["Looking up %s in the external environment\n", { id$name }] 
+d547 7
+a553 10
+	answer <- dir.Lookup[id$name]
+	if answer !== nil then
+	  if env$traceSymbols then 
+	    env.printf["  Found %s\n", { nameof answer }]
+	  end if
+	  r <- iDefine[id, SExternal, false]
+	  r$isNotManifest <- true
+	  r$size <- 8
+% Should set r$ATinfo to Any, but we can't
+	end if
+@
+
+
+1.15
+log
+@Clean up trace output
+@
+text
+@d2 1
+a2 1
+export SUnknown, SConst, SVar, SParam, SResult, SOpName, SImport
+d17 1
+a425 15
+% for debugging
+
+      var xany : Any
+      const RISA <- typeobject RISA
+	function lowerbound -> [Integer]
+	function upperbound -> [Integer]
+	function getElement [Integer] -> [Any]
+      end RISA
+      const pass <- typeobject pass
+	operation pass [String, RISA]
+	operation printf [String, RISA]
+	function getGenerateConcurrent -> [Boolean]
+      end pass
+      primitive var "GETENV" [xany] <- []
+
+d505 1
+a505 1
+      if r !== nil and isLiteral[] then
+d514 35
+@
+
+
+1.14
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d291 1
+d319 1
+a319 1
+	  env.pass["  %s is self\n", {s.asString}]
+d322 1
+a322 1
+	  env.pass["  %s is manifest\n", {s.asString}]
+d329 1
+a329 1
+	    env.pass["  %s is not manifest\n", {s.asString}]
+d332 1
+a332 1
+	      env.pass["  has CT %s %d\n", {info.asString, info.variableSize}]
+d338 1
+a338 1
+	      env.pass["  has AT %s %d\n", {info.asString, info.variableSize}]
+d343 1
+a343 1
+	      env.pass["  has no info 8\n", nil]
+d368 1
+a368 1
+	  env.pass["  %s is self\n", {s.asString}]
+d371 1
+a371 1
+	  env.pass["  %s is manifest\n", {s.asString}]
+d373 1
+a373 1
+	  env.pass["  %s is a param\n", {s.asString}]
+d376 1
+a376 1
+	    env.pass["  has CT %s %d\n", {info.asString, info.variableSize}]
+d380 1
+a380 1
+	    env.pass["  has AT %s %d\n", {info.asString, info.variableSize}]
+d383 1
+a383 1
+	    env.pass["  has no info 8\n", nil]
+a437 1
+      var env : pass
+a438 1
+      env <- view xany as pass
+@
+
+
+1.13
+log
+@Moved lookupid from a separate file
+@
+text
+@d1 3
+a3 1
+export STKind, STContext, SymbolTable, Symbol
+d9 8
+a16 3
+const STKind <- enumeration STKind
+  SUnknown, SConst, SVar, SParam, SResult, SOpName, SImport
+end STKind
+d22 1
+a22 4
+const STContext <- enumeration STContext
+  CATLit, CObLit, COpSig, COpDef,
+  CUnavailableHandler, CComp, CBlock, COutside
+end STContext
+d24 9
+a40 1
+    field isattached : Boolean <- false
+d44 9
+a52 4
+    field isSelf : Boolean <- false
+    field isNotManifest : Boolean <- false
+    field isUsedOutsideInitially : Boolean <- false
+    field isTypeVariable : Boolean <- false
+d62 49
+d132 6
+a137 6
+	r$isattached <- isattached
+%	r$ismove <- ismove
+%	r$isvisit <- isvisit
+	r$isUsedOutsideInitially <- isUsedOutsideInitially
+	r$isSelf <- isself
+	r$isNotManifest <- isNotManifest
+d161 1
+a161 1
+      if isUsedOutsideInitially then
+a185 4
+    const obcx <- STContext.CObLit
+    const atcx <- STContext.CATLit
+    const stresult <- STKind.SResult
+    const stparam  <- STKind.SParam
+d202 1
+a202 1
+      if context != atcx and context != obcx then
+d213 1
+a213 1
+	  r$isUsedOutsideInitially <- r$isUsedOutsideInitially or !inInitially
+d224 1
+a224 1
+      r <- context = obcx or context = atcx
+d304 1
+a304 1
+      if cx !== nil and (context = atcx or context = obcx) then
+d307 1
+a307 1
+      if context = STContext.COpDef or context = STContext.COpSig then
+a311 6
+      if mytree == nil then
+	env.pass["ST.alloc mytree is nil\n", nil]
+      else
+	env.pass["ST.alloc %s\n", {mytree.asString}]
+      end if
+
+d323 2
+a324 2
+	  if s$mykind = stparam or s$mykind = stresult then
+	  elseif s$mykind = STKind.SImport and ! s$isUsedOutsideInitially then
+d333 2
+d339 2
+d348 1
+a348 1
+	    if context = obcx or context = atcx then
+d371 1
+a371 1
+	elseif s$mykind = stparam then
+d398 1
+a398 1
+	if s$mykind = stresult then
+d410 1
+a410 1
+      if context = STContext.COpDef or context = STContext.COpSig then
+d528 1
+a528 1
+	r$isUsedOutsideInitially <- r$isUsedOutsideInitially or !self$inInitially
+@
+
+
+1.12
+log
+@Store the AT of exported symbols, do allocation for inlining
+@
+text
+@d11 4
+@
+
+
+1.11
+log
+@Removed all monitors
+@
+text
+@d41 4
+d157 2
+a158 2
+    function isLiteral -> [r : Boolean]
+      r <- cx = obcx or cx = atcx
+d199 1
+a199 1
+	const asym <- table(i)
+d379 1
+a379 1
+	const s <- table(i)
+d404 1
+a404 1
+	  const s <- table(i)
+@
+
+
+1.10
+log
+@Got rid of monitors and fix
+@
+text
+@a21 1
+  monitor
+a101 1
+  end monitor
+a107 1
+  monitor
+d157 1
+a157 1
+    private operation grow
+a438 1
+  end monitor
+@
+
+
+1.9
+log
+@Implement change to "new" keyword.
+@
+text
+@d13 1
+a13 1
+  CUnavailableHandler, CComp, CBlock, CMonitor, COutside
+a250 20
+      % Look for monitors
+      if env$generateConcurrent and context = obcx then
+	if mytree == nil then
+	  env.printf["ST.alloc on object, mytree is nil\n", nil]
+	else
+	  const U <- typeobject U
+	    function getMayBeElided -> [Boolean]
+	  end U
+	  const T <- typeobject T
+	    function getYMonitor -> [U]
+	  end T
+	  const myobj <- view mytree as T
+	  const mymon <- myobj$ymonitor
+	  if mymon !== nil and ! mymon$mayBeElided then
+	    size <- 8
+	    nio <- nio + size
+	  end if
+	end if
+      end if
+
+d283 1
+a283 2
+	    if context = obcx or context = atcx or 
+		 context = STContext.CMonitor then
+a375 20
+
+      % Look for monitors
+      if env$generateConcurrent and context = obcx and kind == 'O' then
+	if mytree == nil then
+	  env.printf["ST.alloc on object, mytree is nil\n", nil]
+	else
+	  const U <- typeobject U
+	    function getMayBeElided -> [Boolean]
+	  end U
+	  const T <- typeobject T
+	    function getYMonitor -> [U]
+	  end T
+	  const myobj <- view mytree as T
+	  const mymon <- myobj$ymonitor
+	  if mymon !== nil and !mymon$mayBeElided then
+	    thetemplate.addOne['m', "monitor@@O4"]
+	  end if
+	end if
+      end if
+
+a407 8
+	  end if
+	end for
+      elseif kind = 'O' then
+	const mon <- STContext.CMonitor
+	for i : Integer <- 0 while i <= inner.upperbound by i<-i+1
+	  st <- inner(i)
+	  if st$context = mon then
+	    st.writeTemplate[thetemplate, kind]
+@
+
+
+1.8
+log
+@Generate attached template brands
+@
+text
+@d142 1
+a142 1
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+@
+
+
+1.7
+log
+@Enabled attach declarations
+@
+text
+@d429 3
+@
+
+
+1.6
+log
+@type -> typeobject sed
+@
+text
+@d25 1
+a25 1
+%    field isattached : Boolean <- false
+d59 1
+a59 1
+%	r$isattached <- isattached
+d176 1
+a176 1
+%      r$isattached <- isattached
+@
+
+
+1.5
+log
+@New Emerald syntax for primitives
+@
+text
+@d1 1
+a1 3
+import Ident, IdentTable from "Jekyll"
+export STKind, STContext, SymbolTable, Symbol to "Jekyll"
+import lookupId from "Jekyll"
+d3 1
+a3 1
+const Templ <- type Templ
+d16 1
+a16 1
+const Tree <- type Tree
+d49 1
+a49 1
+	const getITable <- type getITable
+d217 1
+a217 1
+      const RISA <- type RISA
+d222 1
+a222 1
+      const pass <- type pass
+d228 1
+a228 1
+      const infotype <- type t
+d256 1
+a256 1
+	  const U <- type U
+d259 1
+a259 1
+	  const T <- type T
+d383 1
+a383 1
+      const RISA <- type RISA
+d388 1
+a388 1
+      const pass <- type pass
+d403 1
+a403 1
+	  const U <- type U
+d406 1
+a406 1
+	  const T <- type T
+d418 1
+a418 1
+	const infotype <- type t function getBrand ->[Character] end t
+d503 1
+a503 1
+	const t <- view getmytree[] as type T
+@
+
+
+1.4
+log
+@Generate debugging info for parameters and retuls
+@
+text
+@d55 1
+a55 1
+	primitive 198 [xany] <- []
+d88 1
+a88 1
+%      primitive 398 [me] <- [a]
+d235 1
+a235 1
+      primitive 198 [xany] <- []
+d396 1
+a396 1
+      primitive 198 [xany] <- []
+@
+
+
+1.3
+log
+@Implemented (a first cut at) concurrency
+@
+text
+@d441 9
+@
+
+
+1.2
+log
+@Allocate symbols in the more appropriate order
+@
+text
+@d226 2
+d253 20
+d384 34
+a417 12
+%      var xany : Any
+%      const RISA <- type RISA
+%	function lowerbound -> [Integer]
+%	function upperbound -> [Integer]
+%	function getElement [Integer] -> [Any]
+%      end RISA
+%      const pass <- type pass
+%	operation pass [String, RISA]
+%      end pass
+%      var env : pass
+%      primitive 198 [xany] <- []
+%      env <- view xany as pass
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 1
+  SUnknown, SConst, SVar, SParam, SResult, SOpName
+d26 5
+a30 3
+    field isattached : Boolean <- false
+    field ismove : Boolean <- false
+    field isvisit : Boolean <- false
+d33 1
+d60 5
+a64 3
+	r$isattached <- isattached
+	r$ismove <- ismove
+	r$isvisit <- isvisit
+d88 7
+a94 2
+      primitive 398 [me] <- [a]
+      r <- r || " " || me.asString
+d129 1
+d131 11
+d148 1
+d177 2
+a178 1
+      r$isattached <- isattached
+d228 5
+d250 49
+a299 2
+	const infotype <- type t function variableSize ->[Integer] function asString -> [String] end t
+	var info : infotype <- nil
+d305 1
+a305 1
+	  % a manifest symbol, not allocation
+d307 2
+a308 2
+	else
+	  env.pass["  %s is not manifest\n", {s.asString}]
+d311 2
+a312 1
+	    env.pass["  has CTInfo %s %d\n", {info.asString, info.variableSize}]
+d315 2
+a316 1
+	    env.pass["  has ATInfo %s %d\n", {info.asString, info.variableSize}]
+a318 2
+	  end if
+	  if info == nil then
+a319 3
+	  else
+	    size <- info.variableSize
+	    if size = 1 then size <- 4 end if
+d321 1
+d323 3
+a325 16
+	  if s$mykind = stparam then
+	    s$base <- 'A'
+	    s$offset <- nao
+	    nao <- nao + 8
+	  elseif s$mykind = stresult then
+	    % do nothing, take care of results later
+	  elseif context = obcx or context = atcx or 
+		 context = STContext.CMonitor then
+	    s$base <- 'O'
+	    s$offset <- nio + 4
+	    nio <- nio + size
+	  else
+	    s$base <- 'L'
+	    s$offset <- nlo
+	    nlo <- nlo + size
+	  end if
+d328 3
+d375 1
+a375 1
+      for i : Integer <- upb while i >= 0 by i <- i - 1
+a376 1
+	var info : infotype <- nil
+d379 1
+a379 1
+	if base = kind then
+d381 1
+a381 1
+	    info <- view s$CTInfo as infotype
+d383 2
+a384 3
+	    info <- view s$ATInfo as infotype
+	  end if
+	  if info == nil then
+a385 2
+	  else
+	    brand <- info.getBrand
+a404 2
+      elseif kind = 'O' then
+	
+d459 1
+@

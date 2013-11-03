@@ -1,0 +1,57 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.03.26.06.59.02;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.03.24.17.23.05;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Install emerald as a pkg.
+@
+
+
+1.2
+log
+@Use -f to avoid any .cshrc setting of EMERALDARCH
+@
+text
+@#!/bin/csh -f
+cd $EMERALDROOT/vm/$EMERALDARCH
+echo "Installing vm/$EMERALDARCH/emx in /cs/public/lib/pkg/emerald/bin/"
+install -c emx /cs/public/lib/pkg/emerald/bin/
+if (x$1 == x-a) then
+  cd $EMERALDROOT/lib/
+  foreach name ( Builtins Compiler bcdef jsdef opoid )
+    echo "Installing $name in /cs/public/lib/pkg/emerald/lib/"
+    install -c $name /cs/public/generic/lib/pkg/emerald/lib/
+  end
+endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+#!/bin/csh
+@

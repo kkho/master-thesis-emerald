@@ -1,0 +1,105 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.3
+date	97.01.21.23.48.47;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.25.16.32.56;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.26.02;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Many changes to make the Report up to date
+@
+text
+@\documentstyle[fleqn,titlepage,normscite]{article}
+%\documentstyle[fleqn,clbiba,titlepage,normscite]{article}
+\input{pagelayout}
+\input{emcmd}
+\begin{document}
+\bibliographystyle{alpha}
+ \input{ubctitle}
+\newpage{}
+\pagenumbering{roman}
+\tableofcontents{}
+\newpage{}
+\pagenumbering{arabic}
+\parindent 0pt
+\parskip 3pt plus 3pt
+\input{intro}
+\input{lexical}
+\input{declarations}
+\input{expressions}
+\input{statements}
+\input{operations}
+\input{types}
+\input{objects}
+\input{reliability}
+\appendix
+%\include{reserved}
+%\include{syntax}
+\include{builtins}
+%\include{compiling}
+%\include{debugging}
+\bibliography{Report}
+\end{document}
+@
+
+
+1.2
+log
+@Checkpoint of August 94 updates for DIKU course
+@
+text
+@d1 2
+a2 1
+\documentstyle[fleqn,clbiba,titlepage,normscite]{article}
+d28 2
+a29 2
+\include{compiling}
+\include{debugging}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+x ./Report.tex, 569 bytes, 2 tape blocks
+d5 1
+a5 1
+\bibliographystyle{myalpha}
+a6 3
+%\newpage{}
+%\pagenumbering{roman}
+%\tableofcontents{}
+d8 3
+d14 1
+@

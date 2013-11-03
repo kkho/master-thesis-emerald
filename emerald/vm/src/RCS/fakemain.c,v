@@ -1,0 +1,55 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdio.h>
+#pragma pointer_size short
+
+int main(ac,av)
+int ac;
+char **av;
+{
+  mainp(ac,av);
+  return 0;
+}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+@

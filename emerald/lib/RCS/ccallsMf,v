@@ -1,0 +1,173 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	98.03.02.16.36.59;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.09.18.00.31;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.30.19.19.56;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.15.05.12.03;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Generic makefile part for ccalls.
+@
+
+
+1.4
+log
+@'./lib'
+@
+text
+@CCALLSROOT = $(EMERALDROOT)/ccalls
+
+#
+# Provide a default set of ccalls, in case nothing is specified in the macroMf
+CCALLS_OBJ=emstream.o string.o misk.o rand.o
+
+CCALLS_SRC = \
+	$(CCALLSROOT)/regexp/regexp.c \
+	$(CCALLSROOT)/misk/misk.c \
+	$(CCALLSROOT)/rand/rand.c \
+	$(CCALLSROOT)/emstream/emstream.c \
+	$(CCALLSROOT)/string/string.c \
+	$(CCALLSROOT)/xta/xta.c \
+	$(CCALLSROOT)/xliba/xliba.c \
+	$(CCALLSROOT)/xma/xma.c \
+	$(CCALLSROOT)/xforms/xforms.c \
+	$(CCALLSROOT)/bani/bani.c
+
+regexp.o: $(CCALLSROOT)/regexp/regexp.c $(CCALLSROOT)/regexp/regexp.h \
+	$(CCALLSROOT)/regexp/regmagic.h
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/regexp $(CCALLSROOT)/regexp/regexp.c
+
+misk.o: $(CCALLSROOT)/misk/misk.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/misk $(CCALLSROOT)/misk/misk.c
+
+rand.o: $(CCALLSROOT)/rand/rand.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/rand $(CCALLSROOT)/rand/rand.c
+
+emstream.o: $(CCALLSROOT)/emstream/emstream.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/emstream $(CCALLSROOT)/emstream/emstream.c
+
+string.o: $(CCALLSROOT)/string/string.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/string $(CCALLSROOT)/string/string.c
+
+xforms.o: $(CCALLSROOT)/xforms/xforms.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/xforms -I. $(CCALLSROOT)/xforms/xforms.c
+
+bani.o: $(CCALLSROOT)/bani/bani.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/bani -I. $(CCALLSROOT)/bani/bani.c
+
+xta.o: $(CCALLSROOT)/xta/xta.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/xta $(CCALLSROOT)/xta/xta.c
+
+xma.o: $(CCALLSROOT)/xma/xma.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/xma $(CCALLSROOT)/xma/xma.c
+
+xliba.o: $(CCALLSROOT)/xliba/xliba.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/xliba $(CCALLSROOT)/xliba/xliba.c
+@
+
+
+1.3
+log
+@Updated
+@
+text
+@d5 1
+a5 1
+CCALLS_OBJ=emstream.o string.o misk.o
+@
+
+
+1.2
+log
+@Define and use CCALLSROOT rather than ../../ccalls
+@
+text
+@d3 15
+a17 5
+CCALLS_OBJ = \
+	regexp.o regsub.o regerror.o \
+	hello.o \
+	emstream.o \
+	string.o
+d23 2
+a24 7
+regerror.o: $(CCALLSROOT)/regexp/regerror.c $(CCALLSROOT)/regexp/regexp.h \
+	$(CCALLSROOT)/regexp/regmagic.h
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/regexp $(CCALLSROOT)/regexp/regerror.c
+
+regsub.o: $(CCALLSROOT)/regexp/regsub.c $(CCALLSROOT)/regexp/regexp.h \
+	$(CCALLSROOT)/regexp/regmagic.h
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/regexp $(CCALLSROOT)/regexp/regsub.c
+d26 2
+a27 2
+hello.o: $(CCALLSROOT)/misc/hello.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/misc $(CCALLSROOT)/misc/hello.c
+d29 2
+a30 2
+emstream.o: $(CCALLSROOT)/streams/emstream.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I$(CCALLSROOT)/streams $(CCALLSROOT)/streams/emstream.c
+d34 15
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 2
+d9 3
+a11 3
+regexp.o: ../../ccalls/regexp/regexp.c ../../ccalls/regexp/regexp.h \
+	../../ccalls/regexp/regmagic.h
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I../../ccalls/regexp ../../ccalls/regexp/regexp.c
+d13 3
+a15 3
+regerror.o: ../../ccalls/regexp/regerror.c ../../ccalls/regexp/regexp.h \
+	../../ccalls/regexp/regmagic.h
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I../../ccalls/regexp ../../ccalls/regexp/regerror.c
+d17 3
+a19 3
+regsub.o: ../../ccalls/regexp/regsub.c ../../ccalls/regexp/regexp.h \
+	../../ccalls/regexp/regmagic.h
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I../../ccalls/regexp ../../ccalls/regexp/regsub.c
+d21 2
+a22 2
+hello.o: ../../ccalls/misc/hello.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I../../ccalls/misc ../../ccalls/misc/hello.c
+d24 2
+a25 2
+emstream.o: ../../ccalls/streams/emstream.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I../../ccalls/streams ../../ccalls/streams/emstream.c
+d27 2
+a28 2
+string.o: ../../ccalls/string/string.c
+	$(CC) -c $(CCALLSCPFLAGS) $(CFLAGS) -I../../ccalls/string ../../ccalls/string/string.c
+@

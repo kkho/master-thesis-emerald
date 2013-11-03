@@ -1,0 +1,94 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.23.17.01.05;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Storage allocation header (will replace malloc.h).
+@
+
+
+1.3
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@#ifndef _EMERALD_STORAGE_H
+#define _EMERALD_STORAGE_H
+
+#if defined(MALLOCPARANOID)
+extern void *vmMalloc(int);
+extern void *vmRealloc(void *, int);
+extern void *vmCalloc(int, int);
+extern void vmFree(void *);
+#else
+#if defined(WIN32MALLOCDEBUG)
+/*
+ * Microsoft C debug malloc.
+ */
+#include <crtdbg.h>
+#endif
+
+
+#define vmMalloc(a) malloc((a))
+#define vmRealloc(a,b) realloc(a,(b))
+#define vmCalloc(a,b) calloc(a,b)
+#define vmFree(a) (free(a))
+#endif
+
+extern void *gc_malloc(int);
+extern void *gc_malloc_old(int nb, int remember);
+extern void *extraRoots[];
+extern int     extraRootsSP;
+#define regRoot(x) (extraRoots[extraRootsSP++] = (void *)&(x))
+#define unregRoot() ( extraRoots[--extraRootsSP] = 0)
+
+extern void InitStorage(void);
+#endif
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d25 1
+a25 1
+extern void *gc_malloc_nogc(int), *gc_malloc_old(int nb, int remember);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a9 1
+#include <stdlib.h>
+d23 9
+@

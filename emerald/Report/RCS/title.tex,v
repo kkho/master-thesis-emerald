@@ -1,0 +1,76 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.2
+date	94.08.25.16.33.04;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.26.13;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Checkpoint of August 94 updates for DIKU course
+@
+text
+@\begin{titlepage}
+\vspace{2in}
+\flushright{\fbox{\large {\bf Draft/Limited Circulation}}}\\[0.9in]
+\begin{center}
+{\Large {\bf The \emd{} Programming Language}\\[0.1in] }
+{\large {\bf REPORT}\\[0.4in]}
+{\large {\bf Norman C. Hutchinson, Andrew P. Black,\\
+         Henry M. Levy, Eric Jul and Rajendra K. Raj
+}} \\[0.1in]
+Emerald Project\\
+Department of Computer Science, FR-35\\
+University of Washington\\
+Seattle, Washington 98195\\[0.1in]
+5 October 1987\\[1.0in]
+\end{center}
+\begin{center}
+\parbox{5.0in}{
+{\bf Abstract:}\\[0.15in]
+The programming language \emd{} was designed and developed 
+to demonstrate that the
+object-based style of programming can be incorporated both elegantly and
+efficiently in the distributed programming environment.
+At the same time, \emd{} is an '80s programming language providing excellent
+features for abstraction and polymorphism. Primarily a language for distributed
+environments, Emerald includes features for dealing with the location of objects,
+and extends exception handling mechanisms for recovering from partial failures
+of distributed systems. This report presents an overview of
+Emerald and a concise description of its language constructs.
+}
+\end{center}
+\end{titlepage}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+x ./title.tex, 1220 bytes, 3 tape blocks
+@

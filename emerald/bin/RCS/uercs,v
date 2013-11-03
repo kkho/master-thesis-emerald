@@ -1,0 +1,42 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	99.02.23.02.00.36;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Update emerald including RCS directories.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/bin/sh
+cd $EMERALDROOT
+RCMP=${RCMP:-rcmp -u -z -d10}
+if [ $# = 0 ] ; then 
+  echo "Usage: ue host"
+  exit
+fi
+case $1 in
+  work|mako|ubc|manning|cascade)
+    ${RCMP} `allfiles -v` cascade:emerald ;;
+  vuw|circa|bats)
+    ${RCMP} `allfiles -v` bats:/vol/projects/emerald ;;
+  home|norm.home|hutchinson.home)
+    ${RCMP} `allfiles -v` norm.home:/emerald ;;
+  *)
+    ${RCMP} `allfiles -v` ${1}:emerald ;;
+esac
+  
+@

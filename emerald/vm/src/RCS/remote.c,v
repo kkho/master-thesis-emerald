@@ -1,0 +1,2344 @@
+head	1.15;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.13
+	103alpha:1.10
+	102alpha:1.8
+	101alpha:1.7
+	100alpha:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.15
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	98.06.09.15.33.03;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	98.05.22.15.49.12;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	98.05.08.19.39.48;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	98.05.08.19.37.48;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	98.05.01.07.21.05;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.04.30.20.46.11;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.04.04.20.08.38;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.15
+log
+@Check in current version
+@
+text
+@/*
+ * remote.c - basic infrastructure for remote operations
+ */
+#define E_NEEDS_NETDB
+#define E_NEEDS_IOV
+#define E_NEEDS_STRING
+#include "system.h"
+
+#include "assert.h"
+#include "vm_exp.h"
+#include "trace.h"
+#include "creation.h"
+#include "oidtoobj.h"
+#include "read.h"
+#include "write.h"
+#include "bufstr.h"
+#include "dist.h"
+#include "streams.h"
+#include "gc.h"
+#include "remote.h"
+#include "gaggle.h"
+#include "insert.h"
+#define E_NEEDS_EXTRACT_OID
+#define E_NEEDS_EXTRACT_NODE
+#include "extract.h"
+#include "locate.h"
+#include "move.h"
+#include "call.h"
+
+unsigned distGCSeq = 1, lastCompletedDistGCSeq = 1;
+noderecord *allnodes = NULL, *thisnode = NULL, *limbonode = NULL;
+Node limbo;
+static int nodecount = 0;
+Object rootdir = (Object)JNIL, node = (Object)JNIL, inctm = (Object)JNIL;
+Object rootdirg = (Object)JNIL;
+Object locsrv = (Object)JNIL, debugger = (Object)JNIL;
+extern int doDistribution;
+void *ctstr;
+Node ctsrv;
+#if !defined(NTRACE)
+static char *typenames[] = {
+  "EchoRequest",
+  "EchoReply",
+  "InvokeRequest",
+  "InvokeReply",
+  "ObjectRequest",
+  "ObjectReply",
+  "LocateRequest",
+  "LocateReply",
+  "MoveRequest",
+  "MoveReply",
+  "Move3rdPartyRequest",
+  "Move3rdPartyReply",
+  "InvokeForwardRequest",
+  "InvokeForwardReply",
+  "IsFixedRequest",
+  "IsFixedReply",
+  "GaggleUpdate",
+  "DistGCInfo",
+  "DistGCDoneRequest",
+  "DistGCDoneReply",
+  "DistGCDoneReport" };
+#endif  
+
+int isLimbo(Node n)
+{
+  return n.ipaddress == 0 && n.port == 0 && n.epoch == 0;
+}
+
+noderecord *getNodeRecordFromObj(Object obj)
+{
+  return RESDNT(obj->flags) ? thisnode : *(noderecord **)obj->d;
+}
+
+Node getMyLoc(void)
+{
+  return thisnode->srv;
+}
+
+Node getLocFromObj(Object obj)
+{
+  noderecord *nd = getNodeRecordFromObj(obj);
+  return nd ? nd->srv : limbo;
+}
+
+#ifdef DISTRIBUTED
+static noderecord *handleupdown(Node id, int up);
+extern Object createStub(ConcreteType ct, void *stub, OID oid);
+
+static Object ctijunk[100];
+static int nextctijunkptr = 0;
+
+void cticallback(int (*isscheduled)(IISc map, Object), IISc map)
+{
+  int i;
+  for (i = 0; i < nextctijunkptr; i++) {
+    if (!isscheduled(map, ctijunk[i])) {
+      Stream str = (Stream)ctstr;
+      OID id;
+      id = OIDOf(ctijunk[i]);
+      TRACE(rinvoke, 8, ("Checkpoint needs %s", OIDString(id)));
+      memmove(WriteStream(str, 4), "CTID", 4);
+      WriteOID(&id, str);
+    }
+  }
+  nextctijunkptr = 0;
+}
+
+void ctcallback(Object o)
+{
+  int i;
+  if (isABuiltin(o)) return;
+  for (i = 0; i < nextctijunkptr; i++) {
+    if (ctijunk[i] == o) return;
+  }
+  assert(nextctijunkptr < 100);
+  ctijunk[nextctijunkptr++] = o;
+}
+
+
+noderecord *getNodeRecordFromSrv(Node srv)
+{
+  noderecord *nd;
+  
+  for (nd = allnodes; nd && !SameNode(srv,nd->srv); nd = nd->p) ;
+  return nd;
+}
+
+void updateNodeRecord(Object obj, noderecord *nd)
+{
+  *(noderecord **)obj->d = nd;
+}
+
+void updateLocation(Object obj, Node srv)
+{
+  if (!RESDNT(obj->flags)) {
+    noderecord *nd = getNodeRecordFromSrv(srv);
+    if (nd != thisnode) {
+      updateNodeRecord(obj, nd);
+    } else {
+      updateNodeRecord(obj, limbonode);
+    }      
+  }
+}
+
+Object getNodeFromObj(Object obj)
+{
+  noderecord *nd = getNodeRecordFromObj(obj);
+  return nd ? OIDFetch(nd->node) : (Object)JNIL;
+}
+
+Object getNodeFromSrv(Node srv)
+{
+  noderecord *nd = getNodeRecordFromSrv(srv);
+  return nd ? OIDFetch(nd->node) : (Object)JNIL;
+}
+#endif
+
+/*
+ * Read an OID from theStream into oid
+ */
+void ReadOID(OID *oid, Stream theStream)
+{
+  Bits8 *theBuffer;
+
+  theBuffer = ReadStream(theStream, filesizeofOID);
+  ExtractOID(oid, theBuffer);
+}
+
+void ReadInt(u32 *n, Stream theStream)
+{
+  Bits8 *theBuffer;
+
+  theBuffer = ReadStream(theStream, sizeof(u32));
+  ExtractBits32(n, theBuffer);
+}
+
+
+void WriteInt(u32 n, Stream str)
+{
+  Bits8 *theBuffer;
+
+  theBuffer = WriteStream(str, sizeof(Bits32));
+  InsertBits32(&n, theBuffer);
+}
+
+#ifdef DISTRIBUTED
+void parseAddr(char *str, unsigned int *addr, unsigned short *port)
+{
+  char *colon, *comma;
+  struct hostent *h = NULL;
+
+  comma = (char *)strchr(str, ',');
+  if (comma) *comma = '\0';
+  colon = (char *)strchr(str, ':');
+  if (!colon) {
+    *port = EMERALDFIRSTPORT + getplane();
+  } else {
+    *colon = '\0';
+    *port = mstrtol(colon + 1, 0, 0);
+  }
+  if ('a' <= str[0] && str[0] <= 'z') {
+    h = gethostbyname(str);
+    if (h == NULL) {
+      fprintf(stderr, "parseAddr: gethostbyname failed!\n");
+      return;
+    } else { 
+      memcpy(addr, h->h_addr, sizeof(*addr));
+    }
+  } else {
+    *addr = inet_addr(str);
+  }
+  if (colon) *colon = ':';
+  if (comma) *comma = ',';
+}
+
+static int ping(Node);
+
+void objectArrived(OID oid)
+{
+}  
+#endif
+
+void init_nodeinfo(void)
+{
+  struct timeval tm;
+  OID Orootdirg;
+  ConcreteType ct, ctd, ctdg;
+  int stack[16];
+#ifdef DISTRIBUTED
+  extern char *gRootNode;
+  Node rootnodeid;
+#endif
+
+  TRACE(rinvoke, 5, ("Init node info"));
+  if (thisnode) { return; }
+
+  /* allocate space and new OIDs */
+  limbonode = (noderecord*) vmMalloc(sizeof(noderecord));
+  memset(limbonode, 0, sizeof(noderecord));
+  assert(limbonode != NULL);
+  limbonode->up = 0; limbonode->p = NULL; nodecount++;
+  assert(!allnodes);
+  allnodes = limbonode;
+
+  /* allocate space and new OIDs */
+  thisnode = (noderecord*) vmMalloc(sizeof(noderecord));
+  assert(thisnode != NULL);
+  NewOID(&thisnode->node);
+  assert(thisnode->node.Seq == 1);
+  NewOID(&thisnode->inctm);
+  assert(thisnode->inctm.Seq == 2);
+  thisnode->up = 1; thisnode->p = NULL; nodecount++;
+  allnodes->p = thisnode;
+  Orootdirg.ipaddress = 0x10101010;
+  Orootdirg.port = 0x2020;
+  Orootdirg.epoch = 0x3030;
+  Orootdirg.Seq = 0x40404040;
+  ctd = BuiltinInstCT(RDIRECTORYI); assert(ctd);
+  ctdg = BuiltinInstCT(DIRECTORYGAGGLEI); assert(ctdg);
+  inhibit_gc++;
+#ifdef DISTRIBUTED
+  thisnode->srv = myid;
+#endif
+
+  /*
+   * create the IncarnationTime object.  We do this early, because in the
+   * process of getting going someone else might ask us for it.
+   */
+  ct = BuiltinInstCT(TIMEI); assert(ct);
+  if (gettimeofday(&tm, NULL) < 0) {
+    perror("gettimeofday");
+    time((time_t *)&tm.tv_sec); tm.tv_usec = 0;
+  }
+  stack[0] = (unsigned int) tm.tv_sec;
+  stack[1] = (unsigned int) intct;
+  stack[2] = (unsigned int) tm.tv_usec;
+  stack[3] = (unsigned int) intct;
+  TRACE(sys, 3, ("Creating my incarnation time"));
+  inctm = CreateObjectFromOutside(ct, (u32)stack);
+  OIDInsert(thisnode->inctm, inctm);
+
+#ifdef DISTRIBUTED
+  if (doDistribution) {
+    DRegisterNotify((void (*)(Node, int))handleupdown);
+  }
+  if (!gRootNode || !strcmp(gRootNode, "here")) {
+  } else if (!strcmp(gRootNode, "search")) {
+    unsigned int addr;
+    unsigned short port;
+    int i;
+
+    for (i = 0; i < 10; i++) {
+      char *path = getenv("EMERALDMACHINES");
+      if (!path || !*path) path = "localhost";
+      while (path && *path) {
+	parseAddr(path, &addr, &port);
+	rootnodeid.ipaddress = addr;
+	port = port + i * EMERALDPORTSKIP;
+	rootnodeid.port = port;
+	rootnodeid.epoch = 0;
+	if ((rootnodeid.ipaddress == myid.ipaddress || rootnodeid.ipaddress == htonl(0x7f000001)) && rootnodeid.port == myid.port) {
+	  /* This is me */
+	} else {
+	  TRACE(rinvoke, 1, ("Trying %s", NodeString(rootnodeid)));
+	  if (DProd(&rootnodeid) >= 0) {
+	    assert(rootnodeid.port == port);
+	    if (ping(rootnodeid) >= 0) goto done;
+	  }
+	}
+	path = strchr(path, ',');
+	if (path) path++;
+      }
+    }
+    printf("Can't find a running emerald node\nEMERALDMACHINES=%s\n", getenv("EMERALDMACHINES"));
+  done: ;
+    
+  } else {
+    unsigned int addr;
+    unsigned short port;
+
+    TRACE(rinvoke, 1, ("Trying to contact %s", gRootNode));
+    parseAddr(gRootNode, &addr, &port);
+    rootnodeid.ipaddress = addr;
+    rootnodeid.port = port;
+    rootnodeid.epoch = 0;
+    if (DProd(&rootnodeid) < 0) {
+      printf("Can't contact emerald on %s\n", gRootNode);
+      exit(1);
+    }
+    assert(rootnodeid.port == port);
+    if (ping(rootnodeid) < 0) {
+      extern int checkSameUser;
+      printf("Can't ping emerald on %s", gRootNode);
+      if (!checkSameUser) printf(" (probably user mismatch)");
+      printf("\n");
+      exit(1);
+    }
+  }
+  /* We need to create a root directory gaggle */
+  rootdirg = CreateUninitializedObject(ctdg);
+  OIDInsert(Orootdirg, rootdirg);
+  stack[0] = (int)rootdirg;
+  stack[1] = (int)ctdg;
+  rootdir = CreateObjectFromOutside(ctd, (u32)stack);
+  if (doDistribution) {
+    printf("Emerald listening on port %d %x, epoch %d %x\n", myid.port, myid.port, myid.epoch, myid.epoch);
+  }
+#endif
+
+  /* create the Node object */
+  ct = BuiltinInstCT(NODEI); assert(ct);
+  stack[0] = (int)rootdirg;
+  stack[1] = (int)(ISNIL(rootdir) ? (ConcreteType)JNIL : CODEPTR(rootdirg->flags));
+  stack[2] = MyNode.port << 16 | MyNode.epoch;
+  stack[3] = (unsigned int) intct;
+  TRACE(sys, 3, ("Creating my node"));
+  node = CreateObjectFromOutside(ct, (u32) stack);
+  OIDInsert(thisnode->node, node);
+  inhibit_gc--;
+}
+
+/*
+ * Read a Node from theStream into srv
+ */
+void ReadNode(Node *srv, Stream theStream)
+{
+  Bits8 *theBuffer;
+
+  theBuffer = ReadStream(theStream, filesizeofNode);
+  ExtractNode(srv, theBuffer);
+}
+
+
+void InsertNode(Node *t, Bits8 *data)
+{
+  /* no hton desired here */
+  *(Bits32 *)data = t->ipaddress;
+  InsertBits16(&t->port, data + 4);
+  InsertBits16(&t->epoch, data + 6);
+}
+
+/*
+ * Read a Node from theStream into srv
+ */
+void WriteNode(Node *srv, Stream theStream)
+{
+  Bits8 *theBuffer;
+
+  theBuffer = WriteStream(theStream, filesizeofNode);
+  InsertNode(srv, theBuffer);
+}
+#ifdef DISTRIBUTED
+int ExtractHeader(RemoteOpHeader *h, Stream str)
+{
+  RemoteOpHeader *sh;
+  sh = (RemoteOpHeader *)ReadStream(str, sizeof(RemoteOpHeader));
+  if (!sh) return -1;
+
+  ExtractBits32(&h->marker, (Bits8 *)&sh->marker);
+  /* copy the 4 char fields */
+  *((int *)h + 1) = *((int *)sh + 1);
+
+  ExtractBits32(&h->distgcseq, (Bits8 *)&sh->distgcseq);
+  ExtractOID(&h->ss, (Bits8 *)&sh->ss);
+  ExtractNode(&h->sslocation, (Bits8 *)&sh->sslocation);
+  ExtractOID(&h->target, (Bits8 *)&sh->target);
+  ExtractOID(&h->targetct, (Bits8 *)&sh->targetct);
+  if (h->marker != EMERALDMARKER) {
+#ifdef WIN32MALLOCDEBUG
+	  vmMallocCheck();
+#endif
+	  abort();
+  }
+  return 0;
+}
+
+Stream StartMsg(RemoteOpHeader *h)
+{
+  Stream str;
+  RemoteOpHeader *sh;
+  str = CreateStream(WriteBufferStream, NULL); assert(str);
+  sh = (RemoteOpHeader *)WriteStream(str, sizeof(RemoteOpHeader));
+  h->marker = EMERALDMARKER;
+  h->distgcseq = distGCSeq << 1 | inDistGC();
+  InsertBits32(&h->marker, (Bits8 *)&sh->marker);
+  /* copy the 4 char fields */
+  *((int *)sh + 1) = *((int *)h + 1);
+
+  InsertBits32(&h->distgcseq, (Bits8 *)&sh->distgcseq);
+  InsertOID(&h->ss, (Bits8 *)&sh->ss);
+  InsertNode(&h->sslocation, (Bits8 *)&sh->sslocation);
+  InsertOID(&h->target, (Bits8 *)&sh->target);
+  InsertOID(&h->targetct, (Bits8 *)&sh->targetct);
+  return str;
+}
+
+int forwardMsg(Node srv, RemoteOpHeader *h, Stream str)
+{
+  struct iovec oiov;
+  int rval;
+
+  RewindStream(str);
+  TRACE(rinvoke, 10, ("forwardMsg: len=%d", BufferLength(str)));
+  BufferToIovec(str, &oiov);
+  rval = DSend(srv, oiov.iov_base, oiov.iov_len);
+  return rval;
+}
+  
+int sendMsg(Node srv, Stream str)
+{
+  struct iovec oiov;
+  int rval;
+
+  TRACE(rinvoke, 10, ("sendMsg: len=%d", BufferLength(str)));
+  BufferToIovec(str, &oiov);
+  rval = DSend(srv, oiov.iov_base, oiov.iov_len);
+  DestroyStream(str);
+  return rval;
+}
+
+
+void findAndSendTo(OID target, Stream str)
+{
+  Object obj = OIDFetch(target);
+  if (ISNIL(obj)) {
+    /*
+     * This must be a state, because we throw them away too aggressively.
+     */
+    ConcreteType ct = BuiltinInstCT(INTERPRETERSTATEI);
+    obj = createStub(ct, limbonode, target);
+  }
+  findLocation(obj, CODEPTR(obj->flags), 0, str);
+}
+
+void sendMsgTo(Node srv, Stream str, OID target)
+{
+  struct iovec oiov;
+
+  TRACE(rinvoke, 10, ("sendMsg: len=%d", BufferLength(str)));
+  BufferToIovec(str, &oiov);
+  if (DSend(srv, oiov.iov_base, oiov.iov_len) < 0) {
+    /*
+     * Find the object, then send the message again.
+     */
+    TRACE(dist, 1, ("Can't send message to node %s", NodeString(srv)));
+    findAndSendTo(target, str);
+  } else {
+    DestroyStream(str);
+  }
+}
+
+void sendUnavailableReply(Stream str)
+{
+  RemoteOpHeader request, reply;
+  Stream replystr, readstr;
+
+  /*
+   * If the stream is a write stream, then I wrote it and its reply location
+   * is going to be me.  Don't bother trying to reply to yourself.
+   */
+  if (!IsReadStream(str)) {
+    DestroyStream(str);
+    return;
+  }
+  readstr = WriteToReadStream(str, 0);
+  ExtractHeader(&request, readstr);
+  DestroyStream(readstr);
+
+  if (!SameNode(request.sslocation, myid)) {
+    reply = request;
+    switch (request.kind) {
+    case InvokeRequest:
+      reply.kind = InvokeReply;
+      reply.status = 0;
+      reply.option1 = 2;
+      break;
+    case MoveRequest:
+    case Move3rdPartyRequest:
+      reply.kind = MoveReply;
+      reply.status = 0;
+    default:
+      TRACE(locate, 0, ("Can't reply about message type %s",
+			typenames[request.kind]));
+      DestroyStream(str);
+      return;
+    }
+    replystr = StartMsg(&reply);
+    sendMsg(request.sslocation, replystr);
+  } else {
+    TRACE(locate, 0, ("Can't reply to myself about message type %s",
+		      typenames[request.kind]));
+  }
+  DestroyStream(str);
+}
+
+void doEchoRequest(struct noderecord *thisnode, Node srv)
+{
+  RemoteOpHeader h;
+  Stream str;
+  h.kind = EchoRequest;
+  h.ss = nooid;
+  h.sslocation = myid;
+  h.target = nooid;
+  h.targetct = nooid;
+  str = StartMsg(&h);
+  WriteInt(0, str);
+  WriteOID(&thisnode->node, str);
+  WriteOID(&thisnode->inctm, str);
+  WriteInt(1, str);
+  TRACE(rinvoke, 3, ("EchoRequest to %s", NodeString(srv)));
+
+  if (sendMsg(srv, str) < 0) {
+    printf("Can't send the echo request message\n");
+    exit(1);
+  }
+}
+
+void unavailableState(State *state)
+{
+  State *otherstate;
+  Object target;
+  OID oid = OIDOf(state);
+  TRACE(rinvoke, 4, ("Checking for outstanding invocation for state %x %s",
+		     (unsigned int)state, OIDString(OIDOf(state))));
+  ISetForEach(allProcesses, otherstate) {
+    if (sameOID(otherstate->nsoid, oid)) {
+      target = OIDFetch(otherstate->nstoid);
+      TRACE(rinvoke, 5, ("Unavailable in object %x a %.*s", target,
+			 CODEPTR(target->flags)->d.name->d.items,
+			 CODEPTR(target->flags)->d.name->d.data));
+      TRACE(unavailable, 5, ("Raising unavailable in state %#x", otherstate));
+      TRACE(process, 5, ("Resetting nsoid in state %#x", otherstate));
+      otherstate->nsoid = nooid;
+      otherstate->nstoid = nooid;
+      if (!unavailable(otherstate, target)) makeReady(otherstate);
+      /*
+       * Because unavailable may remove the state from allProcesss
+       * we have to fudge with the index
+       */
+      if (allProcesses->table[ISetxx_index].key != (int)otherstate) ISetxx_index--;
+    }
+  } ISetNext();
+}
+
+void checkForUnavailableInvokes(Object o)
+{
+  State *state;
+  OID oid = OIDOf(o);
+
+  TRACE(rinvoke, 4, ("Unavailable invokes checking %d processes", ISetSize(allProcesses)));
+  ISetForEach(allProcesses, state) {
+    TRACE(unavailable, 9, ("Checking state %#x", state));
+    if (sameOID(state->nstoid, oid) || sameOID(state->nsoid, oid)) {
+      TRACE(rinvoke, 1, ("Unavailing invocation on %s a %.*s",
+			 OIDString(OIDOf(o)),
+			 CODEPTR(o->flags)->d.name->d.items,
+			 CODEPTR(o->flags)->d.name->d.data));
+      TRACE(process, 5, ("Resetting nsoid in state %#x", state));
+      state->nsoid = nooid;
+      state->nstoid = nooid;
+      if (!unavailable(state, o)) makeReady(state);
+      /*
+       * Because unavailable may remove the state from allProcesss
+       * we have to fudge with the index
+       */
+      if (allProcesses->table[ISetxx_index].key != (int)state) ISetxx_index--;
+    }
+  } ISetNext();
+}
+
+static void doUpcallHandlers(Object thenode, Object theinctm, char *name)
+{
+  Object args[4];
+  int fn, fail = 0;
+  ConcreteType nodect;
+
+  if (ISNIL(node)) return;
+  nodect = BuiltinInstCT(NODEI);
+
+  args[0] = thenode;
+  args[1] = (Object)CODEPTR(thenode->flags);
+  args[2] = theinctm;
+  args[3] = (Object)CODEPTR(theinctm->flags);
+  fn = findOpByName(nodect, name);
+  upcall(node, fn, &fail, 2, 0, (int *)args);
+}
+
+static void nukeNode(noderecord *nd)
+{
+  Object thenode, theinctm;
+  theinctm = OIDFetch(nd->inctm);
+  thenode = OIDFetch(nd->node);
+  nd->up = 0;
+  invokeHandleDown(nd);
+  moveHandleDown(nd);
+  locateHandleDown(nd);
+  doUpcallHandlers(thenode, theinctm, "nodedown");
+}
+
+noderecord *update_nodeinfo_fromOIDs(OID nodeOID, OID inctmOID, int up)
+{
+  noderecord **nd;
+  Object thenode, inctm;
+  ConcreteType ct;
+
+  TRACE(rinvoke, 8, ("Updating node info for %08x.%04x.%04x -> %s", nodeOID.ipaddress, nodeOID.port, nodeOID.epoch, up ? "up": "down"));
+  for(nd = &allnodes ; *nd ; nd = &((*nd)->p)) {
+    if (nodeOID.ipaddress == (*nd)->node.ipaddress &&
+	nodeOID.port == (*nd)->node.port &&
+	nodeOID.epoch == (*nd)->node.epoch) {
+      TRACE(rinvoke, 9, ("Already had one"));      
+      (*nd)->up = up;
+      if (!up) {
+	nukeNode(*nd);
+      } 
+      return *nd;
+    }
+  }
+
+  TRACE(rinvoke, 9, ("Making a new one"));      
+  *nd = (noderecord*) vmMalloc(sizeof(noderecord));
+  assert(*nd != NULL);
+  (*nd)->p = NULL; nodecount++;
+  (*nd)->up = up; 
+  (*nd)->srv.ipaddress =  htonl(nodeOID.ipaddress);
+  (*nd)->srv.port = nodeOID.port;
+  (*nd)->srv.epoch = nodeOID.epoch;
+
+  /* create the node object */
+  ct = BuiltinInstCT(NODEI); assert(ct);
+  (*nd)->node = nodeOID;
+
+  thenode = doObjectRequest((*nd)->srv, &(*nd)->node, ct);
+  assert(thenode && !ISNIL(thenode));
+
+  /* retrieve the IncarnationTime object */
+  ct = BuiltinInstCT(TIMEI); assert(ct);
+  (*nd)->inctm = inctmOID;
+  if (up) {
+    inctm = doObjectRequest((*nd)->srv, &(*nd)->inctm, ct);
+    if (ISNIL(inctm)) {
+      TRACE(rinvoke, 0, ("update_nodeinfo: failed to retrieve inctm"));
+      *nd = (*nd)->p; nodecount--; return NULL;
+    }
+  } else if (! ISNIL((inctm = OIDFetch((*nd)->inctm)))) {
+    /* We already have the object */
+  } else {
+    /* TODO:
+       We need to probably create a fake incarnation time object, because we
+       believe that we will never have stubs for immutable objects.
+     */
+    int stack[512];
+    ct = BuiltinInstCT(TIMEI); assert(ct);
+    stack[0] = 0;
+    stack[1] = (unsigned int) intct;
+    stack[2] = 0;
+    stack[3] = stack[1];
+    inctm = CreateObjectFromOutside(ct, (u32)stack);
+    OIDInsert(inctmOID, inctm);
+  }
+  doUpcallHandlers(thenode, inctm, up ? "nodeup" : "nodedown");
+  return *nd;
+}
+
+static noderecord *handleupdown(Node id, int up)
+{
+  OID nodeOID, inctmOID;
+  nodeOID.ipaddress = ntohl(id.ipaddress);
+  nodeOID.port = id.port;
+  nodeOID.epoch = id.epoch;
+  nodeOID.Seq = 1;
+
+  inctmOID = nodeOID;
+  inctmOID.Seq = 2;
+
+  TRACE(rinvoke, 8, ("Handling updown for %s -> %s", NodeString(id), up ? "up" : "down"));
+  return update_nodeinfo_fromOIDs(nodeOID, inctmOID, up);
+}
+
+void update_nodeinfo(Stream str, Node srv)
+{
+  OID nodeOID, inctmOID;
+  u32 up;
+  u32 which;
+
+  while (!AtEOF(str)) {
+    TRACE(rinvoke, 10, ("Looking at another reply"));
+    ReadInt(&which, str);
+    if (which == 0) {
+      ReadOID(&nodeOID, str);
+      ReadOID(&inctmOID, str);
+      ReadInt(&up, str);
+      TRACE(rinvoke, 11, ("nodeoid = %s", OIDString(nodeOID)));
+      TRACE(rinvoke, 11, ("inctmoid = %s", OIDString(inctmOID)));
+      (void)update_nodeinfo_fromOIDs(nodeOID, inctmOID, up);
+    } else if (which == 1) {
+      handleGaggleUpdate(NULL, srv, str);
+    } else {
+      assert(0);
+    }
+  }
+}
+
+static int readyForBusiness;
+
+void handleEchoReply(RemoteOpHeader *h, Node srv, Stream str)
+{
+  TRACE(rinvoke, 10, ("EchoReply: %d bytes", BufferLength(str)));
+  TRACE(rinvoke, 4, ("EchoReply received"));
+  update_nodeinfo(str, srv);
+  readyForBusiness = 1;
+}
+  
+void handleEchoRequest(RemoteOpHeader *header, Node srv, Stream str)
+{
+  RemoteOpHeader replyh;
+  Stream reply;
+
+  TRACE(rinvoke, 3, ("EchoRequest received"));
+  if (BufferLength(str) != 2 * filesizeofOID + 2 * sizeof(u32)) {
+    TRACE(rinvoke, 0, ("EchoRequest: invalid length"));
+  } else {
+    noderecord *n;
+    update_nodeinfo(str, srv);
+    replyh.kind = EchoReply;
+    replyh.ss = nooid;
+    replyh.sslocation = myid;
+    replyh.target = nooid;
+    replyh.targetct = nooid;
+    reply = StartMsg(&replyh);
+    
+    for (n = allnodes->p; n; n = n->p) {
+      TRACE(rinvoke, 6, ("EchoRequest: sending info on node %s - %s", 
+			 OIDString(n->node), n->up ? "up" : "down"));
+      WriteInt(0, reply);
+      WriteOID(&n->node, reply);
+      TRACE(rinvoke, 11, ("nodeoid = %s", OIDString(n->node)));
+      WriteOID(&n->inctm, reply);
+      TRACE(rinvoke, 11, ("inctmoid = %s", OIDString(n->inctm)));
+      WriteInt(n->up, reply);
+    }
+    sendGaggleNews(srv, reply);
+    sendMsg(srv, reply);
+    TRACE(rinvoke, 4, ("EchoReply sent"));
+  }
+}
+
+void handleObjectReply(RemoteOpHeader *h, Node srv, Stream str)
+{
+  Object o;
+  TRACE(rinvoke, 7, ("ObjectReply received for %s", OIDString(h->target)));
+  if (h->status == 0) {
+    TRACE(rinvoke, 0, ("ObjectReply: remote object not found"));
+  } else if (h->status == 1) {
+    TRACE(rinvoke, 9, ("ObjectReply: received real object"));
+    o = OIDFetch(h->target);
+    if (!ISNIL(o)) {
+      TRACE(rinvoke, 1, ("Got an object reply for an object I already have."));
+    } else {
+      o = ExtractObjects(str, srv);
+      assert(OIDFetch(h->target) == o);
+      CLEARBROKEN(o->flags);
+      objectArrived(h->target);
+    }
+  } else {
+    TRACE(rinvoke, 0, ("ObjectReply: didn't receive immutable object"));
+  }
+}
+
+Object
+doObjectRequest(Node srv, OID *oid, ConcreteType ct)
+{
+  Stream str;
+  Object o;
+
+  TRACE(rinvoke, 7,
+	("doObjectRequest: ct '%.*s' %s",
+	 ct->d.name->d.items, ct->d.name->d.data, OIDString(*oid)));
+  if (! ISNIL(o = OIDFetch(*oid))) {
+    TRACE(rinvoke, 8, ("doObjectRequest: found it locally"));
+    return o;
+  }
+  if (ISIMUT(ct->d.instanceFlags)) {
+    RemoteOpHeader h;
+    h.kind = ObjectRequest;
+    h.ss = nooid;
+    h.sslocation = myid;
+    h.target = *oid;
+    h.targetct = OIDOf(ct);
+    str = StartMsg(&h); assert(str);
+    TRACE(rinvoke, 8, ("doObjectRequest, sending to node %s",
+		       NodeString(srv)));
+    sendMsgTo(srv, str, h.target);
+    while (ISNIL(o = OIDFetch(*oid))) {
+      processMessages();
+    }
+  } else {
+    noderecord *nd;
+    TRACE(rinvoke, 9, ("doObjectRequest: creating proxy to object"));
+    for(nd=allnodes ; nd && ! SameNode(srv,nd->srv) ; nd=nd->p);
+    if (nd) {
+      TRACE(rinvoke, 9, ("proxy is on %s", NodeString(nd->srv)));
+    } else {
+      TRACE(rinvoke, 0, ("doObjectRequest: warning, no nd"));
+    }
+    o = createStub(ct, nd, *oid);
+  }
+  return o;
+}
+
+void handleObjectRequest(RemoteOpHeader *h, Node srv, Stream str)
+{
+  RemoteOpHeader replyh;
+  Stream reply;
+  Object o;
+  ConcreteType ct;
+
+  TRACE(rinvoke, 7, ("ObjectRequest received"));
+  if (BufferLength(str) != 0) {
+    TRACE(rinvoke, 0, ("ObjectRequest: invalid length"));
+  } else {
+    replyh.kind = ObjectReply;
+    replyh.option1 = 0;
+    TRACE(rinvoke, 8, ("ObjectRequest: for object %s", OIDString(h->target)));
+    if ((replyh.status = !ISNIL(o = OIDFetch(h->target)))) {
+      ct = CODEPTR(o->flags);
+      replyh.option1 = ISIMUT(ct->d.instanceFlags) ? 1 : 0;
+    }
+    replyh.ss = h->ss;
+    replyh.sslocation = h->sslocation;
+    replyh.target = h->target;
+    replyh.targetct = h->targetct;
+    reply = StartMsg(&replyh);
+    if (replyh.option1) {
+      TRACE(rinvoke, 8, ("ObjectRequest: sending immutable object"));
+      checkpointCTCallback = ctcallback;
+      checkpointCTIntermediateCallback = cticallback;
+      ctstr = reply;
+      Checkpoint(o, CODEPTR(o->flags), reply);
+      ctstr = 0;
+      memmove(WriteStream(reply, 4), "DONE", 4);
+    }
+    sendMsg(srv, reply);
+  }
+}
+
+#include "mqueue.h"
+extern MQueue incoming;
+
+void serveRequest(void)
+{
+  Node srv;
+  Stream str;
+  struct iovec iov;
+
+  
+  MQueueRemove(incoming, &srv, &iov.iov_len, (void **)&iov.iov_base);
+  str = CreateStream(FreeBufferStream, &iov); assert(str);
+  doRequest(srv, str);
+}
+
+void doRequest(Node srv, Stream str)
+{
+  RemoteOpHeader header;
+  void (*handler)(RemoteOpHeader *header, Node srv, Stream str);
+
+  if (ExtractHeader(&header, str) < 0) {
+    TRACE(rinvoke, 0, ("dstsrv: runt packet received"));
+    DestroyStream(str);
+    return;
+  }
+#ifdef USEDISTGC
+  TRACE(distgc, 10, ("Incoming msg from %s, type %s, distgcseq %d (%s), mine %d",
+		     NodeString(srv), typenames[header.kind], header.distgcseq >> 1,
+		     (header.distgcseq & 1) ? "active" : "passive", distGCSeq));
+  if ((header.distgcseq >> 1) != distGCSeq) {
+    int hisdistgcseq = header.distgcseq >> 1;
+    int hesindistgc  = header.distgcseq & 1;
+    TRACE(distgc, 3, ("Incoming distgc = %d (%s), mine = %d",
+		      hisdistgcseq, hesindistgc ? "active" : "passive",
+		      distGCSeq));
+    if (hisdistgcseq < distGCSeq) {
+      /* Ignore it */
+    } else if (hesindistgc) {
+      if (inDistGC()) {
+	restartDistGC(hisdistgcseq);
+      } else {
+	if (readyForBusiness) {
+	  TRACE(distgc, 1, ("Starting gc #%d", hisdistgcseq));
+	  distGCSeq = lastCompletedDistGCSeq = hisdistgcseq - 1;
+	  startDistGC();
+	}
+      }
+    } else {
+      /* He is passive */
+      if (inDistGC()) {
+	/* Shouldn't happen should it? */
+	TRACE(distgc, 0, ("He's passive %d, I'm active %d",
+			  hisdistgcseq, distGCSeq));
+	abort();
+      } else {
+	lastCompletedDistGCSeq = distGCSeq = hisdistgcseq;
+      }
+    }
+  }
+#endif
+  TRACE(rinvoke, 8, ("serveRequest: req by %s, msgtype=%d, len=%d",
+		     NodeString(srv), header.kind,
+		     BufferLength(str)));
+  TRACE(rinvoke, 9, ("reply to %s @@ %s",
+		     OIDString(header.ss), NodeString(header.sslocation)));
+  switch(header.kind) {
+  case EchoRequest:
+    handler = handleEchoRequest;
+    break;
+  case EchoReply:
+    handler = handleEchoReply;
+    break;
+  case ObjectRequest:
+    handler = handleObjectRequest;
+    break;
+  case ObjectReply:
+    handler = handleObjectReply;
+    break;
+  case InvokeRequest:
+    handler = handleInvokeRequest;
+    break;
+  case LocateRequest:
+    handler = handleLocateRequest;
+    break;
+  case LocateReply:
+    handler = handleLocateReply;
+    break;
+  case MoveRequest:
+    handler = handleMoveRequest;
+    break;
+  case MoveReply:
+    handler = handleMoveReply;
+    break;
+  case Move3rdPartyRequest:
+    handler = handleMove3rdPartyRequest;
+    break;
+  case InvokeForwardRequest:
+    handler = handleInvokeForwardRequest;
+    break;
+  case IsFixedRequest:
+    handler = handleIsFixedRequest;
+    break;
+  case IsFixedReply:
+    handler = handleIsFixedReply;
+    break;
+  case InvokeReply:
+    handler = handleInvokeReply;
+    break;
+  case GaggleUpdate:
+    handler = handleGaggleUpdate;
+    break;
+#ifdef USEDISTGC
+  case DistGCInfo:
+    handler = handleDistGCInfo;
+    break;
+  case DistGCDoneRequest:
+    handler = handleDistGCDoneRequest;
+    break;
+  case DistGCDoneReply:
+    handler = handleDistGCDoneReply;
+    break;
+  case DistGCDoneReport:
+    handler = handleDistGCDoneReport;
+    break;
+#endif
+  default:
+    TRACE(rinvoke, 0, ("dstsrv: unknown packet type: %d", header.kind));
+    DestroyStream(str);
+    return;
+  }
+  handler(&header, srv, str);
+  DestroyStream(str);
+}
+
+static int ping(Node srv)
+{
+  int res;
+  extern int findsocket(Node *t, int create);
+  doEchoRequest(thisnode, srv);
+  while (!readyForBusiness && findsocket(&srv, 0) > 0)
+    processMessages();
+  res = findsocket(&srv, 0) > 0 ? 0 : -1;
+  TRACE(rinvoke, 3, ("Ping %s", res < 0 ? "failed" : "succeeded"));
+  return res;
+}
+
+void moveDone(State *state, RemoteOpHeader *request, int fail)
+{
+  if (!RESDNT(state->firstThing)) {
+    RemoteOpHeader h;
+    TRACE(rinvoke, 4, ("Forwarding waking ss %s on %s", 
+		       OIDString(OIDOf((Object)state)),
+		       NodeString(getLocFromObj((Object)state))));
+    h.kind = MoveReply;
+    h.ss = OIDOf((Object)state);
+    h.sslocation = getLocFromObj((Object)state);
+    h.target = request->target;
+    h.targetct = request->targetct;
+    h.status = fail;
+    sendMsgTo(getLocFromObj((Object)state), StartMsg(&h), h.ss);
+  } else {
+    state->nstoid = nooid;
+    assert(ISetMember(allProcesses, (int)state));
+    makeReady(state);
+  }
+}
+
+void isFixedDone(RemoteOpHeader *h, State *state, int answer)
+{
+  if (!RESDNT(state->firstThing)) {
+    RemoteOpHeader replyh;
+    Stream reply;
+    TRACE(rinvoke, 4, ("Forwarding waking ss %s on %s", 
+		       OIDString(OIDOf((Object)state)),
+		       NodeString(getLocFromObj((Object)state))));
+    replyh.kind = IsFixedReply;
+    replyh.option1 = h->option1;
+    replyh.ss = OIDOf((Object)state);
+    replyh.sslocation = getLocFromObj((Object)state);
+    replyh.target = nooid;
+    replyh.targetct = nooid;
+    reply = StartMsg(&replyh);
+    WriteInt(answer, reply);
+    sendMsgTo(getLocFromObj((Object)state), reply, replyh.ss);
+  } else {
+    assert(ISetMember(allProcesses, (int)state));
+    if (RESDNT(state->op->flags)) {
+      if (!ISNIL(answer)) {
+#define sp state->sp
+	PUSH(int, answer);
+	PUSH(ConcreteType, BuiltinInstCT(BOOLEANI));
+      }
+      makeReady(state);
+#undef sp
+    } else {
+      returnToForeignObject(state, answer);
+    }
+  }
+}
+
+void handleGaggleUpdate(RemoteOpHeader *h, Node sender, Stream str)
+{
+  OID moid, ooid, ctoid;
+  Node location;
+  u32 opcode;
+  ConcreteType ct;
+
+  TRACE(rinvoke, 7, ("GaggleUpdate received"));
+  if (h != NULL) {
+    ReadInt(&opcode, str);
+    assert(opcode == 1 || opcode == 2);
+  } else {
+    opcode = 1;
+  }
+  ReadOID(&moid, str);
+  ReadOID(&ooid, str);
+  ReadOID(&ctoid, str);
+  ReadNode(&location, str);
+  if (opcode == 1) {
+    ct = (ConcreteType)doObjectRequest(sender, &ctoid, ctct);
+    if (ISNIL(OIDFetch(ooid))) {
+      noderecord *nd = getNodeRecordFromSrv(location);
+      if (!nd) nd = getNodeRecordFromSrv(sender);
+      (void)createStub(ct, nd, ooid);
+    }
+    add_gmember(moid, ooid);
+  } else if (opcode == 2) {
+    delete_gmember(moid, ooid);
+  } else {
+    assert(0);
+  }
+}
+
+#endif
+@
+
+
+1.14
+log
+@Clean up move records when move completes
+@
+text
+@d40 1
+d63 1
+a63 1
+  
+d190 1
+a190 1
+  char *colon, *plane, *comma;
+d197 1
+a197 3
+    *port = EMERALDFIRSTPORT;
+    plane = getenv("EMPLANE");
+    if (plane) *port += mstrtol(plane, 0, 10);
+d205 1
+a205 1
+      TRACE(rinvoke, 0, ("parseAddr: gethostbyname failed!"));
+d612 17
+d631 4
+a634 1
+  assert(!nd->up);
+d638 1
+d644 1
+a644 1
+  Object thenode;
+d654 3
+a656 1
+      if (!up) nukeNode(*nd);
+d664 2
+a665 1
+  (*nd)->up = up; (*nd)->p = NULL; nodecount++;
+d681 2
+a682 1
+    if (ISNIL(doObjectRequest((*nd)->srv, &(*nd)->inctm, ct))) {
+d686 1
+a686 1
+  } else if (! ISNIL(OIDFetch((*nd)->inctm))) {
+a693 1
+    Object o;
+d699 2
+a700 2
+    o = CreateObjectFromOutside(ct, (u32)stack);
+    OIDInsert(inctmOID, o);
+d702 1
+a702 1
+
+@
+
+
+1.13
+log
+@Detect and respond to more node failure conditions during locate and move
+@
+text
+@d1026 1
+@
+
+
+1.12
+log
+@Removed RCS strings in the header
+@
+text
+@d110 1
+d112 3
+d516 2
+a517 1
+      reply.status = 1;
+@
+
+
+1.11
+log
+@Reply to stranded messages when a location fails to find the object
+@
+text
+@d1 2
+a2 2
+/* remote.c - basic infrastructure for remote operations
+ * $Id: remote.c,v 1.10 1998/05/01 07:21:05 norm Exp $
+@
+
+
+1.10
+log
+@Implemented isfixed and unfix remotely
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.9 1998/04/30 20:46:11 norm Exp $
+d33 1
+a33 1
+int nodecount = 0;
+d40 23
+d89 2
+a90 2
+Object ctijunk[100];
+int nextctijunkptr = 0;
+a140 12
+void writeLocation(Object obj, Stream str)
+{
+  WriteNode(&(*(noderecord **)obj->d)->srv, str);
+}
+
+void writeNoLocation(Stream str)
+{
+  Node id = { 0 };
+  
+  WriteNode(&id, str);
+}
+
+a344 1
+    fflush(stdout);
+d490 42
+d550 1
+a550 1
+    fprintf(stderr, "Can't send the echo request message\n");
+d717 1
+a717 1
+int readyForBusiness;
+d886 2
+a887 2
+  TRACE(distgc, 10, ("Incoming msg from %s, type %d, distgcseq %d (%s), mine %d",
+		     NodeString(srv), header.kind, header.distgcseq >> 1,
+@
+
+
+1.9
+log
+@Improved distgc tracing and fixed over-aggressive nature
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.8 1998/04/20 13:19:44 norm Exp norm $
+d907 6
+d954 1
+a954 1
+void moveDone(State *state, RemoteOpHeader *request)
+d966 1
+d974 1
+a974 1
+void isFixedDone(State *state, int answer)
+d977 1
+a977 1
+    RemoteOpHeader h;
+d982 7
+a988 6
+    h.kind = IsFixedReply;
+    h.ss = OIDOf((Object)state);
+    h.sslocation = getLocFromObj((Object)state);
+    h.target = nooid;
+    h.targetct = nooid;
+    reply = StartMsg(&h);
+d990 1
+a990 1
+    sendMsgTo(getLocFromObj((Object)state), reply, h.ss);
+d994 1
+d996 3
+a998 2
+      PUSH(int, answer);
+      PUSH(ConcreteType, BuiltinInstCT(BOOLEANI));
+@
+
+
+1.8
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.7 1998/04/08 21:45:27 norm Exp norm $
+d834 3
+d840 1
+a840 1
+    TRACE(distgc, 1, ("Incoming distgc = %d (%s), mine = %d",
+@
+
+
+1.7
+log
+@More reliable process management, got xforms working
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.6 1998/04/04 20:08:38 norm Exp norm $
+d108 8
+a115 1
+  if (!RESDNT(obj->flags)) updateNodeRecord(obj, getNodeRecordFromSrv(srv));
+d503 1
+a503 1
+void unavailableRemoteInvoke(State *state)
+d505 1
+d507 1
+d510 18
+a527 8
+  target = (Object)IIScLookup(outstandingInvokes, (int)state);
+  if (!IIScIsNIL(target)) {
+    IIScDelete(outstandingInvokes, (int)state);
+    TRACE(rinvoke, 5, ("Unavailable in object %x a %.*s", target,
+		       CODEPTR(target->flags)->d.name->d.items,
+		       CODEPTR(target->flags)->d.name->d.data));
+    if (!unavailable(state, target)) makeReady(state);
+  }
+d533 1
+a533 1
+  Object target;
+d537 15
+a551 13
+    target = (Object)IIScLookup(outstandingInvokes, (int)state);
+    if (!IIScIsNIL(target)) {
+      TRACE(rinvoke, 5, ("Process in object %x a %.*s", target,
+			 CODEPTR(target->flags)->d.name->d.items,
+			 CODEPTR(target->flags)->d.name->d.data));
+      if (target == o) {
+	TRACE(rinvoke, 1, ("Unavailing invocation on %s a %.*s",
+			   OIDString(OIDOf(target)),
+			   CODEPTR(target->flags)->d.name->d.items,
+			   CODEPTR(target->flags)->d.name->d.data));
+	IIScDelete(outstandingInvokes, (int)state);
+	if (!unavailable(state, o)) makeReady(state);
+      }
+a813 1
+  RemoteOpHeader header;
+a814 1
+  void (*handler)(RemoteOpHeader *header, Node srv, Stream str);
+d820 7
+@
+
+
+1.6
+log
+@Small fixes to locate and move
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.5 1998/03/24 16:25:58 norm Exp norm $
+d39 1
+d453 1
+a453 1
+  findLocation(obj, CODEPTR(obj), 0, str);
+@
+
+
+1.5
+log
+@'.'
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.2 1998/02/06 15:52:13 norm Exp norm $
+d527 1
+a527 1
+	
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d23 2
+d27 2
+a39 2
+int nRequestServersWaiting = 0;
+
+a421 1
+  /* TODO: Reset stream to the beginning if necessary */
+d442 31
+d490 17
+a506 2
+    TRACE(rinvoke, 3, ("Can't send echo request"));
+    abort();
+a513 1
+  extern IISc outstandingInvokes;
+d528 1
+a528 7
+	if (!unavailable(state, o)) {
+	  makeReady(state);
+	} else {
+	  if ((state = processDone(state))) {
+	    makeReady(state);
+	  }
+	}
+a535 3
+  OID oid;
+  Object o;
+
+d537 3
+a539 22
+  OIScForEach(OIDToObjectTable, oid, o) {
+    if (wasGCMalloced(o) && !RESDNT(o->flags)) {
+      TRACE(rinvoke, 10, ("Looking at a non resident obj %s at %s",
+			  OIDString(oid), NodeString(getLocFromObj(o))));
+      if (SameNode(getLocFromObj(o), nd->srv)) {
+	/*
+	 * My last location for this object is on a now down machine.  We
+	 * need to ensure that it hasn't gone elsewhere, and if it hasn't
+	 * then make it unavailable.  We also need to remove it from our
+	 * remotegrey list if we are in a distgc.
+	 */
+	ConcreteType ct = CODEPTR(o->flags);
+	TRACE(rinvoke, 5, ("Object %s, a %.*s may be lost", OIDString(oid),
+			   ct ? ct->d.name->d.items : 5,
+			   ct ? (char *)ct->d.name->d.data : "no ct"));
+	aggressivelyLocate(o);
+      }
+    }
+  } OIScNext();
+  /* TODO: We also need to abort any transactions pending on that node */
+  /* I don't know how to find them */
+  locateHandleUpDown(nd);
+d732 1
+a732 3
+    if (sendMsg(srv, str) < 0) {
+      TRACE(rinvoke, 0, ("doObjectRequest: send request failed"));
+    }
+d930 1
+a930 1
+    sendMsg(getLocFromObj((Object)state), StartMsg(&h));
+d933 1
+a933 5
+    if (RESDNT(state->op->flags)) {
+      makeReady(state);
+    } else {
+      returnToForeignObject(state);
+    }
+d937 1
+a937 1
+void isfixedDone(State *state, int answer)
+d945 1
+a945 1
+    h.kind = MoveReply;
+d952 1
+a952 1
+    sendMsg(getLocFromObj((Object)state), reply);
+d962 1
+a962 1
+      returnToForeignObject(state); /* TODO: return the value */
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d4 4
+a7 12
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdlib.h>
+#ifndef WIN32
+#include <sys/time.h>
+#endif /* not WIN32 */
+#include <sys/types.h>
+#ifndef WIN32
+#include <netinet/in.h>
+#include <netdb.h>
+#endif
+#pragma pointer_size short
+d17 1
+a17 1
+#include "threads.h"
+d28 1
+a28 1
+vmThreadId myid, limbo;
+a35 1
+void beRequestServer(void *);
+d38 23
+a60 2
+#ifdef USETHREADS
+static noderecord *handleupdown(vmThreadId id, int up);
+d90 1
+a90 17
+noderecord *getNodeRecordFromObj(Object obj)
+{
+  return RESDNT(obj->flags) ? thisnode : *(noderecord **)obj->d;
+}
+
+vmThreadId getMyLoc(void)
+{
+  return thisnode->srv;
+}
+
+vmThreadId getLocFromObj(Object obj)
+{
+  noderecord *nd = getNodeRecordFromObj(obj);
+  return nd ? nd->srv : limbo;
+}
+
+noderecord *getNodeRecordFromSrv(vmThreadId srv)
+d94 1
+a94 1
+  for (nd = allnodes; nd && !vmSameThread(srv,nd->srv); nd = nd->p) ;
+d103 1
+a103 1
+void updateLocation(Object obj, vmThreadId srv)
+d110 1
+a110 1
+  WriteThreadId(&(*(noderecord **)obj->d)->srv, str);
+d115 1
+a115 1
+  vmThreadId id = { 0 };
+d117 1
+a117 1
+  WriteThreadId(&id, str);
+d126 1
+a126 1
+Object getNodeFromSrv(vmThreadId srv)
+d161 1
+a161 1
+#ifdef USETHREADS
+a165 3
+#ifndef WIN32
+  extern unsigned long inet_addr(char *);
+#endif
+d193 1
+a193 26
+static void ping(vmThreadId);
+
+static OISc tw;
+int noThreadWaitingForObject(OID oid)
+{
+  semaphore *wait;
+  if (tw == NULL) tw = OIScCreate();
+  wait = (semaphore *)OIScLookup(tw, oid);
+  if (OIScIsNIL(wait)) {
+    wait = vmMalloc(sizeof(semaphore));
+    MTSemInit(wait, 0);
+    OIScInsert(tw, oid, (int)wait);
+    return 1;
+  }
+  return 0;
+}
+
+semaphore *threadWaitingForObject(OID oid)
+{
+  semaphore *wait;
+  assert(tw);
+  TRACE(rinvoke, 5, ("Thread waiting for object %s", OIDString(oid)));
+  wait = (semaphore *)OIScLookup(tw, oid);
+  assert(!OIScIsNIL(wait));
+  return wait;
+}
+a196 8
+  semaphore *wait;
+  assert(tw);
+  TRACE(rinvoke, 5, ("Object %s arrived, waking up waiters", OIDString(oid)));
+  wait = (semaphore *)OIScLookup(tw, oid);
+  assert(!OIScIsNIL(wait));
+  MTSemVAll(wait);
+  MTSemFree(wait);
+  vmFree(wait);
+d206 1
+a206 1
+#ifdef USETHREADS
+d208 1
+a208 1
+  vmThreadId rootnodeid;
+a210 1
+  myid = vmMyThreadId();
+d231 3
+a233 3
+  Orootdirg.IPAddress = 0x10101010;
+  Orootdirg.EmeraldInstance = 0x2020;
+  Orootdirg.Epoch = 0x3030;
+d238 1
+a238 1
+#ifdef USETHREADS
+d259 1
+a259 1
+#ifdef USETHREADS
+d261 1
+a261 3
+    nRequestServersWaiting++;
+    vmCreateThread(beRequestServer, 0);
+    MTRegisterNotify((void (*)(vmThreadId, int))handleupdown);
+d277 1
+a277 1
+	rootnodeid.incarnation = 0;
+d281 2
+a282 2
+	  TRACE(rinvoke, 1, ("Trying %s", ThreadIdString(rootnodeid)));
+	  if (MTProd(&rootnodeid) >= 0) {
+d284 1
+a284 2
+	    ping(rootnodeid);
+	    goto done;
+d302 2
+a303 2
+    rootnodeid.incarnation = 0;
+    if (MTProd(&rootnodeid) < 0) {
+d308 7
+a314 1
+    ping(rootnodeid);
+d323 1
+a323 1
+    printf("Emerald listening on port %d %x, incarnation %d %x\n", myid.port, myid.port, myid.incarnation, myid.incarnation);
+d332 1
+a332 1
+  stack[2] = MyNode.EmeraldInstance << 16 | MyNode.Epoch;
+a339 1
+#ifdef USETHREADS
+d341 1
+a341 1
+ * Read a threadId from theStream into srv
+d343 1
+a343 1
+void ReadThreadId(vmThreadId *srv, Stream theStream)
+d347 2
+a348 2
+  theBuffer = ReadStream(theStream, filesizeofThreadID);
+  ExtractThreadId(srv, theBuffer);
+d352 1
+a352 1
+void InsertThreadId(vmThreadId *t, Bits8 *data)
+d357 1
+a357 1
+  InsertBits16(&t->incarnation, data + 6);
+d361 1
+a361 1
+ * Read a threadID from theStream into srv
+d363 1
+a363 1
+void WriteThreadId(vmThreadId *srv, Stream theStream)
+d367 2
+a368 2
+  theBuffer = WriteStream(theStream, filesizeofThreadID);
+  InsertThreadId(srv, theBuffer);
+d370 1
+a370 1
+
+d383 1
+a383 1
+  ExtractThreadId(&h->sslocation, (Bits8 *)&sh->sslocation);
+a394 17
+void SNotUseful(void)
+{
+  TRACE(rinvoke, 12, ("%#x: SNotUseful n = %d", MTMe(), nRequestServersWaiting));
+  if (nRequestServersWaiting <= 0) {
+    nRequestServersWaiting++;
+    TRACE(rinvoke, 12, ("%#x: SNotUseful creating server", MTMe()));
+    vmCreateThread(beRequestServer, 0);
+  }
+  LoseExclusive();
+}
+
+void SUseful(void)
+{
+  TRACE(rinvoke, 12, ("%#x: SUseful n = %d", MTMe(), nRequestServersWaiting));
+  GainExclusive();
+}
+
+d409 1
+a409 1
+  InsertThreadId(&h->sslocation, (Bits8 *)&sh->sslocation);
+d415 1
+a415 1
+int forwardMsg(vmThreadId srv, RemoteOpHeader *h, Stream str)
+d424 1
+a424 3
+  SNotUseful();
+  rval = vmThreadSend(srv, oiov.iov_base, oiov.iov_len);
+  SUseful();
+d428 1
+a428 1
+int sendMsg(vmThreadId srv, Stream str)
+d435 1
+a435 3
+  SNotUseful();
+  rval = vmThreadSend(srv, oiov.iov_base, oiov.iov_len);
+  SUseful();
+d441 1
+a441 1
+void doEchoRequest(struct noderecord *thisnode, vmThreadId srv)
+d447 1
+a447 1
+  h.sslocation = vmMyThreadId();
+d455 1
+a455 1
+  TRACE(rinvoke, 3, ("EchoRequest to %s", ThreadIdString(srv)));
+d503 2
+a504 2
+			  OIDString(oid), ThreadIdString(getLocFromObj(o))));
+      if (vmSameThread(getLocFromObj(o), nd->srv)) {
+d527 1
+a527 1
+
+d530 1
+a530 1
+  TRACE(rinvoke, 8, ("Updating node info for %08x.%04x.%04x -> %s", nodeOID.IPAddress, nodeOID.EmeraldInstance, nodeOID.Epoch, up ? "up": "down"));
+d532 3
+a534 3
+    if (nodeOID.IPAddress == (*nd)->node.IPAddress &&
+	nodeOID.EmeraldInstance == (*nd)->node.EmeraldInstance &&
+	nodeOID.Epoch == (*nd)->node.Epoch) {
+d546 3
+a548 2
+  vmGetServerThread(&(*nd)->srv, htonl(nodeOID.IPAddress), 
+		    nodeOID.EmeraldInstance, nodeOID.Epoch);
+d553 3
+a555 4
+  if (ISNIL(doObjectRequest((*nd)->srv, &(*nd)->node, ct))) {
+    TRACE(rinvoke, 0, ("update_nodeinfo: failed to retrieve node"));
+    *nd = (*nd)->p; nodecount--; return NULL;
+  }
+d582 1
+d586 1
+a586 1
+static noderecord *handleupdown(vmThreadId id, int up)
+d589 3
+a591 3
+  nodeOID.IPAddress = ntohl(id.ipaddress);
+  nodeOID.EmeraldInstance = id.port;
+  nodeOID.Epoch = id.incarnation;
+d593 1
+a593 1
+  
+d596 2
+a597 1
+  TRACE(rinvoke, 8, ("Handling updown for %s -> %s", ThreadIdString(id), up ? "up" : "down"));
+d601 1
+a601 1
+void update_nodeinfo(Stream str, vmThreadId srv)
+d614 2
+a624 1
+static semaphore waitingForEchoReply;
+d627 1
+a627 1
+void handleEchoReply(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d632 1
+a632 1
+  MTSemV(&waitingForEchoReply);
+d635 1
+a635 1
+void handleEchoRequest(RemoteOpHeader *header, vmThreadId srv, Stream str)
+d641 1
+a641 1
+  if (BufferLength(str) != 2*filesizeofOID + 2 * sizeof(u32)) {
+d648 1
+a648 1
+    replyh.sslocation = vmMyThreadId();
+d658 1
+d660 1
+d669 1
+a669 1
+void handleObjectReply(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d672 1
+a672 1
+  TRACE(rinvoke, 7, ("ObjectReply received"));
+d677 9
+a685 3
+    o = ExtractObjects(str, srv);
+    assert(OIDFetch(h->target) == o);
+    CLEARBROKEN(o->flags);
+a688 1
+  objectArrived(h->target);
+d692 1
+a692 1
+doObjectRequest(vmThreadId srv, OID *oid, ConcreteType ct)
+d705 14
+a718 14
+    semaphore *stopme;
+    if (noThreadWaitingForObject(*oid)) { 
+      RemoteOpHeader h;
+      h.kind = ObjectRequest;
+      h.ss = nooid;
+      h.sslocation = vmMyThreadId();
+      h.target = *oid;
+      h.targetct = OIDOf(ct);
+      str = StartMsg(&h); assert(str);
+      TRACE(rinvoke, 8, ("doObjectRequest, sending to node %s",
+			 ThreadIdString(srv)));
+      if (sendMsg(srv, str) < 0) {
+	TRACE(rinvoke, 0, ("doObjectRequest: send request failed"));
+      }
+a719 5
+    stopme = threadWaitingForObject(*oid);
+    SNotUseful();
+    MTSemP(stopme);
+    SUseful();
+    o = OIDFetch(*oid);
+d723 1
+a723 1
+    for(nd=allnodes ; nd && ! vmSameThread(srv,nd->srv) ; nd=nd->p);
+d725 1
+a725 1
+      TRACE(rinvoke, 9, ("proxy is on %s", ThreadIdString(nd->srv)));
+d734 1
+a734 2
+
+void handleObjectRequest(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d770 2
+d775 1
+a775 1
+  vmThreadId srv;
+d778 1
+a778 2
+  void (*handler)(RemoteOpHeader *header, vmThreadId srv, Stream str);
+  int rval;
+d781 2
+a782 11
+  SNotUseful();
+  rval = vmThreadReceive(&srv, (void **)&iov.iov_base, &iov.iov_len);
+  SUseful();
+  if (rval < 0) {
+    TRACE(rinvoke, 10, ("serveRequest: receive failed: rval=%d", rval));
+    return;
+  }
+  TRACE(rinvoke, 10,
+	("receive ok: rval=%d, rlen=%d", rval, iov.iov_len));
+  GainExclusive();
+
+a787 1
+    LoseExclusive();
+d823 1
+a823 1
+		     ThreadIdString(srv), header.kind,
+d826 1
+a826 1
+		     OIDString(header.ss), ThreadIdString(header.sslocation)));
+a883 1
+    LoseExclusive();
+a887 1
+  LoseExclusive();
+d890 1
+a890 1
+void beRequestServer(void *arg)
+d892 2
+a893 11
+  nRequestServersWaiting--;
+  while (nRequestServersWaiting <= 1) {
+    serveRequest();
+  }
+  TRACE(rinvoke, 9, ("%#x: Other server around, dying", MTMe()));
+}
+
+static void ping(vmThreadId srv)
+{
+  /* build the message for the remote host */
+  MTSemInit(&waitingForEchoReply, 0);
+d895 5
+a899 6
+  SNotUseful();
+  MTSemP(&waitingForEchoReply);
+  MTSemFree(&waitingForEchoReply);
+  readyForBusiness = 1;
+  SUseful();
+  TRACE(rinvoke, 3, ("Ping done"));  
+d908 1
+a908 1
+		       ThreadIdString(getLocFromObj((Object)state))));
+d932 1
+a932 1
+		       ThreadIdString(getLocFromObj((Object)state))));
+d955 1
+a955 1
+void handleGaggleUpdate(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d958 2
+a960 2
+  vmThreadId location;
+  u32 junk;
+d964 2
+a965 2
+    ReadInt(&junk, str);
+    assert(junk == 1 || junk == 2);
+d967 1
+a967 1
+    junk = 1;
+d972 3
+a974 4
+  ReadThreadId(&location, str);
+  if (junk == 1) {
+    ct = (ConcreteType)doObjectRequest(srv, &ctoid, ctct);
+    TRACE(rinvoke, 8, ("handleGaggleUpdate: back from doObjectRequest"));
+d977 1
+a977 1
+      if (!nd) nd = getNodeRecordFromSrv(srv);
+d981 1
+a981 1
+  } else if (junk == 2) {
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d2 1
+a2 1
+ * $Id: remote.c,v 1.1 1997/01/21 23:59:53 norm Exp $
+d4 1
+a4 1
+
+d6 2
+a7 1
+#include <ctype.h>
+d9 1
+d11 1
+a12 1
+#ifndef DOS
+d30 3
+d34 1
+d137 11
+d156 1
+d169 4
+a172 1
+  struct hostent *h;
+d185 11
+a195 1
+  h = gethostbyname(str);
+a197 6
+  if (h == NULL) {
+    TRACE(rinvoke, 0, ("parseAddr: gethostbyname failed!"));
+    return;
+  } else { 
+    memcpy(addr, h->h_addr, sizeof(*addr));
+  }
+d235 1
+a245 1
+  int oldinh;
+d278 1
+a278 2
+  oldinh = inhibit_gc;
+  inhibit_gc = 1;
+d288 1
+a288 1
+  if (gettimeofday(&tm, NULL) != 0) {
+d290 1
+a290 1
+    time(&tm.tv_sec); tm.tv_usec = 0;
+a306 2
+#endif
+#ifdef USETHREADS
+d336 1
+a336 1
+  done:
+d342 1
+a342 1
+    printf("Root directory should be on %s\n", gRootNode);
+d347 4
+a350 1
+    if (MTProd(&rootnodeid) < 0) exit(1);
+d362 1
+d375 1
+a375 1
+  inhibit_gc = oldinh;
+a378 8
+void ExtractThreadId(vmThreadId *t, Bits8 *data)
+{
+  /* No ntoh desired here */
+  t->ipaddress = *(Bits32 *) data;
+  ExtractBits16(&t->port, data + 4);
+  ExtractBits16(&t->incarnation, data + 6);
+}
+
+d416 3
+a418 2
+  /* copy the first 4 bytes */
+  *(int *)h = *(int *)sh;
+d420 1
+d425 6
+d442 1
+d448 1
+d457 5
+a461 2
+  /* copy the first 4 bytes */
+  *(int *)sh = *(int *)h;
+d463 1
+d529 1
+a529 1
+  TRACE(rinvoke, 5, ("There are %d processes", ISetSize(allProcesses)));
+d537 5
+d554 1
+a554 1
+void nukeNode(noderecord *nd)
+d561 3
+a563 2
+    if (!RESDNT(o->flags)) {
+      TRACE(rinvoke, 10, ("Looking at a non resident obj %s at %s", OIDString(oid), ThreadIdString(getLocFromObj(o))));
+d565 6
+a570 1
+	/* This object is on a now down machine */
+d572 4
+a575 4
+	TRACE(rinvoke, 5, ("Object %s, a %.*s is now lost", OIDString(oid),
+			   ct ? ct->d.name->d.items : 5, ct ? (char *)ct->d.name->d.data : "no ct"));
+	checkForUnavailableInvokes(o);
+	updateNodeRecord(o, limbonode);
+d581 1
+d682 1
+d836 48
+a883 5
+  while (1) {
+    rval = vmThreadReceive(&srv, (void **)&iov.iov_base, &iov.iov_len);
+    if (rval < 0) {
+      TRACE(rinvoke, 10, ("serveRequest: receive failed: rval=%d", rval));
+      return;
+d885 63
+a947 61
+    TRACE(rinvoke, 10,
+	  ("receive ok: rval=%d, rlen=%d", rval, iov.iov_len));
+    str = CreateStream(FreeBufferStream, &iov); assert(str);
+
+
+    if (ExtractHeader(&header, str) < 0) {
+      TRACE(rinvoke, 0, ("dstsrv: runt packet received"));
+      DestroyStream(str);
+      continue;
+    }
+    TRACE(rinvoke, 8, ("serveRequest: req by %s, msgtype=%d, len=%d",
+			ThreadIdString(srv), header.kind,
+			BufferLength(str)));
+    TRACE(rinvoke, 9, ("reply to %s @@ %s",
+		       OIDString(header.ss), ThreadIdString(header.sslocation)));
+    switch(header.kind) {
+    case EchoRequest:
+      handler = handleEchoRequest;
+      break;
+    case EchoReply:
+      handler = handleEchoReply;
+      break;
+    case ObjectRequest:
+      handler = handleObjectRequest;
+      break;
+    case ObjectReply:
+      handler = handleObjectReply;
+      break;
+    case InvokeRequest:
+      handler = handleInvokeRequest;
+      break;
+    case LocateRequest:
+      handler = handleLocateRequest;
+      break;
+    case LocateReply:
+      handler = handleLocateReply;
+      break;
+    case MoveRequest:
+      handler = handleMoveRequest;
+      break;
+    case MoveReply:
+      handler = handleMoveReply;
+      break;
+    case Move3rdPartyRequest:
+      handler = handleMove3rdPartyRequest;
+      break;
+    case InvokeForwardRequest:
+      handler = handleInvokeForwardRequest;
+      break;
+    case InvokeReply:
+      handler = handleInvokeReply;
+      break;
+    case GaggleUpdate:
+      handler = handleGaggleUpdate;
+      break;
+    default:
+      TRACE(rinvoke, 0, ("dstsrv: unknown packet type: %d", header.kind));
+      DestroyStream(str);
+      continue;
+    }
+    handler(&header, srv, str);
+d949 2
+a950 1
+    break;
+d952 3
+d960 1
+a960 1
+  while (nRequestServersWaiting <= 0) {
+d969 1
+d973 2
+a1064 1
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+ * $Id: move.c,v 1.4 1996/08/22 12:39:31 norm Exp norm $
+d27 1
+d29 2
+a30 1
+noderecord *allnodes = NULL, *thisnode = NULL;
+d33 1
+d84 2
+a85 1
+  return getNodeRecordFromObj(obj)->srv;
+d92 1
+a92 2
+  for (nd = allnodes; nd && !vmSameThreadHost(srv,nd->srv); nd = nd->p) ;
+  assert(nd);
+d96 5
+d103 1
+a103 1
+  if (!RESDNT(obj->flags)) *(noderecord **)obj->d = getNodeRecordFromSrv(srv);
+d121 1
+a121 1
+  return OIDFetch(nd->node);
+d127 1
+a127 1
+  return OIDFetch(nd->node);
+d150 1
+a150 1
+  char *colon, *plane;
+d153 2
+d166 1
+d217 2
+a218 2
+  OID Orootdir;
+  ConcreteType ct, ctd;
+a222 1
+  vmThreadId myid = vmMyThreadId();
+d226 1
+d231 8
+d246 7
+a252 4
+  assert(!allnodes);
+  allnodes = thisnode;
+  NewOID(&Orootdir);
+  ctd = BuiltinInstCT(DIRECTORYI); assert(ctd);
+d282 1
+a282 3
+  if (!gRootNode) {
+
+  } else if (!strcmp(gRootNode, "here")) {
+a283 4
+    /* We need to create a root directory */
+    rootdir = CreateObjectFromOutside(ctd, (u32)stack);
+    assert(Orootdir.Seq == 3);
+    OIDInsert(Orootdir, rootdir);
+d285 31
+a316 1
+    noderecord *nd;
+d319 1
+a319 2
+    OID rdoid;
+    
+a326 4
+    rdoid.IPAddress = ntohl(rootnodeid.ipaddress);
+    rdoid.EmeraldInstance = port;
+    rdoid.Epoch = rootnodeid.incarnation;
+    rdoid.Seq = 3;
+a327 2
+    nd = getNodeRecordFromSrv(rootnodeid);
+    rootdir = createStub(ctd, nd, rdoid);
+d329 6
+a334 1
+  myid = MTThreadID(0);
+d336 1
+a336 1
+    printf("Emerald listening on port %d, incarnation %d\n", myid.port, myid.incarnation);
+d342 2
+a343 2
+  stack[0] = (int)rootdir;
+  stack[1] = (int)(ISNIL(rootdir) ? (ConcreteType)JNIL : CODEPTR(rootdir->flags));
+a450 1
+  DestroyStream(str);
+d479 1
+d491 49
+d552 3
+a554 1
+      (*nd)->up = up; return *nd;
+d615 1
+a615 1
+void update_nodeinfo(Stream str)
+d619 1
+d623 11
+a633 4
+    ReadOID(&nodeOID, str);
+    ReadOID(&inctmOID, str);
+    ReadInt(&up, str);
+    (void)update_nodeinfo_fromOIDs(nodeOID, inctmOID, up);
+d642 2
+a643 6
+  if (BufferLength(str) % (2 * filesizeofOID + sizeof(u32)) != 0) {
+    TRACE(rinvoke, 0, ("EchoReply: invalid length"));
+  } else {
+    TRACE(rinvoke, 4, ("EchoReply received"));
+    update_nodeinfo(str);
+  }
+d653 1
+a653 1
+  if (BufferLength(str) != 2*filesizeofOID + sizeof(u32)) {
+d657 1
+a657 1
+    update_nodeinfo(str);
+d665 1
+a665 1
+    for (n = allnodes; n; n = n->p) {
+d668 1
+d673 1
+a676 1
+  sendGaggleNews(srv);
+d733 1
+a733 1
+    for(nd=allnodes ; nd && ! vmSameThreadHost(srv,nd->srv) ; nd=nd->p);
+d939 2
+d943 6
+d952 14
+a965 4
+  ct = (ConcreteType)doObjectRequest(srv, &ctoid, ctct);
+  TRACE(rinvoke, 8, ("handleGaggleUpdate: back from doObjectRequest"));
+  if (ISNIL(OIDFetch(ooid))) {
+    (void)createStub(ct, getNodeRecordFromSrv(srv), ooid);
+a966 1
+  add_gmember(moid, ooid);
+@

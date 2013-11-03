@@ -1,0 +1,296 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3
+	carlton_start:1.3
+	immel_start:1.2;
+locks; strict;
+
+
+1.3
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.54.53;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.54.52;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.3
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@const objectflags <- class objectflags
+  const x <- BitChunk.create[4]
+
+  initially
+    x[0,32] <- 0
+  end initially
+
+  export operation setIsImmutable [a : Boolean]
+    x[0, 1] <- a.ord
+  end setIsImmutable
+  export function getIsImmutable -> [r : Boolean]
+    r <- x[0, 1] == 1
+  end getIsImmutable
+
+  export operation setIsManifest [a : Boolean]
+    x[1, 1] <- a.ord
+  end setIsManifest
+  export function getIsManifest -> [r : Boolean]
+    r <- x[1, 1] == 1
+  end getIsManifest
+
+  export operation setIsNotManifest [a : Boolean]
+    x[2, 1] <- a.ord
+  end setIsNotManifest
+  export function getIsNotManifest -> [r : Boolean]
+    r <- x[2, 1] == 1
+  end getIsNotManifest
+
+  export operation setCannotBeConformedTo [a : Boolean]
+    x[3, 1] <- a.ord
+  end setCannotBeConformedTo
+  export function getCannotBeConformedTo -> [r : Boolean]
+    r <- x[3, 1] == 1
+  end getCannotBeConformedTo
+  
+  export operation setIsVector [a : Boolean]
+    x[4, 1] <- a.ord
+  end setIsVector
+  export function getIsVector -> [r : Boolean]
+    r <- x[4, 1] == 1
+  end getIsVector
+
+  export operation setIsTypeVariable [a : Boolean]
+    x[5, 1] <- a.ord
+  end setIsTypeVariable
+  export function getIsTypeVariable -> [r : Boolean]
+    r <- x[5, 1] == 1
+  end getIsTypeVariable
+
+  export operation setResultsDependOnlyOnArgs [a : Boolean]
+    x[6, 1] <- a.ord
+  end setResultsDependOnlyOnArgs
+  export function getResultsDependOnlyOnArgs -> [r : Boolean]
+    r <- x[6, 1] == 1
+  end getResultsDependOnlyOnArgs
+
+  export operation setInExecutableConstruct [a : Boolean]
+    x[7, 1] <- a.ord
+  end setInExecutableConstruct
+  export function getInExecutableConstruct -> [r : Boolean]
+    r <- x[7, 1] == 1
+  end getInExecutableConstruct
+
+  export operation setDependsOnTypeVariable [a : Boolean]
+    x[8, 1] <- a.ord
+  end setDependsOnTypeVariable
+  export function getDependsOnTypeVariable -> [r : Boolean]
+    r <- x[8, 1] == 1
+  end getDependsOnTypeVariable
+
+  export operation setTypesAreAssigned [a : Boolean]
+    x[9, 1] <- a.ord
+  end setTypesAreAssigned
+  export function getTypesAreAssigned -> [r : Boolean]
+    r <- x[9, 1] == 1
+  end getTypesAreAssigned
+
+  export operation setTypesHaveBeenChecked [a : Boolean]
+    x[10, 1] <- a.ord
+  end setTypesHaveBeenChecked
+  export function getTypesHaveBeenChecked -> [r : Boolean]
+    r <- x[10, 1] == 1
+  end getTypesHaveBeenChecked
+
+  export operation setDoesNotDuplicateSelf [a : Boolean]
+    x[11, 1] <- a.ord
+  end setDoesNotDuplicateSelf
+  export function getDoesNotDuplicateSelf -> [r : Boolean]
+    r <- x[11, 1] == 1
+  end getDoesNotDuplicateSelf
+
+  export operation setDoesNotMoveArguments [a : Boolean]
+    x[12, 1] <- a.ord
+  end setDoesNotMoveArguments
+  export function getDoesNotMoveArguments -> [r : Boolean]
+    r <- x[12, 1] == 1
+  end getDoesNotMoveArguments
+
+  export operation setDoLocalCreate [a : Boolean]
+    x[13, 1] <- a.ord
+  end setDoLocalCreate
+  export function getDoLocalCreate -> [r : Boolean]
+    r <- x[13, 1] == 1
+  end getDoLocalCreate
+
+  export operation setTypeDependsOnTypeVariable [a : Boolean]
+    x[14, 1] <- a.ord
+  end setTypeDependsOnTypeVariable
+  export function getTypeDependsOnTypeVariable -> [r : Boolean]
+    r <- x[14, 1] == 1
+  end getTypeDependsOnTypeVariable
+
+  export operation setDoesNotMoveSelf [a : Boolean]
+    x[15, 1] <- a.ord
+  end setDoesNotMoveSelf
+  export function getDoesNotMoveSelf -> [r : Boolean]
+    r <- x[15, 1] == 1
+  end getDoesNotMoveSelf
+
+  export operation setAlreadyGenerated [a : Boolean]
+    x[16, 1] <- a.ord
+  end setAlreadyGenerated
+  export function getAlreadyGenerated -> [r : Boolean]
+    r <- x[16, 1] == 1
+  end getAlreadyGenerated
+
+end objectflags
+
+export ObjectFlags
+
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d5 1
+a5 1
+    x(0,32) <- 0
+d9 1
+a9 1
+    x(0, 1) <- a.ord
+d12 1
+a12 1
+    r <- x(0, 1) == 1
+d16 1
+a16 1
+    x(1, 1) <- a.ord
+d19 1
+a19 1
+    r <- x(1, 1) == 1
+d23 1
+a23 1
+    x(2, 1) <- a.ord
+d26 1
+a26 1
+    r <- x(2, 1) == 1
+d30 1
+a30 1
+    x(3, 1) <- a.ord
+d33 1
+a33 1
+    r <- x(3, 1) == 1
+d37 1
+a37 1
+    x(4, 1) <- a.ord
+d40 1
+a40 1
+    r <- x(4, 1) == 1
+d44 1
+a44 1
+    x(5, 1) <- a.ord
+d47 1
+a47 1
+    r <- x(5, 1) == 1
+d51 1
+a51 1
+    x(6, 1) <- a.ord
+d54 1
+a54 1
+    r <- x(6, 1) == 1
+d58 1
+a58 1
+    x(7, 1) <- a.ord
+d61 1
+a61 1
+    r <- x(7, 1) == 1
+d65 1
+a65 1
+    x(8, 1) <- a.ord
+d68 1
+a68 1
+    r <- x(8, 1) == 1
+d72 1
+a72 1
+    x(9, 1) <- a.ord
+d75 1
+a75 1
+    r <- x(9, 1) == 1
+d79 1
+a79 1
+    x(10, 1) <- a.ord
+d82 1
+a82 1
+    r <- x(10, 1) == 1
+d86 1
+a86 1
+    x(11, 1) <- a.ord
+d89 1
+a89 1
+    r <- x(11, 1) == 1
+d93 1
+a93 1
+    x(12, 1) <- a.ord
+d96 1
+a96 1
+    r <- x(12, 1) == 1
+d100 1
+a100 1
+    x(13, 1) <- a.ord
+d103 1
+a103 1
+    r <- x(13, 1) == 1
+d107 1
+a107 1
+    x(14, 1) <- a.ord
+d110 1
+a110 1
+    r <- x(14, 1) == 1
+d114 1
+a114 1
+    x(15, 1) <- a.ord
+d117 1
+a117 1
+    r <- x(15, 1) == 1
+d121 1
+a121 1
+    x(16, 1) <- a.ord
+d124 1
+a124 1
+    r <- x(16, 1) == 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d129 1
+a129 1
+export ObjectFlags to "Jekyll"
+@

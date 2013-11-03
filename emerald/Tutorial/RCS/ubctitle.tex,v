@@ -1,0 +1,58 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@% @;
+
+
+1.1
+date	93.03.22.17.01.58;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@\begin{titlepage}
+\vspace*{0.16in}
+\begin{center}
+\Large
+{\bf The Emerald Programming Language}\\
+{\bf Tutorial} \\
+
+\vspace{2.5ex}
+{\large Norman C. Hutchinson}
+
+\normalsize
+{\em Department of Computer Science \\
+University of British Columbia \\
+Vancouver, B.C., Canada V6T 1Z2} \\
+\vspace{2.5ex}
+\end{center}
+\vspace*{0.4in}
+
+\begin{center}
+\parbox{6.0in}{
+{\bf Abstract:}\\[0.15in]
+Emerald is an object-oriented language designed to facilitate the
+construction of distributed applications and systems.  This tutorial
+provides information about running and living with the Emerald environment.
+For a description of the language, see the language report.
+}
+\end{center}
+\end{titlepage}
+@

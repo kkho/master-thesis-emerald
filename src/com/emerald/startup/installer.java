@@ -397,7 +397,10 @@ public class installer extends Activity implements OnClickListener {
 						pp = Runtime.getRuntime().exec(
 								"mv " + home.getPath() + "/system/em_output" + " " + home.getPath() + "/emerald"
 								, env, home);
-						pp.waitFor(); 
+						pp.waitFor();
+						
+						//move examples here
+						
 						pp = Runtime.getRuntime().exec(
 								"mv " + home.getPath() + "/system/emerald_programs" + " " + home.getPath() + "/emerald_programs"
 								, env, home);

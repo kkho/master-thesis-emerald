@@ -1,0 +1,104 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	98.02.09.18.11.02;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.07.20.18.45.05;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.07.15.20.58.54;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.56.44;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compiler/Builtins revision maintenance tool
+@
+
+
+1.4
+log
+@Cleaned up
+@
+text
+@#!/bin/csh -f
+@@ i = 1
+unset passed
+set old = `latestversion`
+while ($i <= 3)
+    echo "Regression pass $i"
+    useversion $old
+    rm -f bestCP
+    (emmake bestCP && emx -C bestCP) || break
+    useversion best
+    emmake ftffs EMC=xemc || break
+    newversion
+    set new = `latestversion`
+    if { cmp -s CP_q$old CP_q$new } then
+	set passed
+	echo Regression done
+	break
+    endif
+    set old = $new
+    @@ i++
+end
+if (! $?passed ) then
+    echo 'Regression failed\!'
+endif
+@
+
+
+1.3
+log
+@Use emmake explicitly
+@
+text
+@d8 4
+a11 1
+    emmake xffs
+@
+
+
+1.2
+log
+@fix to work with new compiler build mechanism (make based
+instead of using ffs script)
+@
+text
+@d8 1
+a8 1
+    make xffs
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+a8 1
+    xffs
+@

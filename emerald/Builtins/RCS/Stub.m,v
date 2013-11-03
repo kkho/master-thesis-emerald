@@ -1,0 +1,169 @@
+head	1.8;
+access;
+symbols
+	105alpha:1.8
+	104alpha:1.8
+	103alpha:1.8
+	102alpha:1.8
+	101alpha:1.8
+	100alpha:1.8
+	DIKU_0:1.4;
+locks; strict;
+
+
+1.8
+date	96.03.19.22.42.38;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.11.23.17.12.36;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.03.16.19.14.35;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.03.03.05.48.05;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.08.18.17.20.45;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.01.19.19.58.36;	author aveitch;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.01.19.17.23.44;	author aveitch;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.01.19.03.37.52;	author aveitch;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@Stop using mutable objects with no state, changed the name of instanceFlags
+@
+text
+@export Stub to "Builtins"
+
+const Stub <- immutable object Stub builtin 0x1025
+  const StubType <- typeobject StubType builtin 0x1625
+  end StubType
+
+  export function getSignature -> [result : Signature]
+    result <- StubType
+  end getSignature
+
+  export operation create -> [r : StubType]
+    r <- object aStub builtin 0x1425
+      var pad : Integer
+      process
+      end process
+    end aStub
+  end create
+end Stub
+@
+
+
+1.7
+log
+@Root directory creation, some small cleanups
+@
+text
+@d13 1
+@
+
+
+1.6
+log
+@Brians changes to support upcalls
+@
+text
+@d11 2
+a12 2
+  export function create [] -> [result : StubType]
+    result <- object aStub builtin 0x1425
+@
+
+
+1.5
+log
+@Add a little initially
+@
+text
+@d11 1
+a11 1
+  export function Create [] -> [result : StubType]
+a12 2
+      initially
+      end initially
+a13 2
+        primitive "STUBCALL"  [] <- []
+	primitive "STUBRETURN" [] <- []
+d16 1
+a16 1
+  end Create
+@
+
+
+1.4
+log
+@Decoder and Stub should not be immutable
+@
+text
+@d13 2
+@
+
+
+1.3
+log
+@misssed one instance of new byte code
+@
+text
+@d4 1
+a4 1
+  const StubType <- immutable typeobject StubType builtin 0x1625
+d12 1
+a12 1
+    result <- immutable object aStub builtin 0x1425
+@
+
+
+1.2
+log
+@Update code number
+@
+text
+@d12 1
+a12 1
+    result <- immutable object aStub builtin 0x1422
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 2
+a4 2
+const Stub <- immutable object Stub builtin 0x1022
+  const StubType <- immutable typeobject StubType builtin 0x1622
+@

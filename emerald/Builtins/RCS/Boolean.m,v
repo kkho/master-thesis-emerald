@@ -1,0 +1,155 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.2
+	immel_start:1.2;
+locks; strict;
+
+
+1.4
+date	98.02.25.17.34.45;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.43.49;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.43.47;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.4
+log
+@Changed the name of the boolean-to-string bytecode to avoid a conflict.
+@
+text
+@% 
+% @@(#)Boolean.m	1.2  3/6/91
+%
+const Boolean <- immutable object Boolean builtin 0x1003
+  const BooleanType <- immutable typeobject BooleanType builtin 0x1603
+    function > [o : Boolean] -> [r : Boolean]
+    function >=[o : Boolean] -> [r : Boolean]
+    function < [o : Boolean] -> [r : Boolean]
+    function <=[o : Boolean] -> [r : Boolean]
+    function = [o : Boolean] -> [r : Boolean]
+    function !=[o : Boolean] -> [r : Boolean]
+    function & [o : Boolean] -> [r : Boolean]
+    function | [o : Boolean] -> [r : Boolean]
+    function ! -> [r : Boolean]
+    function ord -> [r : Integer]
+    function asString -> [s : String]
+      % s <- either "true" or "false"
+    function hash -> [Integer]
+  end BooleanType
+  export function getSignature -> [result : Signature]
+    result <- BooleanType
+  end getSignature
+  export function create [data : Integer] -> [result : BooleanType]
+    result <- immutable object aBoolean builtin 0x1403
+      export function > [o : Boolean] -> [r : Boolean]
+	primitive self  "SUB" "GT" [r] <- [o]
+      end >
+      export function >= [o : Boolean] -> [r : Boolean]
+	primitive self  "SUB" "GE" [r] <- [o]
+      end >=
+      export function < [o : Boolean] -> [r : Boolean]
+	primitive self  "SUB" "LT" [r] <- [o]
+      end <
+      export function <= [o : Boolean] -> [r : Boolean]
+	primitive self  "SUB" "LE" [r] <- [o]
+      end <=
+      export function = [o : Boolean] -> [r : Boolean]
+	primitive self  "SUB" "EQ" [r] <- [o]
+      end =
+      export function != [o : Boolean] -> [r : Boolean]
+	primitive self  "SUB" "NE" [r] <- [o]
+      end !=
+      export function & [o : Boolean] -> [r : Boolean]
+	primitive self "AND" [r] <- [o]
+      end &
+      export function | [o : Boolean] -> [r : Boolean]
+	primitive self "OR" [r] <- [o]
+      end |
+      export function ! -> [r : Boolean]
+	primitive self "NOT" [r] <- []
+      end !
+      export function asString -> [r : String]
+	primitive self "EBSTR" [r] <- []
+      end asString
+      export function ord -> [r : Integer]
+	primitive self [r] <- []
+      end ord
+      export function hash -> [r : Integer]
+	primitive self [r] <- []
+      end hash
+    end aBoolean
+  end create
+  export function makeTrue -> [result : BooleanType]
+    result <- true
+  end makeTrue
+  export function makeFalse -> [result : BooleanType]
+    result <- false
+  end makeFalse
+end Boolean
+
+export Boolean to "Builtins"
+
+@
+
+
+1.3
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@d53 1
+a53 1
+	primitive self "BSTR" [r] <- []
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d4 2
+a5 2
+const Boolean == immutable object Boolean builtin 0x1003
+  const BooleanType == immutable typeobject BooleanType builtin 0x1603
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Boolean.m	1.1  3/6/91
+d5 1
+a5 1
+  const BooleanType == immutable type BooleanType builtin 0x1603
+@

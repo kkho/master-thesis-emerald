@@ -1,0 +1,277 @@
+head	1.10;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.10
+	103alpha:1.10
+	102alpha:1.10
+	101alpha:1.10
+	100alpha:1.10
+	DIKU_0:1.10
+	carlton_start:1.8
+	immel_start:1.4;
+locks; strict;
+
+
+1.10
+date	94.08.17.16.51.33;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.06.21.17.11.09;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.03.02.21.16.21;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.23.22.43.03;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.57.36;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.57.35;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.57.34;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.10
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@
+export Selflit
+
+const selflit <- class Selflit (Tree)
+  field myobject : ObLit
+
+  export function upperbound -> [r : Integer]
+    r <- 0
+  end upperbound
+
+  export operation copy [i : Integer] -> [r : Tree]
+    r <- selflit.create[ln]
+  end copy
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    if ob == nil then
+      Environment$env.SemanticError[self$ln, "selfliteral outside of object", nil]
+    end if
+    myobject <- view ob as ObLit
+    r <- self
+  end removeSugar
+
+  export function getAT -> [r : Tree]
+    r <- myobject$name.getAT
+  end getAT
+
+  export function getCT -> [r : Tree]
+    r <- myobject$name.getCT
+  end getCT
+    
+  export operation getIsNotManifest -> [r : Boolean]
+    r <- myobject$name.getIsNotManifest
+  end getIsNotManifest
+  
+  export operation setIsNotManifest [r : Boolean]
+    myobject$name.setIsNotManifest[r]
+  end setIsNotManifest
+  
+  export function getCodeOID -> [oid : Integer]
+    oid <- (view myobject$name as hasIDs).getCodeOID
+  end getCodeOID
+
+  export function asType -> [r : Tree]
+    r <- myobject$name.asType
+  end astype
+  
+  export operation execute -> [r : Tree]
+    r <- myobject$name.execute
+  end execute
+
+  export operation generate[xct : Printable]
+    const bc <- view xct as ByteCode
+    if bc$size = 4 then
+      bc.addCode["LDSELF"]
+    else
+      bc.addCode["LDSELFV"]
+    end if
+  end generate
+
+  export function asString -> [r : String]
+    r <- "selflit"
+  end asString
+end Selflit
+@
+
+
+1.9
+log
+@First attempt at abcons
+@
+text
+@d40 1
+a40 1
+    oid <- myobject$name.getCodeOID
+@
+
+
+1.8
+log
+@Leave selflits in the tree rather than turning them into syms
+@
+text
+@d52 1
+a52 4
+    const bc <- view xct as typeobject BCType
+      operation addCode[String]
+      function  getSize -> [Integer]
+    end BCType
+@
+
+
+1.7
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d5 6
+d12 1
+a12 1
+    r <- self
+a17 6
+      r <- self
+    elseif Environment$env$doselfs then
+      const hasname <- typeobject t function getName -> [Tree] end t
+      r <- (view ob as hasname)$name.copy[0]
+    else
+      r <- self
+d19 2
+d22 28
+@
+
+
+1.6
+log
+@Fix calls to SemanticError
+@
+text
+@a14 1
+      const canbecomeref <- typeobject t op becomeRef end t
+a15 1
+      begin (view r as canBecomeRef).becomeRef end 
+@
+
+
+1.5
+log
+@Get rid of return on generate
+@
+text
+@d11 1
+a11 1
+      Environment$env.SemanticError[self$ln, "selfliteral outside of object\n", nil]
+@
+
+
+1.4
+log
+@Cleanup literals
+@
+text
+@d23 1
+a23 1
+  export operation generate[xct : Printable]-> [rct : None]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d5 3
+a7 12
+  monitor
+    export function upperbound -> [r : Integer]
+      r <- ~1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      r <- self
+    end copy
+  end monitor
+a25 1
+      operation addValue[Integer, Integer]
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@a0 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+d2 1
+a2 1
+export Selflit to "Jekyll"
+d23 2
+a24 2
+      const hasname <- type t function getName -> [Tree] end t
+      const canbecomeref <- type t op becomeRef end t
+d33 1
+a33 1
+    const bc <- view xct as type BCType
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d35 1
+a35 1
+  export operation generate[xct : Printable]
+@

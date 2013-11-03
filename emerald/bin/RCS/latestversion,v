@@ -1,0 +1,59 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.08.17.17.01.52;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.42.17;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compiler/Builtins revision maintenance tool
+@
+
+
+1.2
+log
+@Allow gzipped files (.gz)
+@
+text
+@#!/bin/csh -f
+set max = 0
+set nonomatch
+set all = ( CP_*[0-9]* )
+unset nonomatch
+if ( "$all" != 'CP_*[0-9]*') then
+    foreach i ( $all )
+	set this = `echo $i | sed -e 's/CP_[a-zA-Z]*//' -e 's/\.Z$//' -e 's/\.gz$//' -e 's/\.bak$//'`
+	if ($this > $max) set max = $this
+    end
+endif
+echo $max
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+a8 1
+	set this = `echo $i | sed -e 's/CP_[a-zA-Z]*//' -e 's/\.Z$//' -e 's/\.bak$//'`
+@

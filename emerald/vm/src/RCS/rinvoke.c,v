@@ -1,0 +1,1282 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.13
+	104alpha:1.12
+	103alpha:1.9
+	102alpha:1.9
+	101alpha:1.8
+	100alpha:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.14
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	99.02.22.22.22.13;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	98.05.22.15.49.12;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	98.05.04.19.19.45;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.04.04.20.08.38;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.03.26.22.28.29;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.14
+log
+@Check in current version
+@
+text
+@/* rinvoke.c - support for method invocation on remote objects
+ * $Id: rinvoke.c,v 1.15 1999/05/31 23:46:37 norm Exp $
+ */
+
+#define E_NEEDS_STRING
+#define E_NEEDS_IOV
+#include "system.h"
+
+#include "assert.h"
+#include "bufstr.h"
+#include "builtins.h"
+#include "creation.h" 
+#include "dist.h"
+#include "gc.h"
+#include "globals.h"
+#include "iisc.h"
+#include "locate.h"
+#include "misc.h"
+#include "move.h"
+#include "oidtoobj.h"
+#include "read.h"
+#include "remote.h"
+#include "streams.h"
+#include "trace.h"
+#include "vm_exp.h"
+#include "write.h"
+
+int receivingObjects = 0;
+extern int debugInteractively;
+extern int fakeUnavailable;
+
+#ifdef DISTRIBUTED
+
+/*
+ * The indicated node has failed, find and unavailable any pending
+ * operations.  We need to go through outstandingInvokes and aggressively
+ * locate the state that holds our continuation.
+ */
+void invokeHandleDown(struct noderecord *nd)
+{
+  State *state, *nextstate;
+
+  ISetForEach(allProcesses, state) {
+    if (!isNoOID(state->nsoid)) {
+      nextstate = (State *)OIDFetch(state->nsoid);
+      if (ISNIL(nextstate) || !RESDNT(nextstate->firstThing)) {
+	if (ISNIL(nextstate)) nextstate = stateFetch(state->nsoid, limbo);
+	aggressivelyLocate((Object)nextstate);
+	/*
+	 * Because aggressivelyLocate may remove the state from allProcesss
+	 * we have to fudge with the index
+	 */
+	if (allProcesses->table[ISetxx_index].key != (int)state) ISetxx_index--;
+      }
+    } else if (!isNoOID(state->nstoid)) {
+      /*
+       * This is an outstanding move, we should do something.
+       */
+      TRACE(rinvoke, 0, ("A node has failed while a move is outstanding for %s",
+			 OIDString(state->nstoid)));
+      makeReady(state);
+    }
+  } ISetNext();
+}
+
+void performReturn(State *state)
+{
+  u32 sp = state->fp;
+  OpVectorElement ove = findOpVectorElement(state->cp, state->pc);
+  int nargs = ove->d.nargs;
+  POP(u32, state->pc);
+  POP(u32, state->fp);
+  POP(Object, state->op);
+  POP(ConcreteType, state->cp);
+  sp -= (nargs * 2 * sizeof(u32));
+  state->sp = sp;
+}
+
+State *extractActivation(Object, ConcreteType, Stream, Node);
+
+void handleInvokeForwardRequest(RemoteOpHeader *h, Node srv, Stream str)
+{
+  ConcreteType ct;
+  Object o;
+  unsigned int answer;
+
+  anticipateGC(64*1024 + 2 * StreamLength(str));
+  TRACE(rinvoke, 3, ("InvokeForwardRequest received"));
+  TRACE(rinvoke, 6, ("Checking for CT for incoming activation"));
+  ct = (ConcreteType) doObjectRequest(srv, &h->targetct, ctct);
+  assert(! ISNIL(ct));
+
+  TRACE(rinvoke, 4, ("InvokeForwarded for object with ID %s", OIDString(h->target)));
+  o = OIDFetch(h->target);
+  assert(!ISNIL(o));
+  if (RESDNT(o->flags)) {
+    int more;
+    State *state;
+    TRACE(rinvoke, 4, ("The object is here, accepting activation"));
+    ReadInt(&answer, str);
+    more = memcmp(ReadStream(str, 4), "ACT!", 4);
+    assert(!more);
+    /* Suck out an activation record - argh! */
+    TRACE(rinvoke, 6, ("Incoming activation record!!"));
+    state = extractActivation(o, ct, str, srv);
+    if (!ISNIL(answer)) {
+#define sp state->sp
+      PUSH(u32, answer);
+      PUSH(ConcreteType, BuiltinInstCT(BOOLEANI));
+    }
+#undef sp
+  } else {
+    Node newsrv = getLocFromObj(o);
+    TRACE(rinvoke, 4, ("Forwarding request to %s", NodeString(newsrv)));
+    if (forwardMsg(newsrv, h, str) < 0) {
+      Stream newstr;
+      RewindStream(str);
+      newstr = StealStream(str);
+      findAndSendTo(h->target, newstr);
+    }
+  }
+  TRACE(rinvoke, 4, ("Invoke forward request done"));
+  inhibit_gc--;
+}
+
+void handleInvokeReply(RemoteOpHeader *h, Node srv, Stream str)
+{
+  State *state;
+
+  anticipateGC(64 * 1024 + 2 * StreamLength(str));
+  state = (State *)OIDFetch(h->ss);
+  if (ISNIL(state) || !RESDNT(state->firstThing)) {
+    /*
+     * We probably gc'd this state because we couldn't find any references
+     * to it.  Find it and send it this reply.
+     */
+    Stream newstr;
+    RewindStream(str);
+    newstr = StealStream(str);
+    findAndSendTo(h->ss, newstr);
+  } else {
+    TRACE(rinvoke, 3, ("InvokeReply received"));
+
+    assert(!ISNIL(state));
+    assert(RESDNT(state->firstThing));
+    assert(ISetMember(allProcesses, (int)state));
+
+    TRACE(process, 5, ("Resetting nsoid in state %#x", state));
+    state->nsoid = nooid;
+    state->nstoid = nooid;
+    if (h->status) {
+      TRACE(rinvoke, 0, ("Obsolete remote invocation return code"));
+      h->option1 = 2;
+    }
+    if (h->option1) {
+      /*
+       * We are supposed to propagate a failure.
+       */
+      TRACE(rinvoke, 1, ("Remote invocation raised %s",
+			 h->option1 == 1 ? "failure" :
+			 h->option1 == 2 ? "unavailable" :
+			 "unknown"));
+      if (!findHandler(state, h->option1 - 1, (Object)JNIL)) {
+	if (!debugInteractively) {
+	  state = processDone(state, h->option1);
+	} else {
+	  char buf[80];
+	  sprintf(buf, "Remote invocation raised %s",
+		  h->option1 == 1 ? "failure" :
+		  h->option1 == 2 ? "unavailable" :
+		  "unknown");
+	  if (debug(state, buf)) {
+	    /*
+	     * debug returns 1 when we shouldn't run the state no more.
+	     */
+	    state = 0;
+	  }
+	}
+      }
+      if (state) makeReady(state);
+    } else if (RESDNT(state->op->flags) &&
+	       BROKEN(state->op->flags) && isBroken(state->op)) {
+      if (returnToBrokenObject(state)) {
+	/* nothing to do */
+      } else {
+	makeReady(state);
+      }
+    } else {
+      extractNVars(str, -1, (int *)state->sp, &state->ep, &state->et, srv);
+      makeReady(state);
+    }
+  }
+  TRACE(rinvoke, 4, ("Invoke return handled"));
+  inhibit_gc--;
+}
+
+void handleInvokeRequest(RemoteOpHeader *h, Node srv, Stream str)
+{
+  Stream newstr;
+  int argc = h->option2, retc = h->option1, fn = h->status, i;
+  Object obj;
+  ConcreteType ct = 0;
+  RemoteOpHeader replyh;
+  int *sp;
+  State *state;
+
+  anticipateGC(64 * 1024 + 2 * StreamLength(str));
+  TRACE(rinvoke, 3, ("InvokeRequest received"));
+  /* figure out who we're invoking on */
+  obj = OIDFetch(h->target);
+
+  if (!ISNIL(obj)) {
+    ct = CODEPTR(obj->flags);
+    TRACE(rinvoke, 4, ("Target is a %.*s, operation name is %.*s[%d]",
+		       ct->d.name->d.items, ct->d.name->d.data, 
+		       ct->d.opVector->d.data[fn]->d.name->d.items,
+		       ct->d.opVector->d.data[fn]->d.name->d.data, argc));
+  } else {
+    TRACE(rinvoke, 1, ("Invoking %s op %d [%d] -> [%d]", OIDString(h->target),
+		       fn, argc, retc));
+  }
+
+  if (ISNIL(obj)) {
+    /*
+     * Invoke came here, but we don't know anything about this object.
+     * First find it, then send it the message.
+     */
+    TRACE(rinvoke, 1, ("Trying to find the object and send it the message"));
+    ct = (ConcreteType)doObjectRequest(replyh.sslocation, &h->targetct, ctct);
+    obj = createStub(ct, getNodeRecordFromSrv(replyh.sslocation), h->target);
+
+    RewindStream(str);
+    newstr = StealStream(str);
+    findAndSendTo(h->target, newstr);
+  } else if (!RESDNT(obj->flags)) {
+    Node newsrv = getLocFromObj(obj);
+    /* Invoke came here, but the object is elsewhere */
+    /* First check to see if we think the object is where this invoke
+       came from */
+    if (SameNode(srv, newsrv) || SameNode(myid, newsrv) || SameNode(limbo, newsrv)) {
+      TRACE(rinvoke, 1, ("Have stub, but points back.  Forwarding to limbo"));
+      RewindStream(str);
+      newstr = StealStream(str);
+      findAndSendTo(h->target, newstr);
+    } else {
+      TRACE(rinvoke, 1, ("Forwarding invoke to %s", NodeString(newsrv)));
+      if (forwardMsg(newsrv, h, str) < 0) {
+	RewindStream(str);
+	newstr = StealStream(str);
+	findAndSendTo(h->target, newstr);
+      }
+    }
+  } else if (fakeUnavailable && ((random() % 100) < fakeUnavailable)) {
+    newstr = StealStream(str);
+    sendUnavailableReply(newstr);
+  } else {
+    OID oid;
+    state = newState(obj, ct);
+    OIDRemoveAny((Object)state);
+    ReadOID(&oid, str);
+    OIDInsert(oid, (Object) state);
+    for (sp = (int *)state->sb, i = 0 ; i < 2 * retc ; i++) *sp++ = JNIL;
+    extractNVars(str, argc, sp, &state->ep, &state->et, srv);
+    sp += argc * 2;
+    TRACE(rinvoke, 4, ("Doing upcall on a %.*s",
+		       CODEPTR(obj->flags)->d.name->d.items, 
+		       CODEPTR(obj->flags)->d.name->d.data));
+    state->sp = (u32)sp;
+    pushBottomAR(state);
+
+    /* set up the interpreter state */
+    state->pc = (u32) ct->d.opVector->d.data[fn]->d.code->d.data;
+    dependsOn(state, stateFetch(h->ss, h->sslocation), retc);
+    makeReady(state);
+  }
+  inhibit_gc--;
+}
+
+#if 0
+Object findLocationOf(State *state, Object obj)
+{
+  int args[6], findOpByName(ConcreteType, char *);
+  ConcreteType bcct = BuiltinInstCT(BITCHUNKI);
+  Bitchunk bc;
+  ConcreteType ct;
+  OID oid;
+  static int lookupfn = 0;
+  
+  bc = (Bitchunk)CreateVector(bcct, sizeof(OID));
+  oid = OIDOf(obj);
+  memmove(bc->d.data, &oid, sizeof(OID));
+  args[0] = (int)JNIL;
+  args[1] = (int)JNIL;
+  args[2] = (int)bc;
+  args[3] = (int)bcct;
+  args[4] = (int)OIDFetch(thisnode->node);
+  args[5] = (int)BuiltinInstCT(NODEI);
+  ct = CODEPTR(locsrv->flags);
+  if (!lookupfn) lookupfn = findOpByName(ct, "lookup");
+  upcall(locsrv, lookupfn, 0, 2, 1, args);
+  return (Object)args[0];
+}
+#endif
+
+int rinvoke(State *state, Object obj, int fn)
+{
+  RemoteOpHeader h;
+  u32 sb, sp = state->sp;
+  int retc, argc;
+  Node srv;
+  Stream str; 
+  ConcreteType ct;
+
+  regRoot(obj);
+  regRoot(state);
+  anticipateGC(64 * 1024);  
+  unregRoot();
+  unregRoot();
+
+  /* figure out where we're sending the invocation */
+  ct = CODEPTR(obj->flags);
+  assert(!RESDNT(obj->flags));
+  srv = getLocFromObj(obj);
+
+  /* figure out what object we're invoking on */
+  h.target = OIDOf(obj);
+  if (isNoOID(h.target)) {
+    ConcreteType ct = CODEPTR(obj->flags);
+    printf("It was a %.*s\n", ct->d.name->d.items, ct->d.name->d.data);
+    return debug(state, "Invoked object with no oid");
+  }
+  assert(!isNoOID(h.target));
+  h.targetct = OIDOf(ct);
+
+  /* push the header information */
+  h.kind = InvokeRequest;
+  h.status = fn;
+  h.option1 = retc = ct->d.opVector->d.data[fn]->d.nress;
+  h.option2 = argc = ct->d.opVector->d.data[fn]->d.nargs;
+
+  h.ss = OIDOf((Object)state);
+  h.sslocation = myid;
+  str = StartMsg(&h);
+  state->nstoid = h.target;
+  NewOID(&state->nsoid);
+  TRACE(process, 5, ("Setting nsoid in state %#x to %s", state,
+		     OIDString(state->nsoid)));
+  WriteOID(&state->nsoid, str);
+  sb = sp - 8 * argc;
+
+  TRACE(rinvoke, 3, ("Invoking on %#x %s a %.*s [%d] -> [%d]", obj, 
+		     OIDString(h.target),
+		     ct->d.name->d.items,
+		     ct->d.name->d.data, argc, retc));
+  TRACE(rinvoke, 4, ("It is on node %s", NodeString(srv)));
+
+  sendNVars(str, argc, (int *)sb, state->ep, state->et);
+  state->sp = sb;
+  inhibit_gc--;
+  if (isLimbo(srv)) {
+    findAndSendTo(h.target, str);
+  } else {
+    sendMsgTo(srv, str, h.target);
+  }
+  return 1;
+}
+#endif
+
+Vector getnodes(int onlyactive)
+{
+  ConcreteType nle = BuiltinInstCT(NODELISTELEMENTI);
+  ConcreteType nl = BuiltinInstCT(NODELISTI);
+  ConcreteType ct;
+  Vector thenl;
+  Object thenle;
+  unsigned int stack[32];
+  int i, howmany = 0;
+  noderecord **nd;
+
+  for (nd = &allnodes->p; *nd; nd = &(*nd)->p) {
+    /* Ignore not yet filled out entries */
+    if (ISNIL(OIDFetch((*nd)->node))) continue;
+    if (onlyactive && ! (*nd)->up) continue;
+    howmany ++;
+  }
+  anticipateGC(64 * 1024 + howmany * 6 * sizeof(u32));
+  thenl = CreateVector(nl, howmany);
+  for(i = 0, nd = &allnodes->p ; *nd ; nd = &(*nd)->p) {
+
+    /* Ignore not yet filled out entries */
+    if (ISNIL(OIDFetch((*nd)->node))) continue;
+    if (onlyactive && ! (*nd)->up) continue;
+
+    TRACE(rinvoke, 6, ("Node %d is on %s and up is %d", i,
+		       NodeString((*nd)->srv), (*nd)->up));
+    /* Build the node list element, it takes 4 arguments */
+    /* The node */
+    ct = BuiltinInstCT(NODEI); assert(ct);
+    stack[0] = (unsigned int) OIDFetch((*nd)->node);
+    stack[1] = (unsigned int) ct;
+    /* Is it up? */
+    ct = BuiltinInstCT(BOOLEANI); assert(ct);
+    stack[4] = (unsigned int) (*nd)->up;
+    stack[5] = (unsigned int) ct;
+    /* incarnation Time */
+    ct = BuiltinInstCT(TIMEI); assert(ct);
+    stack[2] = (unsigned int) OIDFetch((*nd)->inctm);
+    stack[3] = (unsigned int) ct;
+    /* lnn */
+    stack[6] = (*nd)->node.port << 16 | (*nd)->node.epoch;
+    stack[7] = (unsigned int) intct;
+    thenle = CreateObjectFromOutside(nle, (u32)stack);
+    ((Object*)thenl->d.data)[i] = thenle;
+    i ++;
+  }
+  inhibit_gc--;
+
+  TRACE(rinvoke, 5, ("getactivenodes() got %d nodes", i));
+  return thenl;
+}
+
+@
+
+
+1.13
+log
+@Fixed a warning reported by the alpha compiler
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.12 1998/05/22 15:49:12 norm Exp norm $
+d30 1
+d202 1
+a202 1
+  ConcreteType ct;
+d253 3
+@
+
+
+1.12
+log
+@Detect and respond to more node failure conditions during locate and move
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.11 1998/05/08 19:38:21 norm Exp norm $
+d84 1
+a84 1
+  int answer;
+@
+
+
+1.11
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.10 1998/05/04 19:19:45 norm Exp $
+d54 7
+d151 4
+a154 4
+      TRACE(rinvoke, 1, ("Remote invocation failed to find the object"));
+      TRACE(rinvoke, 1, ("Target was %s", OIDString(h->target)));
+      if (!unavailable(state, state->op)) makeReady(state);
+    } else if (h->option1) {
+@
+
+
+1.10
+log
+@Removed OutstandingMoves table, and resend msgs when forwardMsg fails
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.9 1998/04/20 13:19:44 norm Exp $
+d268 1
+a268 18
+void doInvokeReply(State *state, State *previousstate, int retc)
+{
+  Stream str;
+  RemoteOpHeader replyh;
+  TRACE(rinvoke, 5, ("doInvokeReply:"));    
+
+  replyh.kind = InvokeReply;
+  replyh.status = 0;
+  assert(!RESDNT(previousstate->firstThing));
+  replyh.ss = OIDOf(previousstate);
+  replyh.sslocation = getLocFromObj((Object)previousstate);
+  replyh.target = nooid;
+  replyh.targetct = nooid;
+  str = StartMsg(&replyh);
+  sendNVars(str, retc, (int *)state->sp, state->ep, state->et);
+  sendMsgTo(replyh.sslocation, str, replyh.ss);
+}
+
+d292 1
+@
+
+
+1.9
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.8 1998/04/08 21:45:27 norm Exp norm $
+d107 6
+a112 1
+    forwardMsg(newsrv, h, str);
+d239 5
+a243 1
+      forwardMsg(newsrv, h, str);
+@
+
+
+1.8
+log
+@More reliable process management, got xforms working
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.7 1998/04/04 20:08:38 norm Exp norm $
+d29 1
+a29 1
+extern IISc outstandingInvokes;
+d40 1
+a40 2
+  State *state;
+  Object *target;
+d42 14
+a55 3
+  IIScForEach(outstandingInvokes, state, target) {
+    aggressivelyLocate((Object)state);
+  } IIScNext();
+d79 1
+a79 1
+  anticipateGC(64*1024);
+a115 1
+  Object target;
+d117 1
+a117 1
+  anticipateGC(64 * 1024);
+a128 7
+    target = (Object)IIScLookup(outstandingInvokes, (int)state);
+    if (IIScIsNIL(target)) {
+      TRACE(rinvoke, 0, ("Puzzling, couldn't find the outstanding invoke for state %#x %s",
+			 state, OIDString(h->ss)));
+    } else {
+      IIScDelete(outstandingInvokes, (int)state);
+    }
+d135 3
+d151 15
+a165 1
+	state = processDone(state, h->option1);
+d194 1
+a194 1
+  anticipateGC(64 * 1024);
+d237 1
+d239 3
+d305 1
+a305 1
+  int retc, argc, res;
+d321 35
+d357 1
+a357 2
+    inhibit_gc --;
+    res = unavailable(state, obj);
+a358 31
+    /* figure out what object we're invoking on */
+    h.target = OIDOf(obj);
+    if (isNoOID(h.target)) {
+      ConcreteType ct = CODEPTR(obj->flags);
+      printf("It was a %.*s\n", ct->d.name->d.items, ct->d.name->d.data);
+      return debug(state, "Invoked object with no oid");
+    }
+    assert(!isNoOID(h.target));
+    h.targetct = OIDOf(ct);
+
+    /* push the header information */
+    h.kind = InvokeRequest;
+    h.status = fn;
+    h.option1 = retc = ct->d.opVector->d.data[fn]->d.nress;
+    h.option2 = argc = ct->d.opVector->d.data[fn]->d.nargs;
+
+    h.ss = OIDOf((Object)state);
+    h.sslocation = myid;
+    str = StartMsg(&h);
+    sb = sp - 8 * argc;
+
+    TRACE(rinvoke, 3, ("Invoking on %#x %s a %.*s [%d] -> [%d]", obj, 
+		       OIDString(h.target),
+		       ct->d.name->d.items,
+		       ct->d.name->d.data, argc, retc));
+    TRACE(rinvoke, 4, ("It is on node %s", NodeString(srv)));
+
+    sendNVars(str, argc, (int *)sb, state->ep, state->et);
+    state->sp = sb;
+    IIScInsert(outstandingInvokes, (int)state, (int)obj);
+    inhibit_gc--;
+a359 1
+    res = 1;
+d361 1
+a361 1
+  return res;
+a375 1
+  anticipateGC(64 * 1024);
+d382 1
+@
+
+
+1.7
+log
+@Small fixes to locate and move
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.6 1998/03/26 22:28:29 norm Exp norm $
+d110 1
+a110 1
+  if (ISNIL(state)) {
+d130 2
+a131 2
+    if (RESDNT(state->firstThing)) {
+      assert(ISetMember(allProcesses, (int)state));
+d133 20
+a152 23
+      if (h->status) {
+	TRACE(rinvoke, 1, ("Remote invocation failed to find the object"));
+	TRACE(rinvoke, 1, ("Target was %s", OIDString(h->target)));
+	if (!unavailable(state, state->op)) makeReady(state);
+      } else if (h->option1) {
+	/*
+	 * We are supposed to propagate a failure.
+	 */
+	TRACE(rinvoke, 1, ("Remote invocation raised %s",
+			   h->option1 == 1 ? "failure" :
+			   h->option1 == 2 ? "unavailable" :
+			   "unknown"));
+	if (!findHandler(state, h->option1 - 1, (Object)JNIL)) {
+	  state = processDone(state, h->option1);
+	}
+	if (state) makeReady(state);
+      } else if (RESDNT(state->op->flags) &&
+		 BROKEN(state->op->flags) && isBroken(state->op)) {
+	if (returnToBrokenObject(state)) {
+	  /* nothing to do */
+	} else {
+	  makeReady(state);
+	}
+a153 1
+	extractNVars(str, -1, (int *)state->sp, &state->ep, &state->et, srv);
+d157 2
+a158 1
+      assert(0);
+d230 1
+a230 1
+    dependsOn(state, stateFetch(h->ss, h->sslocation), DoRemoteReturn, 0, argc, retc);
+@
+
+
+1.6
+log
+@Implement broken objects better
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.5 1998/03/24 16:25:58 norm Exp norm $
+a131 1
+      assert(RESDNT(state->op->flags));
+d149 2
+a150 1
+      } else if (BROKEN(state->op->flags) && isBroken(state->op)) {
+@
+
+
+1.5
+log
+@'.'
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.2 1998/02/06 15:52:13 norm Exp norm $
+d132 1
+d150 6
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d10 1
+a10 3
+#include "vm_exp.h"
+#include "globals.h"
+#include "trace.h"
+d13 7
+d22 4
+a26 8
+#include "bufstr.h"
+#include "dist.h"
+#include "streams.h"
+#include "move.h"
+#include "misc.h"
+#include "gc.h"
+#include "remote.h"
+#include "iisc.h"
+d33 15
+d61 1
+a61 1
+void extractActivation(Object, ConcreteType, Stream, Node);
+d67 1
+d80 1
+d82 1
+d87 7
+a93 1
+    extractActivation(o, ct, str, srv);
+d110 41
+a150 13
+  target = (Object)IIScLookup(outstandingInvokes, (int)state);
+  assert(!IIScIsNIL(target));
+  IIScDelete(outstandingInvokes, (int)state);
+  TRACE(rinvoke, 3, ("InvokeReply received"));
+
+  assert(!ISNIL(state));
+  if (RESDNT(state->firstThing)) {
+    assert(ISetMember(allProcesses, (int)state));
+
+    if (h->status) {
+      TRACE(rinvoke, 1, ("Remote invocation failed to find the object"));
+      TRACE(rinvoke, 1, ("Target was %s", OIDString(OIDOf(target))));
+      if (!unavailable(state, state->op)) {
+a151 3
+      } else {
+	/* TODO: What to do if there is no handler?  The process should die*/
+	TRACE(rinvoke, 0, ("Can't deal with unhandled unavailables"));
+d154 1
+a154 6
+      extractNVars(str, -1, (int *)state->sp, &state->ep, &state->et, srv);
+      if (RESDNT(state->op->flags)) {
+	makeReady(state);
+      } else {
+	returnToForeignObject(state);
+      }
+a155 2
+  } else {
+    assert(0);
+d163 1
+a163 1
+  Stream reply;
+d188 11
+a198 7
+    /* Invoke came here, but we don't know anything about this object */
+    TRACE(rinvoke, 1, ("Forwarding invoke to limbo"));
+    replyh = *h;
+    replyh.kind = InvokeReply;
+    replyh.status = 1;
+    reply = StartMsg(&replyh);
+    sendMsg(replyh.sslocation, reply);
+d206 3
+a208 5
+      replyh = *h;
+      replyh.kind = InvokeReply;
+      replyh.status = 1;
+      reply = StartMsg(&replyh);
+      sendMsg(replyh.sslocation, reply);
+d226 1
+a226 1
+    dependsOn(state, stateFetch(h->ss, h->sslocation), DoRemoteReturn, 0, retc);
+d247 1
+a247 1
+  sendMsg(replyh.sslocation, str);
+a279 1
+  Object newNode;
+a282 4
+  /*
+   * We only have to register obj, because state is guaranteed to not be
+   * gcmalloced.
+   */
+d284 1
+d287 1
+d303 1
+a303 1
+      debug(state, "Invoked object with no oid");
+d329 1
+a329 16
+    while (sendMsg(srv, str) < 0) {
+      TRACE(rinvoke, 1, ("rinvoke: sendMsg failed"));
+      /*
+       * I can't talk to the server, so I must search for the object.  If this
+       * search fails, then I have to conclude that the object is unavailable.
+       */
+      if (!ISNIL(locsrv) && !ISNIL((newNode = findLocationOf(state, obj))))  {
+	/* The search was successful */
+	srv = getLocFromObj(newNode);
+      } else {
+	/* performReturn(state); */
+	IIScDelete(outstandingInvokes, (int)state);
+	res =  unavailable(state, obj);
+	break;
+      }
+    }
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d5 4
+a8 13
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <sys/types.h>
+#include <stdlib.h>
+#ifndef WIN32
+#include <sys/time.h>
+#include <netinet/in.h>
+#endif /* not WIN32 */
+#include <string.h>
+#ifndef DOS
+#include <netdb.h>
+#endif
+#pragma pointer_size short
+d19 1
+a19 1
+#include "threads.h"
+d30 1
+a30 1
+#ifdef MTHREADS
+d45 1
+a45 1
+void extractActivation(Object, ConcreteType, Stream, vmThreadId);
+d47 1
+a47 2
+void
+handleInvokeForwardRequest(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d49 1
+a50 1
+  ConcreteType ct;
+d52 1
+d57 1
+a57 2
+    
+  anticipateGC(64*1024);
+d70 2
+a71 2
+    vmThreadId newsrv = getLocFromObj(o);
+    TRACE(rinvoke, 4, ("Forwarding request to %s", ThreadIdString(newsrv)));
+d78 1
+a78 1
+void handleInvokeReply(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d104 1
+a104 1
+      extractNVars(str, -1, (u32 *)state->sp, &state->ep, &state->et, srv);
+d118 1
+a118 1
+void handleInvokeRequest(RemoteOpHeader *h, vmThreadId srv, Stream str)
+d153 1
+a153 1
+    vmThreadId newsrv = getLocFromObj(obj);
+d157 1
+a157 1
+    if (vmSameThread(srv, newsrv) || vmSameThread(myid, newsrv) || vmSameThread(limbo, newsrv)) {
+d165 1
+a165 1
+      TRACE(rinvoke, 1, ("Forwarding invoke to %s", ThreadIdString(newsrv)));
+d170 1
+a170 1
+    for (sp = (u32 *)state->sb, i = 0 ; i < 2 * retc ; i++) *sp++ = JNIL;
+d201 1
+a201 1
+  sendNVars(str, retc, (u32 *)state->sp, state->ep, state->et);
+d233 2
+a234 2
+  int retc, argc;
+  vmThreadId srv;
+d252 13
+a264 9
+  /* figure out what object we're invoking on */
+  h.target = OIDOf(obj);
+  if (isNoOID(h.target)) {
+    ConcreteType ct = CODEPTR(obj->flags);
+    printf("It was a %.*s\n", ct->d.name->d.items, ct->d.name->d.data);
+    debug(state, "Invoked object with no oid");
+  }
+  assert(!isNoOID(h.target));
+  h.targetct = OIDOf(ct);
+d266 36
+a301 34
+  /* push the header information */
+  h.kind = InvokeRequest;
+  h.status = fn;
+  h.option1 = retc = ct->d.opVector->d.data[fn]->d.nress;
+  h.option2 = argc = ct->d.opVector->d.data[fn]->d.nargs;
+
+  h.ss = OIDOf((Object)state);
+  h.sslocation = vmMyThreadId();
+  str = StartMsg(&h);
+  sb = sp - 8 * argc;
+
+  TRACE(rinvoke, 3, ("Invoking on %#x %s a %.*s [%d] -> [%d]", obj, 
+		     OIDString(h.target),
+		     ct->d.name->d.items,
+		     ct->d.name->d.data, argc, retc));
+  TRACE(rinvoke, 4, ("It is on node %s", ThreadIdString(srv)));
+  
+  sendNVars(str, argc, (u32 *)sb, state->ep, state->et);
+  state->sp = sb;
+  IIScInsert(outstandingInvokes, (int)state, (int)obj);
+  inhibit_gc--;
+  while (sendMsg(srv, str) < 0) {
+    TRACE(rinvoke, 1, ("rinvoke: sendMsg failed"));
+    /*
+     * I can't talk to the server, so I must search for the object.  If this
+     * search fails, then I have to conclude that the object is unavailable.
+     */
+    if (!ISNIL(locsrv) && !ISNIL((newNode = findLocationOf(state, obj))))  {
+      /* The search was successful */
+      srv = getLocFromObj(newNode);
+    } else {
+      /* performReturn(state); */
+      IIScDelete(outstandingInvokes, (int)state);
+      return unavailable(state, obj);
+d303 1
+d305 1
+a305 1
+  return 1;
+d323 1
+a323 1
+    if (ISNIL(OIDFetch((*nd)->node)) || ISNIL(OIDFetch((*nd)->inctm))) continue;
+d331 1
+a331 1
+    if (ISNIL(OIDFetch((*nd)->node)) || ISNIL(OIDFetch((*nd)->inctm))) continue;
+d335 1
+a335 1
+		       ThreadIdString((*nd)->srv), (*nd)->up));
+d350 1
+a350 1
+    stack[6] = (*nd)->node.EmeraldInstance << 16 | (*nd)->node.Epoch;
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.1 1997/01/21 23:59:53 norm Exp norm $
+d5 1
+d7 3
+d11 2
+a12 1
+#include <sys/types.h>
+a13 1
+#include <netinet/in.h>
+a61 1
+  int oldinh = anticipateGC(64*1024);
+d67 1
+d85 1
+a85 1
+  inhibit_gc = oldinh;
+a89 1
+  int oldinh = anticipateGC(64 * 1024);
+d91 1
+d93 1
+d95 2
+a96 1
+  assert(!IIScIsNIL(IIScLookup(outstandingInvokes, (int)state)));
+d105 2
+a106 1
+      TRACE(rinvoke, 4, ("Remote invocation failed to find the object"));
+d125 1
+a125 61
+  inhibit_gc = oldinh;
+}
+
+void handleLocateRequest(RemoteOpHeader *h, vmThreadId srv, Stream str)
+{
+  RemoteOpHeader replyh;
+  Stream reply;
+  Object obj; ConcreteType ct;
+
+  TRACE(rinvoke, 3, ("LocateRequest received"));
+
+  /* figure out who we're locating */
+  obj = OIDFetch(h->target);
+  assert(! ISNIL(obj)); /* fix -bwe */
+
+  ct = CODEPTR(obj->flags);
+  TRACE(rinvoke, 3, ("Locating %s a %.*s", OIDString(h->target),
+		     ct->d.name->d.items, ct->d.name->d.data));
+    
+  if (RESDNT(obj->flags)) {
+    TRACE(rinvoke, 4, ("Got a location request for a resident object"));
+    replyh = *h;
+    replyh.kind = LocateReply;
+    replyh.status = 0;
+    reply = StartMsg(&replyh);
+    sendMsg(srv, reply);
+  } else {
+    forwardMsg(getLocFromObj(obj), h, str);
+    TRACE(rinvoke, 4, ("Forwarding request to %s", ThreadIdString(getLocFromObj(obj))));
+  }
+}
+
+void handleLocateReply(RemoteOpHeader *h, vmThreadId srv, Stream str)
+{
+  State *state;
+  Object obj; ConcreteType ct;
+
+  TRACE(rinvoke, 3, ("LocateReply received"));
+
+  /* figure out who we were locating */
+  obj = OIDFetch(h->target);
+
+  ct = CODEPTR(obj->flags);
+  TRACE(rinvoke, 3, ("Located %s a %.*s at %s", OIDString(h->target),
+		     ct->d.name->d.items, ct->d.name->d.data,
+		     ThreadIdString(srv)));
+
+  if (!RESDNT(obj->flags)) {
+    updateLocation(obj, srv);
+  }
+  state = stateFetch(h->ss, h->sslocation);
+  if (!RESDNT(state->firstThing)) {
+    forwardMsg(getLocFromObj((Object)state), h, str);
+    TRACE(rinvoke, 4, ("Forwarding reply to %s", ThreadIdString(getLocFromObj((Object)state))));
+  } else {
+#define sp state->sp
+    PUSH(Object, getNodeFromSrv(srv));
+    PUSH(ConcreteType, BuiltinInstCT(NODEI));
+#undef sp
+    makeReady(state);
+  }
+a130 1
+  int oldinh = anticipateGC(64 * 1024);
+d138 1
+d150 1
+a150 1
+    TRACE(rinvoke, 4, ("Invoking %s op %d [%d] -> [%d]", OIDString(h->target),
+d156 1
+a156 1
+    TRACE(rinvoke, 4, ("Forwarding invoke to limbo"));
+d168 1
+a168 1
+      TRACE(rinvoke, 4, ("Forwarding to limbo"));
+d175 1
+a175 1
+      TRACE(rinvoke, 4, ("Forwarding invoke to %s", ThreadIdString(newsrv)));
+a182 1
+    inhibit_gc = oldinh;
+d191 1
+a191 1
+    dependsOn(state, stateFetch(h->ss, h->sslocation), RemoteReturn, 0, retc);
+d194 1
+a247 1
+  int oldinh;
+d254 1
+a254 1
+  oldinh = anticipateGC(64 * 1024);  
+a266 2
+    inhibit_gc = oldinh;
+    return unavailable(state, obj);
+d292 1
+a304 1
+      inhibit_gc = oldinh;
+a307 1
+  inhibit_gc = oldinh;
+a311 36
+int findLocation(Object obj, ConcreteType ct, State *state)
+{
+  vmThreadId srv;
+
+#ifdef USETHREADS
+  RemoteOpHeader h;
+  h.kind = LocateRequest;
+  h.target = OIDOf(obj);
+  assert(!isNoOID(h.target));
+  h.targetct = OIDOf(ct);
+  h.ss = OIDOf(state);
+  h.sslocation = vmMyThreadId();
+  srv = getLocFromObj(obj);
+  if (sendMsg(srv, StartMsg(&h)) < 0) {
+    TRACE(rinvoke, 0, ("findLocation: sendMsg failed"));
+    /* TODO: what? */
+  }
+#endif
+  return 1;
+}
+
+Object whereIs(Object obj, ConcreteType ct)
+{
+  if (ISNIL(obj) || 
+      !HASODP(ct->d.instanceFlags) ||
+      RESDNT(obj->flags)) {
+    return OIDFetch(thisnode->node);
+  } else {
+#ifdef MTHREADS
+    return getNodeFromObj(obj);
+#else
+    return (Object)JNIL;
+#endif
+  }
+}
+
+d323 1
+a323 1
+  int oldinh = anticipateGC(64 * 1024);
+d359 1
+a359 1
+  inhibit_gc = oldinh;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+ * $Id: rinvoke.c,v 1.6 1996/08/22 12:39:31 norm Exp norm $
+d30 1
+d33 1
+a33 1
+
+d90 2
+a91 2
+
+  /* TODO: The state may have left already */
+d98 8
+a105 3
+    extractNVars(str, -1, (u32 *)state->sp, &state->ep, &state->et, srv);
+    if (RESDNT(state->op->flags)) {
+      makeReady(state);
+d107 6
+a112 1
+      returnToForeignObject(state);
+d114 2
+a195 2
+  TRACE(rinvoke, 3, ("Invoking %s op %d [%d] -> [%d]", OIDString(h->target),
+		     fn, argc, retc));
+d202 3
+d218 13
+a230 2
+    TRACE(rinvoke, 4, ("Forwarding invoke to %s", ThreadIdString(srv)));
+    forwardMsg(newsrv, h, str);
+d300 10
+a309 1
+  ConcreteType ct = CODEPTR(obj->flags);
+d312 1
+d318 7
+d347 1
+d349 1
+a349 1
+    TRACE(rinvoke, 0, ("rinvoke: sendMsg failed"));
+d359 2
+d364 1
+a391 1
+#ifdef MTHREADS
+d397 1
+a398 1
+  }
+d400 1
+a400 1
+  return (Object)JNIL;
+d402 1
+d417 1
+a417 1
+  for (nd = &allnodes; *nd; nd = &(*nd)->p) {
+d424 1
+a424 1
+  for(i = 0, nd = &allnodes ; *nd ; nd = &(*nd)->p) {
+@

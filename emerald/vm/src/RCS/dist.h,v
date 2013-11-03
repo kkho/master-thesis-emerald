@@ -1,0 +1,89 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	2007.06.11.02.30.26;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.03.02.16.46.01;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@General distributed stuff.
+@
+
+
+1.2
+log
+@Check in current version
+@
+text
+@/*
+ * dist.h
+ */
+
+#ifndef _EMERALD_DIST_H
+#define _EMERALD_DIST_H
+
+#ifndef _EMERALD_STORAGE_H
+#include "storage.h"
+#endif
+
+#ifndef _EMERALD_TYPES_H
+#include "types.h"
+#endif
+
+#define EMERALDFIRSTPORT 0x3ee3
+#define EMERALDPORTSKIP 0x400
+#define EMERALDPORTPROBE(n) ((n) + EMERALDPORTSKIP)
+
+char *NodeString(Node);
+extern Node myid;
+
+#define SameNodeHost(a,b) ((a).ipaddress == (b).ipaddress && (a).port == (b).port)
+#define SameNode(a,b) ((a).ipaddress == (b).ipaddress && (a).port == (b).port && (a).epoch == (b).epoch)
+
+extern void DInit(void);
+void DStart(void);
+
+extern int getplane(void);
+int DNetStart(unsigned int, unsigned short, unsigned short);
+int DSend(Node receiver, void *sbuf, int slen);
+int DProd(Node *receiver);
+typedef void (*NotifyFunction)(Node id, int isup);
+void DRegisterNotify(NotifyFunction);
+
+int InitDist(void);
+
+#ifndef WIN32
+#define closesocket(x) close(x)
+#endif /* not WIN32 */
+
+#endif /* _EMERALD_DIST_H */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d17 1
+a17 1
+#define EMERALDPORTSKIP 0x100
+d29 1
+@

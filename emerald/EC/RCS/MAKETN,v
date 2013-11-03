@@ -1,0 +1,71 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2
+	carlton_start:1.1
+	immel_start:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.08.01.15.17.36;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.25.17.00.34;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Generate the list of token names from the grammar.
+@
+
+
+1.2
+log
+@Fixed file names
+@
+text
+@#!/bin/csh -f
+#
+# @@(#)MAKETOKENNAMES	1.3  3/17/89
+#
+ed - << theend
+0r em_ecomp.y
+v/^%token/d
+1,\$s;^%token[ 	]*\([^ 	]*\)[^"]*"\([^"]*\)".*;  "\2";
+1,\$s;\$;,;
+\$s/,\$//
+1i
+const tokenNameTable <- {
+.
+\$a
+}
+.
+w tokNames.m
+q
+theend
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a6 1
+0r em.ecompiler.y
+d17 1
+a17 1
+w tokenNames.m
+@

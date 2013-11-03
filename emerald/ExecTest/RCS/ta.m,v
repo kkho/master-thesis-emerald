@@ -1,0 +1,132 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.4;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	96.03.28.23.08.38;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.08.17.17.02.57;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.01.12.04.59.07;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.16.05.25.40;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.5
+log
+@Avoid mutable objects with no state
+@
+text
+@const ta <- object ta
+  const aoi <- Array.of[Integer]
+  const aoa <- Array.of[Any]
+  var a : aoi
+  var aa : aoa
+  var iz : Integer
+  var az : Any
+
+  initially
+    a <- aoi.create[10]
+    aa <- aoa.create[10]
+    a[5] <- 99
+    iz <- a[5]
+    for i : integer <- 0 while i < 10 by i <- i + 1
+      aa[i] <- ta
+      az <- aa[i]
+      aa[i] <- i
+      az <- aa[i]
+    end for
+  end initially
+end ta
+@
+
+
+1.4
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d2 7
+a9 6
+    const aoi <- Array.of[Integer]
+    const aoa <- Array.of[Any]
+    var a : aoi
+    var aa : aoa
+    var iz : Integer
+    var az : Any
+@
+
+
+1.3
+log
+@Better testing of arrays
+@
+text
+@d3 1
+a3 1
+    const aoi == Array.of[Integer]
+d7 1
+a7 1
+    var i : Integer
+d12 1
+a12 1
+    i <- a[5]
+@
+
+
+1.2
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d4 1
+d6 1
+d8 1
+d10 1
+a10 1
+
+d13 6
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 2
+a9 2
+    a(5) <- 99
+    i <- a(5)
+@

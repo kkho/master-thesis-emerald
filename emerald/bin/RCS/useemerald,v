@@ -1,0 +1,187 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.03.01.23.31.27;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.20.06.13;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@set up emerald for user use
+@
+
+
+1.2
+log
+@Bring it up to date and start separate vm and EC directories
+@
+text
+@#! /bin/csh -f 
+# set up emerald for user use
+set path = (/usr/bin /bin /cs/local/bin /cs/public/bin/rcs)
+
+set vm = 0
+set compiler = 0
+
+set root = /project3/emerald
+set arch = `arch`
+unset barch
+while ($#argv > 0) 
+    switch ($argv[1])
+    case "-R":
+	set vm = 1
+	breaksw
+    case "-C":
+	set compiler = 1
+	breaksw
+    case "-r":
+	shift argv
+	set root = $argv[1]
+	breaksw
+    case "-a":
+	shift argv
+	set arch = $argv[1]
+	breaksw
+    case "-ba":
+	shift argv
+	set barch = $argv[1]
+	breaksw
+    default:
+	echo "Don't grok "'"'"$argv[1]"'".'
+	exit (1)
+	breaksw
+    endsw
+    shift argv
+end
+if (! $?barch) set barch = $arch
+
+echo Root is $root, base arch is $barch, arch is $arch.
+if (-r ~/emerald) then
+    echo "~/emerald already exists - remove it first."
+    exit (1)
+endif
+if (! -r $root/vm/$barch || ! -r $root/lib/$barch || ! -r $root/bin/$barch) then
+    echo "Base architecture '$barch' does not exist."
+    exit (1)
+endif
+
+mkdir ~/emerald
+mkdir ~/emerald/lib
+foreach i (oid opoid bytecodedefs)
+    cp $root/lib/$i ~/emerald/lib
+end
+foreach i (Builtins Compiler macroMakefile ccalldefs ccalltab.c ccalltab.h \
+	   Makefile )
+    ln -s $root/lib/$i ~/emerald/lib
+end
+ln -s $root/lib/$barch ~/emerald/bin/$arch
+
+foreach i (Builtins)
+    ln -s $root/$i ~/emerald
+end
+
+if ($vm) then
+    mkdir ~/emerald/bin
+    ln -s $root/bin/* ~/emerald/bin
+    rm -f ~/emerald/bin/$arch
+    mkdir ~/emerald/bin/$arch
+    (cd $root/bin/$barch ; tar cf - .) | (cd ~/emerald/bin/$arch ; tar vxf -)
+    mkdir ~/emerald/vm
+    mkdir ~/emerald/vm/$arch
+    ln -s $root/vm/RCS ~/emerald/vm/$arch
+    ln -s $root/vm/RCS ~/emerald/vm
+    ( cd ~/emerald/vm/$arch ; co RCS/* )
+    rm -f ~/emerald/vm/$arch/Makefile
+    cp $root/vm/$barch/Makefile ~/emerald/vm/$arch
+    mkdir ~/emerald/emd
+    ( cd ~/emerald/vm ; ln -s ../emd . )
+    ln -s $root/emd/RCS ~/emerald/emd
+    ( cd ~/emerald/emd ; co RCS/* )
+else
+    ln -s $root/bin ~/emerald/bin
+    ln -s $root/vm ~/emerald
+endif
+
+if ($compiler) then
+    ln -s $root/emyacc ~/emerald
+    mkdir ~/emerald/EC
+    ln -s $root/EC/RCS ~/emerald/EC
+    (cd ~/emerald/EC ; co RCS/*)
+    rm -f ~/emerald/EC/Makefile
+    cp $root/EC/Makefile ~/emerald/EC
+else
+    ln -s $root/EC ~/emerald
+endif
+
+mkdir ~/emerald/Example
+foreach i ( synch.m first.m )
+    cp $root/Example/$i ~/emerald/Example
+end
+
+echo Add the following lines to your '~/.cshrc'
+echo '	setenv EMERALDROOT ~/emerald'
+echo '	alias emarch "eval `$EMERALDROOT/bin/setarch \!*`"'
+echo "	emarch $arch"
+echo Then do '"source ~/.cshrc"'
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 2
+a3 2
+# set up emerald for user use - RECENT CHANGES UNTESTED
+set path = (/usr/bin /bin /cs/local/bin)
+d5 2
+a6 5
+set root = /project3/phoenix
+if ($#argv > 1) then
+    set root = $argv[1]
+    shift argv
+endif
+d8 1
+d10 26
+a35 2
+if ($#argv > 1) then
+    set arch = $argv[1]
+d37 11
+a48 1
+echo Root is $root, arch is $arch.
+d52 1
+a52 1
+foreach i (oid opoid)
+d55 2
+a56 1
+foreach i (CP)
+d59 1
+d61 1
+a61 3
+ln -s $root/bin ~/emerald/bin
+
+foreach i (vm EC Builtins)
+d65 33
+d105 2
+a106 1
+echo '	set path = ($path ~/emerald/bin ~/emerald/bin/`arch`)'
+@

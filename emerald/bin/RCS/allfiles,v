@@ -1,0 +1,249 @@
+head	1.10;
+access;
+symbols
+	105alpha:1.8
+	104alpha:1.7
+	103alpha:1.7
+	102alpha:1.7
+	101alpha:1.7
+	100alpha:1.7;
+locks; strict;
+comment	@# @;
+
+
+1.10
+date	99.02.23.02.07.15;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	99.02.23.02.03.48;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	99.01.21.23.14.27;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.03.24.16.12.47;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.03.02.16.37.08;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.02.23.16.20.26;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.02.09.18.09.08;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.28.23.07.51;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.02.14.16.51.57;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.29.18.12.30;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Produce a list of all interesting emerald files for other scripts.
+@
+
+
+1.10
+log
+@Remove obsolete scripts
+@
+text
+@#!/bin/csh -f
+cd $EMERALDROOT
+echo	./Doc/{BinTools,Install,Layout,RCSHowTo,EmeraldStack.eps} \
+	./bin/{changed,*version,regression,make*{tar,zip},allfiles,genccdef,gencctab} \
+	./bin/{emxx,emc,xemc,ec,*/issymlink,emmake,*arch,issymlink*,*.bat,se} \
+	./bin/{makeinstall,makewin32install,ue} \
+	./vm/src/{*.[chS],vm.d,Makefile{,.DOS},emx.???} \
+	./vm/win32/emx.exe \
+	./Builtins/{*.m,Makefile,vec-ed} \
+	./lib/{Builtins,Compiler,Makefile,oid,opoid,macroMf,ccallsMf} \
+	./lib/{bcdef,ccdef,jsdef} \
+	./lib/*/macroMf \
+	./ccalls/{CCall.doc,Makefile,*.h,xsed.c,*/{Makefile,*.c,*.h,*.va}} \
+	./Example/{*.m,first.x} \
+	./ExecTest/{*.m,*.in,*.out,b,Makefile} \
+	./FailTest/{*.m,*.exp,Makefile} \
+	./EC/{*.m,input.?,b,t,input.{all,bst},Makefile,MAKETN,reset.bat} \
+	./EC/{em_ecomp.y} \
+	./vmc/{[a-z]*.[ch],Emain.c,Makefile,MAKETN,vmcpar.y,vmclex.l} \
+	./emyacc/{y?.c,dextern,files,yacchead.m,yaccpar.*} \
+	./emyacc/{yyre*,yystart*,Makefile} \
+	./Report/{*.tex,*.bib,*.sty,*.m,*.bst,Makefile,manytoone.ps} \
+	./X/*.m ./XForms/*.m ./Game/{*.m,*.bmp,*.txt,*.bin} ./Gaggle/*.m ./TODO ./lib/systems
+if (x$1 == x-v) then
+    echo \
+	./bin/RCS \
+	./vm/src/RCS \
+	./Builtins/RCS \
+	./lib/RCS \
+	./ccalls/*/RCS \
+	./ExecTest/RCS \
+	./EC/RCS \
+	./vmc/RCS \
+	./emyacc/RCS \
+	./Report/RCS \
+	./X/RCS \
+	./XForms/RCS \
+	./RCS \
+	./Tutorial/RCS
+endif
+@
+
+
+1.9
+log
+@Update the list of all the RCS directories
+@
+text
+@a25 1
+	./bin/{setuser,useemerald,rcssync} \
+@
+
+
+1.8
+log
+@Added new script and .exe files.
+@
+text
+@d28 1
+d30 3
+a32 2
+	./ccalls/{*/RCS} \
+	./vm/src/RCS \
+d35 1
+d37 4
+a40 1
+	./X/RCS
+@
+
+
+1.7
+log
+@'.'
+@
+text
+@d6 1
+d8 1
+@
+
+
+1.6
+log
+@'./bin'
+@
+text
+@d5 1
+a5 1
+	./bin/{emxx,emc,xemc,ec,*/issymlink,emmake,*arch,issymlink*,*.bat} \
+@
+
+
+1.5
+log
+@'./bin'
+@
+text
+@d5 2
+a6 2
+	./bin/{emxx,emc,xemc,ec,*/issymlink,emmake,setarch,issymlink*,*.bat} \
+	./vm/src/{*.[chS],vm.d,Makefile{,.DOS},emx.dsp,emx.dsw} \
+d24 1
+a24 1
+	./bin/{setuser,useemerald,forallarch,newarch,rcssync} \
+@
+
+
+1.4
+log
+@Cleaned up
+@
+text
+@d6 1
+a6 1
+	./vm/src/{*.[chS],vm.d,Makefile{,.DOS}} \
+@
+
+
+1.3
+log
+@Eliminate all references to emd
+@
+text
+@d4 2
+a5 2
+	./bin/{changed,*version,regression,make*{tar,zip}} \
+	./bin/{emxx,emc,ec,*/issymlink,emmake,setarch,issymlink*,*.bat} \
+d9 1
+a9 1
+	./lib/{bcdef,cctab.c,cctab.h,ccdef,jsdef} \
+d11 1
+a11 2
+	./ccalls/{CCall.doc,Makefile,misc.h,regexp.h,streams.h} \
+	./ccalls/{misc,regexp,string,streams}/{Makefile,*.c,*.h} \
+d20 2
+a21 2
+	./Report/{*.tex,*.bib,*.sty,*.m,*.bst,Makefile} \
+	./X/*.m
+d24 1
+a25 1
+	./bin/{setuser,useemerald,forallarch,newarch,rcssync} \
+a26 1
+	./lib/systems \
+d28 1
+@
+
+
+1.2
+log
+@Updated a few RCS directories and X
+@
+text
+@d6 1
+a6 2
+	./vm/src/{*.[ch],vm.d,Makefile{,.DOS}} ./vm/emd \
+	./emd/*.[ch] \
+a26 1
+	./emd/RCS \
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d22 2
+a23 1
+	./Report/{*.tex,*.bib,*.sty,*.m,*.bst,Makefile}
+d31 1
+a31 1
+	./ccalls/{RCS,*/RCS} \
+d35 1
+a35 1
+	./X/{RCS,*.m}
+@

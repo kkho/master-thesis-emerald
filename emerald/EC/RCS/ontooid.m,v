@@ -1,0 +1,569 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.14
+	103alpha:1.14
+	102alpha:1.14
+	101alpha:1.14
+	100alpha:1.14
+	DIKU_0:1.12
+	carlton_start:1.10
+	immel_start:1.6;
+locks; strict;
+
+
+1.14
+date	95.03.03.05.44.23;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.12.19.07.19.47;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.08.22.23.43.51;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.08.17.16.51.26;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.06.02.22.57.36;	author mueller;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.10.17.07.22;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.30.22.23.27;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.06.01.18.10.36;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.30.14.38.22;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.55.35;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.55.34;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.55.33;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.14
+log
+@Use new streams code
+@
+text
+@export OpNameToOID
+
+const OpNameToOID <- immutable object OpNameToOID
+  const table : SITable <- SITable.create[513]
+  var count  : Integer <- 0
+  var opoidname : String <- nil
+  var initialized : Boolean <- false
+
+  export function Lookup [name : String] -> [r : Integer]
+    if !initialized then
+      self.loadGlobals
+    end if
+
+    r <- table.Lookup[name]
+    if r == nil then
+      r <- count
+      table.insert[name, r]
+      count <- count + 1
+
+      if opoidname !== nil then
+	const file <- OutStream.toUnix[opoidname, "a"]
+	if file == nil then
+	  const env : EnvironmentType <- Environment$env
+	  env.SemanticError[1, "Can't open op-oid file \"%s\"", {opoidname}]
+	else
+	  file.putString[name]
+	  file.putChar['\n']
+	  file.close
+	end if
+      end if
+    end if
+  end Lookup
+
+  operation loadGlobals
+    var file : InStream
+    var name : String
+    var root : String
+
+    count <- 0
+    primitive "GETROOTDIR" [root] <- []
+  
+    begin
+      file <- InStream.fromUnix[root||"/lib/opoid", "r"]
+      failure file <- nil end failure
+    end
+    if file !== nil then
+      loop
+	begin
+	  name <- file.getString
+	  failure
+	    name <- nil
+	  end failure
+	end
+	exit when name == nil
+	name <- name[0, name.length - 1]
+	table.Insert[name, count]
+	count <- count + 1
+      end loop
+      file.close
+    end if
+    count <- 2000
+    initialized <- true
+  end loadGlobals
+
+  export operation load[fn : String]
+    var file : InStream
+    var name : String
+
+    opoidname <- fn || ".opd"
+    table.reset
+
+    if ! Environment$env$compilingBuiltins then
+      self.loadGlobals
+    end if
+
+    begin
+      file <- InStream.fromUnix[opoidname, "r"]
+      failure file <- nil end failure
+    end
+    if file !== nil then
+      loop
+	begin
+	  name <- file.getString
+	  failure name <- nil end failure
+	end
+	exit when name == nil
+	name <- name[0, name.length - 1]
+	table.Insert[name, count]
+	count <- count + 1
+      end loop
+      file.close
+    end if
+  end load
+end OpNameToOID
+@
+
+
+1.13
+log
+@Deal with file open errors more gracefully
+@
+text
+@d42 4
+a45 1
+    file <- InStream.fromUnix[root||"/lib/opoid", "r"]
+d48 6
+a53 1
+	name <- file.getString
+d76 4
+a79 1
+    file <- InStream.fromUnix[opoidname, "r"]
+d82 4
+a85 1
+	name <- file.getString
+@
+
+
+1.12
+log
+@August 94 Checkpoint II
+@
+text
+@d22 8
+a29 3
+	file.putString[name]
+	file.putChar['\n']
+	file.close
+@
+
+
+1.11
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d42 1
+a42 1
+	name <- name.getSlice[0, name.length - 1]
+d68 1
+a68 1
+	name <- name.getSlice[0, name.length - 1]
+@
+
+
+1.10
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d4 4
+a7 10
+  const inner <- object inner
+      const voi <- Vector.of[Integer]
+      const vos <- Vector.of[String]
+      var currentsize : Integer <- 513
+      var values : voi <- voi.create[currentsize]
+      var keys   : vos <- vos.create[currentsize]
+      var count  : Integer <- 0
+      var limit  : Integer <- (currentsize * 4) / 5
+      const opoidname <- "lib/opoid"
+      var initialized : Boolean <- false
+d9 4
+a12 34
+      operation iInsert [s : String, r : Integer]
+	const first <- s.hash # currentsize
+	var h : Integer <- first
+	loop
+	  const k <- keys[h]
+	  if k == nil then
+	    keys[h] <- s
+	    values[h] <- r
+	    return
+	  elseif s = k then
+	    values[h] <- r
+	    return
+	  end if
+	  h <- (h + 1) # currentsize
+	  exit when h = first
+	end loop
+      end iInsert
+  
+      operation enlarge
+	const oldvalues <- values
+	const oldkeys   <- keys
+	const oldsize   <- currentsize
+  
+	currentsize <- currentsize * 2 + 1
+	limit <- (currentsize * 4) / 5
+	values <- voi.create[currentsize]
+	keys   <- vos.create[currentsize]
+	for i : Integer <- 0 while i < oldsize by i <- i + 1
+	  const k <- oldkeys[i]
+	  if k !== nil then
+	    self.iInsert[k, oldvalues[i]]
+	  end if
+	end for
+      end enlarge
+d14 5
+a18 4
+      export function Lookup [name : String] -> [r : Integer]
+	var h : Integer
+	var file : OutStream
+	var root : String
+d20 8
+a27 4
+	if !initialized then
+	  self.Read
+	  initialized <- true
+	end if
+d29 4
+a32 1
+	h <- name.hash # currentsize
+d34 10
+a43 15
+	loop
+	  const k <- keys[h]
+	  if k == nil then
+	    exit
+	  elseif k = name then
+	    r <- values[h]
+	    return
+	  end if
+	  h <- (h + 1) # currentsize
+	end loop
+	% Didn't find it.
+
+	if count >= limit then self.enlarge end if
+	self.iInsert[name, count]
+	r <- count
+d45 6
+d52 3
+a54 16
+	primitive "GETROOTDIR" [root] <- []
+	file <- OutStream.toUnix[root||"/"||opoidname, "a"]
+	file.putString[name]
+	file.putChar['\n']
+	file.close
+      end Lookup
+      operation Read
+	var root : String
+	var file : InStream;
+	var name : String
+	primitive "GETROOTDIR" [root] <- []
+	file <- InStream.fromUnix[root || "/" || opoidname, "r"]
+	loop
+	  exit when file.eos
+	  name <- file.getString
+	  name <- name.getSlice[0, name.length - 1]
+d56 2
+a57 7
+	  if count >= limit then self.enlarge end if
+	  self.iInsert[name, count]
+	  count <- count + 1
+	end loop
+	file.close
+      end Read
+  end inner
+d59 16
+a74 3
+  export operation Lookup [name : String] -> [r : Integer]
+    r <- inner.Lookup[name]
+  end Lookup
+@
+
+
+1.9
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d19 1
+a19 1
+	  const k <- keys(h)
+d21 2
+a22 2
+	    keys(h) <- s
+	    values(h) <- r
+d25 1
+a25 1
+	    values(h) <- r
+d43 1
+a43 1
+	  const k <- oldkeys(i)
+d45 1
+a45 1
+	    self.iInsert[k, oldvalues(i)]
+d63 1
+a63 1
+	  const k <- keys(h)
+d67 1
+a67 1
+	    r <- values(h)
+@
+
+
+1.8
+log
+@from/toUnix calls changed to new syntax
+opoid file now found in lib instead of Etc
+@
+text
+@d45 1
+a45 1
+	    iInsert[k, oldvalues(i)]
+d75 1
+a75 1
+	iInsert[name, count]
+d97 1
+a97 1
+	  iInsert[name, count]
+@
+
+
+1.7
+log
+@Removed all monitors
+@
+text
+@d12 1
+a12 1
+      const opoidname <- "Etc/opoid"
+d80 1
+a80 1
+	file <- OutStream.toUnix[root || "/" || opoidname, 01011, 0]
+d90 1
+a90 1
+	file <- InStream.fromUnix[root || "/" || opoidname, 0, 0]
+@
+
+
+1.6
+log
+@Return the answer when you add a name
+@
+text
+@a4 1
+    monitor
+d15 1
+a15 1
+      private operation iInsert [s : String, r : Integer]
+d33 1
+a33 1
+      private operation enlarge
+d85 1
+a85 1
+      private operation Read
+a101 1
+    end monitor
+@
+
+
+1.5
+log
+@Optimized to use vectors and a hash table
+@
+text
+@d77 1
+@
+
+
+1.4
+log
+@Get EMERALDROOT each time.  It used to break if the compiler checkpointed
+in a different environment from where it was subsequently run.
+@
+text
+@d3 1
+a3 1
+const OpNameToOID == immutable object OpNameToOID
+d6 7
+a12 2
+      const aos == Array.of[String]
+      const state == aos.create[~64]
+a13 1
+      var root : String
+d15 18
+d34 22
+a55 2
+      export function Lookup [name : String] -> [ r : Integer ]
+	var s : String
+d60 9
+a68 4
+	for i : Integer <- 0 while i <= state.upperbound by i <- i + 1
+	  s <- state(i)
+	  if s = name then 
+	    r <- i
+d71 13
+a83 12
+	end for
+	state.addUpper[name]
+	r <- state.upperbound
+	begin
+	  primitive "GETROOTDIR" [root] <- []
+	  begin
+	    const file <- OutStream.toUnix[root || "/" || opoidname, 01011, 0]
+	    file.putString[name]
+	    file.putChar['\n']
+	    file.close
+	  end
+	end
+d86 3
+d90 11
+a100 11
+	begin
+	  const file <- InStream.fromUnix[root || "/" || opoidname, 0, 0]
+	  var name : String
+	  loop
+	    exit when file.eos
+	    name <- file.getString
+	    name <- name.getSlice[0, name.length - 1]
+	    state.addUpper[name]
+	  end loop
+	  file.close
+	end
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d9 1
+a9 2
+      var filename : String
+
+d28 7
+a34 4
+	  const file <- OutStream.toUnix[filename, 01011, 0]
+	  file.putString[name]
+	  file.putChar['\n']
+	  file.close
+d38 12
+a49 9
+	const file <- InStream.fromUnix[filename, 0, 0]
+	var name : String
+	loop
+	  exit when file.eos
+	  name <- file.getString
+	  name <- name.getSlice[0, name.length - 1]
+	  state.addUpper[name]
+	end loop
+	file.close
+a50 5
+      initially
+	var root : String
+	primitive "GETROOTDIR" [root] <- []
+	filename <- root || "/" || opoidname
+      end initially
+@
+
+
+1.2
+log
+@Got rid of the absolute paths
+@
+text
+@d1 1
+a1 1
+export OpNameToOID to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a3 1
+  const filename <- "/usr/norm/jekyll/Etc/opoid"
+d8 3
+d46 5
+@

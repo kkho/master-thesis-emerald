@@ -1,0 +1,787 @@
+head	1.11;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.9
+	103alpha:1.8
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	98.06.24.16.13.08;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.05.01.07.21.05;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.05.01.04.47.38;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.13.19.53.20;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.18.13.01;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.11
+log
+@Check in current version
+@
+text
+@/*
+ * The Emerald interface to the system.
+ */
+
+#define E_NEEDS_NETDB
+#define E_NEEDS_STRING
+#include "system.h"
+
+#include "vm_exp.h"
+#include "init.h"
+#include "trace.h"
+#include "types.h"
+#include "globals.h"
+#include "oidtoobj.h"
+#include "assert.h"
+#include "creation.h"
+#include "gc.h"
+#include "rinvoke.h"
+#include "move.h"
+#include "remote.h"
+#include "timer.h"
+
+/*
+ * Here is the name of the machine we are on.
+ */
+String SysName;
+
+/*
+ * Here is our lnn, whatever inet_lnaof returns
+ */
+static int syslnn = -1;
+
+/*
+ * Our incarnation time is created in remote.c:init_nodeinfo.
+ */
+extern Object inctm;
+
+/*
+ * Here are pointers to our standard input and output streams
+ */
+Object StdInStream, StdOutStream;
+
+/*
+ * System routines which take arguments find those arguments
+ * immediately above the current sp.
+ */
+
+#define sp state->sp  
+
+/*
+ * The get* functions all return various pieces of the system state.
+ * They take no parameters.
+ */
+int getstdin(State *state)
+{
+  PUSH(Object, StdInStream);
+  return 0;
+}
+int getstdout(State *state)
+{
+  PUSH(Object, StdOutStream);
+  return 0;
+}
+
+int gettod(State *state)
+{
+  if (gettimeofday((struct timeval *)sp, 0) < 0)
+    TRACE(sys, 1, ("gettimeofday fails!"));
+  TRACE(sys, 3, ("gettimeofday returns %d:%06d", 
+		 ((struct timeval *)sp)->tv_sec,
+		 ((struct timeval *)sp)->tv_usec));
+  sp += 2 * sizeof(int);
+  return 0;
+}
+int getlnn(State *state)
+{
+  PUSH(u32, syslnn);
+  return 0;
+}
+
+int getname(State *state)
+{
+  TRACE(sys, 1, ("getname returns %.*s", SysName->d.items, SysName->d.data));
+  PUSH(String, SysName);
+  return 0;
+}
+
+int jgetIncarnationTime(State *state)
+{
+  PUSH(Object, inctm);
+  return 0;
+}
+
+int jgetLoadAverage(State *state)
+{
+  double avg = 1.0;
+  int ret;
+#if defined(i386freebsd)
+  ret = getloadavg(&avg, 1);
+  if (ret < 1) {
+    TRACE(sys, 0, ("getloadavg failed, ret %d", ret));
+    avg = 1.0;
+  }
+#endif
+  PUSH(float, (float) avg);
+  return 0;
+}
+
+int jisfixed(State *state)
+{
+  ConcreteType ct;
+  Object o;
+
+  o = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+
+  if (ISNIL(o) || !HASODP(ct->d.instanceFlags)) {
+    PUSH(int, 0);
+    PUSH(ConcreteType, BuiltinInstCT(BOOLEANI));
+    return 0;
+  } else if (RESDNT(o->flags)) {
+    PUSH(int, isFixedHere(o));
+    PUSH(ConcreteType, BuiltinInstCT(BOOLEANI));
+    return 0;
+#ifdef DISTRIBUTED
+  } else {
+    doIsFixed(o, state, 0);
+    return 1;
+#endif
+  }
+}
+
+/*
+ *  Return true if the object is local.
+ */
+int jislocal(State *state)
+{
+  ConcreteType ct;
+  Object o;
+  int ans;
+
+  o = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+
+  ans = ISNIL(o) || !HASODP(ct->d.instanceFlags) || RESDNT(o->flags);
+  PUSH(int, ans);
+  PUSH(ConcreteType, BuiltinInstCT(BOOLEANI));
+  return 0;
+}
+
+int getallnodes(State *state)
+{
+  Vector ans = getnodes(0);
+  PUSH(Vector, ans);
+  return 0;
+}
+
+int getactivenodes(State *state)
+{
+  Vector ans = getnodes(1);
+  PUSH(Vector, ans);
+  return 0;
+}
+
+int nProcessesDelayed = 0;
+
+static void delayCallback(void *arg)
+{
+  State *state = arg;
+  TRACE(sys, 3, ("delay: thread %x waking", state));
+  TRACE(process, 3, ("process %x waking", state));
+  nProcessesDelayed --;
+  makeReady(state);
+}
+
+int delay(State *state)
+{
+  JTime t = *(JTime *)sp;
+  struct timeval tv;
+  TRACE(sys, 3, ("delay: sleeping for %d.%06d", t->d.secs, t->d.usecs));
+  TRACE(process, 3, ("process %x sleeping for %d.%06d", state, t->d.secs, t->d.usecs));
+  if (t->d.secs < 0 || (t->d.secs == 0 && t->d.usecs < 100)) return 0;
+  tv.tv_sec = t->d.secs;
+  tv.tv_usec = t->d.usecs;
+  afterTime(tv, delayCallback, state);
+  nProcessesDelayed++;
+  return 1;
+}
+
+int jfix(State *state)
+{
+  ConcreteType ct, d_ct;
+  Object obj, d;
+  int retc = 0;
+
+  obj = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+  d = *(Object *)(sp+8);
+  d_ct = *(ConcreteType *)(sp+12);
+
+  TRACE(sys, 2, ("fix of %x at location of %x", obj, d));
+#ifdef DISTRIBUTED
+  if (ISNIL(obj) || !HASODP(ct->d.instanceFlags) || ISIMUT(ct->d.instanceFlags)) {
+    /* do nothing */
+  } else {
+    Object dn = whereIs(d, d_ct);
+    if (ISNIL(dn)) {
+      return unavailable(state, d);
+    } else if (RESDNT(dn->flags) && RESDNT(obj->flags)) {
+      fixHere(obj);
+    } else {
+      move(1, obj, getLocFromObj(dn), state);
+      retc = 1;
+    }
+  }
+#endif
+  return retc;
+}
+
+int jrefix(State *state)
+{
+  ConcreteType ct, d_ct;
+  Object obj, d;
+  int retc = 0;
+
+  obj = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+  d = *(Object *)(sp+8);
+  d_ct = *(ConcreteType *)(sp+12);
+
+  TRACE(sys, 2, ("refix of %x at location of %x", obj, d));
+#ifdef DISTRIBUTED
+  if (ISNIL(obj) || !HASODP(ct->d.instanceFlags) || ISIMUT(ct->d.instanceFlags)) {
+    /* do nothing */
+  } else {
+    Object dn = whereIs(d, d_ct);
+    if (ISNIL(dn)) {
+      return unavailable(state, d);
+    } else if (RESDNT(dn->flags) && RESDNT(obj->flags)) {
+      fixHere(obj);
+    } else {
+      move(2, obj, getLocFromObj(dn), state);
+      retc = 1;
+    }
+  }
+#endif
+  return retc;
+}
+
+int junfix(State *state)
+{
+  ConcreteType ct;
+  Object o;
+
+  o = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+  TRACE(sys, 2, ("unfix of %x", o));
+  if (RESDNT(o->flags)) {
+    unfixHere(o);
+    return 0;
+#ifdef DISTRIBUTED
+  } else {
+    doIsFixed(o, state, 1);
+    return 1;
+#endif
+  }
+}
+
+int jmove(State *state)
+{
+  ConcreteType ct, d_ct;
+  Object obj, d;
+  int retc = 0;
+
+  obj = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+  d = *(Object *)(sp + 8);
+  d_ct = *(ConcreteType *)(sp + 12);
+
+#ifdef DISTRIBUTED
+  if (ISNIL(obj) || !HASODP(ct->d.instanceFlags) || ISIMUT(ct->d.instanceFlags)) {
+    /* do nothing */
+  } else {
+    Object dn = whereIs(d, d_ct);
+    if (ISNIL(dn)) {
+      return unavailable(state, d);
+    } else if (RESDNT(dn->flags) && RESDNT(obj->flags)) {
+    } else if (RESDNT(obj->flags) && isFixedHere(obj)) {
+      retc = 0x1000;
+    } else {
+      move(0, obj, getLocFromObj(dn), state);
+      retc = 1;
+    }
+  }
+#endif
+  TRACE(sys, 3, ("move: completed with code %x", retc));
+  return retc;
+}
+
+int getnode(State *state)
+{
+  PUSH(Object, OIDFetch(thisnode->node));
+  return 0;
+}
+
+int jlocate(State *state)
+{
+  ConcreteType ct;
+  Object obj, dn;
+
+  obj = *(Object *)sp;
+  ct = *(ConcreteType *)(sp+4);
+  TRACE(sys, 2, ("locate of %x", obj));
+#ifdef DISTRIBUTED
+  dn = whereIs(obj, ct);
+  if (ISNIL(dn)) {
+    /* The node the object was on is dead */
+    printf("Should this raise unavailable?\n");
+    PUSH(Object, dn);
+    PUSH(ConcreteType, (ConcreteType)JNIL);
+    return 0;
+  } else if (RESDNT(dn->flags)) {
+    PUSH(Object, dn);
+    PUSH(ConcreteType, BuiltinInstCT(NODEI));
+    return 0;
+  } else {
+    findLocation(obj, ct, state, 0);
+    return 1;
+  }
+#else
+  dn = OIDFetch(thisnode->node);
+  TRACE(sys, 2, ("Locate returns node %x", dn));
+  PUSH(Object, dn);
+  PUSH(ConcreteType, BuiltinInstCT(NODEI));
+  return 0;
+#endif
+}
+
+#undef sp
+
+#define MAXFOO 128
+
+void sysinit(void)
+{
+  unsigned int stack[32];
+  ConcreteType ct;
+  extern Node MyNode;
+  /*
+   * Query UNIX for hostname and lnn
+   */
+  char name[MAXFOO];
+
+  inhibit_gc++;
+
+#if !defined(WIN32)
+  if (gethostname(name, sizeof name) < 0) {
+    fprintf(stderr, "Can't get my own host name, making one up\n");
+    strcpy(name, "imaginary");
+  }
+
+#else
+#if defined(SYSTYPE_SYSV)
+  strcpy(name, "Some SYSV machine");
+#endif
+#if defined(WIN32)
+  strcpy(name, "DOS-PC");
+#endif
+#endif
+  SysName = (String) CreateVector(BuiltinInstCT(STRINGI), strlen(name));
+  memmove(SysName->d.data, name, SysName->d.items);
+  syslnn = MyNode.port << 16 | MyNode.epoch;
+  TRACE(sys, 1, ("Started on %.*s <%08x.%04x.%04x>", 
+		 SysName->d.items, SysName->d.data,
+		 ntohl(MyNode.ipaddress), MyNode.port, 
+		 MyNode.epoch));
+
+  /*
+   * Create StdInStream and StdOutStream.  The initially expects a single
+   * integer filedescriptor on the top of the stack, and that's all folks.
+   */
+  if ((ct = BuiltinInstCT(INSTREAMI)) == 0) {
+    StdInStream = (Object) JNIL;
+    fprintf( stderr, "StdInStream initialized to JNIL\n" );
+  } else {
+    stack[0] = 0;
+    stack[1] = (unsigned int)intct;
+    StdInStream = CreateObjectFromOutside(ct, (unsigned int)stack);
+  }
+  if ((ct = BuiltinInstCT(OUTSTREAMI)) == 0) {
+    StdOutStream = (Object) JNIL;
+    fprintf( stderr, "StdOutStream initialized to JNIL\n" );
+  } else {
+    stack[0] = 1;
+    stack[1] = (unsigned int)intct;
+    StdOutStream = CreateObjectFromOutside(ct, (unsigned int) stack);
+  }
+  inhibit_gc--;
+}
+
+@
+
+
+1.10
+log
+@Clean up an unnecessary reference to doIsFixed when not DISTRIBUTED
+@
+text
+@d32 6
+d83 1
+d88 21
+d193 1
+a193 1
+  Object obj, d, dn;
+d206 1
+a206 1
+    dn = whereIs(d, d_ct);
+d223 1
+a223 1
+  Object obj, d, dn;
+d236 1
+a236 1
+    dn = whereIs(d, d_ct);
+d272 1
+a272 1
+  Object obj, d, dn;
+d284 1
+a284 1
+    dn = whereIs(d, d_ct);
+d357 1
+a357 1
+    TRACE(dist, 0, ("Can't get my own host name, making one up"));
+@
+
+
+1.9
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@d97 1
+d101 1
+d233 1
+d237 1
+@
+
+
+1.8
+log
+@Implemented isfixed and unfix remotely
+@
+text
+@d325 1
+a325 1
+    fprintf(stderr, "Can't get my own host name, making one up");
+@
+
+
+1.7
+log
+@Eradicated all vestiges of the old TRACE0-7 macros
+@
+text
+@d98 2
+a99 2
+    /* TODO: do remote question */
+    return 0;
+d228 7
+a234 1
+  return 0;
+@
+
+
+1.6
+log
+@'.'
+@
+text
+@d62 4
+a65 4
+    TRACE0(sys,1,"gettimeofday fails!");
+  TRACE2(sys, 3, "gettimeofday returns %d:%06d", 
+	 ((struct timeval *)sp)->tv_sec,
+	 ((struct timeval *)sp)->tv_usec);
+d171 1
+a171 1
+  TRACE2(sys, 2, "fix of %x at location of %x", obj, d);
+d201 1
+a201 1
+  TRACE2(sys, 2, "refix of %x at location of %x", obj, d);
+d227 1
+a227 1
+  TRACE1(sys, 2, "unfix of %x", o);
+@
+
+
+1.5
+log
+@'./vm/src'
+@
+text
+@d117 1
+d135 2
+d142 1
+d156 1
+d178 1
+a178 9
+      if (!unavailable(state, d)) {
+	return 0;
+      } else {
+	if ((state = processDone(state))) {
+	  return 0;
+	} else {
+	  return 1;
+	}
+      }
+d208 1
+a208 9
+      if (!unavailable(state, d)) {
+	return 0;
+      } else {
+	if ((state = processDone(state))) {
+	  return 0;
+	} else {
+	  return 1;
+	}
+      }
+d248 1
+a248 9
+      if (!unavailable(state, d)) {
+	return 0;
+      } else {
+	if ((state = processDone(state))) {
+	  return 0;
+	} else {
+	  return 1;
+	}
+      }
+d289 1
+a289 1
+    findLocation(obj, ct, state);
+a312 4
+#if !defined(WIN32)
+  struct hostent *me;
+  struct in_addr *inp, in;
+#endif
+d318 4
+a321 2
+  gethostname(name, MAXFOO);
+  me = gethostbyname(name);
+a322 6
+#ifdef i386
+  inp = (struct in_addr *)me->h_addr;
+#else
+  inp = (struct in_addr *)me->h_addr_list[0];
+#endif
+  in = *inp;
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d1 2
+a2 1
+/* comment me!
+d5 3
+a7 26
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdio.h>
+#include <stdlib.h>
+#if !defined(NeXT) && !defined(WIN32)
+#include <unistd.h>
+#endif
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#ifndef WIN32
+#include <sys/time.h>
+#endif /* not WIN32 */
+#include <string.h>
+#ifndef DOS
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#ifndef SYSTYPE_SYSV
+#include <arpa/inet.h>
+#include <sys/param.h>
+#else
+#define MAXPATHLEN 1024
+#endif
+#endif
+#pragma pointer_size short
+d21 1
+a21 14
+
+#ifdef COLLECTSYSSTATS
+static int nReads, nBytesRead, nOpens, nCloses, nWrites, nBytesWrite;
+#define MOREOPENS nOpens++
+#define MORECLOSES nCloses++
+#define MOREREADS(x) { nReads++; nBytesRead += (x); }
+#define MOREWRITES(x) { nWrites++; nBytesWrite += (x); }
+#else
+#define MOREOPENS
+#define MORECLOSES
+#define MOREREADS(x)
+#define MOREWRITES(x)
+
+#endif
+d134 8
+d145 1
+a145 1
+  WNotUseful();
+d147 6
+a152 3
+  vmThreadMSleep( t->d.secs, t->d.usecs );
+  WUseful();
+  return 0;
+d167 1
+a167 1
+#ifdef USETHREADS
+d205 1
+a205 1
+#ifdef USETHREADS
+d253 1
+a253 1
+#ifdef USETHREADS
+d295 1
+a295 1
+#ifdef USETHREADS
+d332 1
+a332 1
+#if !defined(DOS)
+d340 1
+a340 1
+#if !defined(DOS)
+d354 1
+a354 1
+#if defined(DOS)
+d360 1
+a360 1
+  syslnn = MyNode.EmeraldInstance << 16 | MyNode.Epoch;
+d363 2
+a364 2
+		 ntohl(MyNode.IPAddress), MyNode.EmeraldInstance, 
+		 MyNode.Epoch));
+@
+
+
+1.3
+log
+@Checkpoint
+@
+text
+@d196 11
+a206 1
+    if (RESDNT(dn->flags) && RESDNT(obj->flags)) {
+d234 11
+a244 1
+    if (RESDNT(dn->flags) && RESDNT(obj->flags)) {
+d282 11
+a292 1
+    if (RESDNT(dn->flags) && RESDNT(obj->flags)) {
+d323 1
+@
+
+
+1.2
+log
+@Cleaned up
+@
+text
+@d4 1
+d6 3
+a8 1
+#if !defined(NeXT)
+d14 1
+d16 1
+a28 1
+#include <stdio.h>
+d93 1
+d96 1
+a96 1
+  if (gettimeofday((struct timeval *)sp,0))
+d289 1
+d294 1
+a294 1
+    PUSH(ConcreteType, dn);
+d304 7
+d331 1
+a331 1
+  inhibit_gc = 1;
+d379 1
+a379 1
+  inhibit_gc = 0;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d285 6
+a290 1
+  if (RESDNT(dn->flags)) {
+@

@@ -1,0 +1,133 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.2
+	immel_start:1.2;
+locks; strict;
+
+
+1.4
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.09.03.04.15.29;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.44.53;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.44.52;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.4
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)NodeListElement.m	1.2  3/6/91
+%
+const NodeListElement <- immutable object NodeListElement builtin 0x100e
+  const NodeListElementType <- immutable typeobject T builtin 0x160e
+    function getTheNode -> [ Node ]
+    function getUp -> [ Boolean ]
+    function getIncarnationTime -> [ Time ]
+    function getLNN -> [Integer]
+  end T
+    
+  export function getSignature -> [ result : Signature ]
+    result <- NodeListElementType
+  end getSignature
+
+  export operation create 
+    [ theNode : Node, up : Boolean, incarnationTime : Time, LNN : Integer ]
+    -> [ n : NodeListElementType ]
+    n <- immutable object aNodeListElement builtin 0x140e
+      const l_theNode : Node <- theNode
+      attached const l_incarnationTime : Time <- incarnationTime
+      const l_up : Boolean <- up
+      const l_LNN : Integer <- LNN
+
+      export function getTheNode -> [ r : Node ]
+	r <- l_theNode
+      end getTheNode
+
+      export function getUp -> [ r : Boolean ]
+	r <- l_up
+      end getUp
+
+      export function getIncarnationTime -> [ r : Time ]
+	r <- l_incarnationTime
+      end getIncarnationTime
+
+      export function getLNN -> [ r : Integer ]
+	r <- l_LNN
+      end getLNN
+    end aNodeListElement
+  end create
+end NodeListElement
+
+export NodeListElement to "Builtins"
+@
+
+
+1.3
+log
+@Fix attached for builtins
+@
+text
+@d4 2
+a5 2
+const NodeListElement == immutable object NodeListElement builtin 0x100e
+  const NodeListElementType == immutable typeobject T builtin 0x160e
+d20 4
+a23 4
+      const l_theNode : Node == theNode
+      attached const l_incarnationTime : Time == incarnationTime
+      const l_up : Boolean == up
+      const l_LNN : Integer == LNN
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d21 1
+a21 1
+      const l_incarnationTime : Time == incarnationTime
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)NodeListElement.m	1.1  3/6/91
+d5 1
+a5 1
+  const NodeListElementType == immutable type T builtin 0x160e
+@

@@ -1,0 +1,452 @@
+head	1.17;
+access;
+symbols
+	105alpha:1.17
+	104alpha:1.17
+	103alpha:1.17
+	102alpha:1.17
+	101alpha:1.17
+	100alpha:1.17
+	DIKU_0:1.14
+	carlton_start:1.12
+	immel_start:1.8;
+locks; strict;
+
+
+1.17
+date	95.03.14.19.09.47;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	95.03.03.05.44.23;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.12.19.07.19.47;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	94.08.22.23.43.43;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.08.17.16.50.35;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.02.22.51.45;	author mueller;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.10.17.06.54;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.04.22.22.51.45;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.04.22.22.51.44;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.04.22.22.51.42;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.51.41;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.51.39;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.51.38;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.51.36;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.51.34;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.17
+log
+@Catch file open errors on output files
+@
+text
+@
+const CP <- class CP  [inputfilename : String, perfile : Boolean]
+    const q <- Array.of[CPAble].create[~20]
+    var start : Integer
+    var indexfilename : String
+    var cpfilename : String
+    var inf : InStream
+    var cpf : OutStream
+
+    export operation CP [x : CPAble]
+      var foo : Any
+      assert q.upperbound < q.lowerbound
+      q.slideTo[start]
+
+      x.getIndex[start, q]
+      start <- q.upperbound + 1
+      loop
+	exit when q.upperbound < q.lowerbound
+	q.removeLower.cpoint[cpf]
+      end loop
+    end CP
+
+    export operation finish 
+      if !perfile then
+	var outf : OutStream
+	begin
+	  outf <- OutStream.toUnix[indexfilename, "w"]
+	  failure
+	    outf <- nil
+	  end failure
+	end
+	if outf == nil then
+	  const env : EnvironmentType <- Environment$env
+	  env.SemanticError[1, "Can't open output file \"%s\"",{indexfilename}]
+	else
+	  outf.putint[start, 0]
+	  outf.putchar['\n']
+	  outf.close
+	end if
+      end if
+      cpf.close
+    end finish
+
+    initially
+      var mode : String
+      if perfile then
+	start <- 0
+	cpfilename <- self.build[inputfilename, '.', "x"]
+	mode <- "w"
+      else
+	indexfilename <- self.build[inputfilename, '/', "CPIndex"]
+	cpfilename <- self.build[inputfilename, '/', "CP"]
+	begin
+	  inf <- InStream.fromUnix[indexfilename, "r"]
+	  failure
+	    inf <- nil
+	  end failure
+	end
+	if inf == nil then
+	  start <- 0
+	else 
+	  const s <- inf.getString
+	  start <- Integer.literal[s]
+	  inf.close
+	end if
+	mode <- "a"
+      end if
+      begin
+	cpf <- OutStream.toUnix[cpfilename, mode]
+	failure
+	  cpf <- nil
+	end failure
+      end
+      % chmod 0777 cpfilename
+      if cpf == nil then
+	const env : EnvironmentType <- Environment$env
+	env.SemanticError[1, "Can't open output file \"%s\"",{cpfilename}]
+	cpf <- OutStream.toUnix["/dev/null", "w"]
+	assert cpf !== nil
+      end if
+      if perfile then
+	const header <- "#!  emx"
+	var length : Integer <- header.length # 4
+	cpf.putString[header]
+	loop
+	  exit when length == 3
+	  cpf.putchar[' ']
+	  length <- length + 1
+	end loop
+	cpf.putchar['\n']
+      end if
+    end initially
+
+  operation build [base : String, delim : Character, rest : String]
+	       -> [ans : String]
+    var i : Integer <- base.length - 1
+    loop
+      exit when base[i] = delim
+      i <- i - 1
+      exit when i < 0
+    end loop
+    if i < 0 then
+      ans <- rest
+    else
+      ans <- base[0, i+1] || rest
+    end if
+  end build
+
+end CP
+
+export CP
+@
+
+
+1.16
+log
+@Use new streams code
+@
+text
+@d26 6
+a31 1
+	outf <- OutStream.toUnix[indexfilename, "w"]
+d68 6
+a73 1
+      cpf <- OutStream.toUnix[cpfilename, mode]
+@
+
+
+1.15
+log
+@Deal with file open errors more gracefully
+@
+text
+@d48 6
+a53 1
+	inf <- InStream.fromUnix[indexfilename, "r"]
+@
+
+
+1.14
+log
+@August 94 Checkpoint II
+@
+text
+@d27 8
+a34 3
+	outf.putint[start, 0]
+	outf.putchar['\n']
+	outf.close
+d60 6
+a65 1
+      assert cpf !== nil
+@
+
+
+1.13
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d80 1
+a80 1
+      ans <- base.getSlice[0, i+1] || rest
+@
+
+
+1.12
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d3 1
+a3 1
+    const q <- CPQueue.create[~20]
+@
+
+
+1.11
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d73 1
+a73 1
+      exit when base(i) = delim
+@
+
+
+1.10
+log
+@emitted code contains no longer has a path in #! line
+from/toUnix calls changed to new syntax
+@
+text
+@d38 1
+a38 1
+	cpfilename <- build[inputfilename, '.', "x"]
+d41 2
+a42 2
+	indexfilename <- build[inputfilename, '/', "CPIndex"]
+	cpfilename <- build[inputfilename, '/', "CP"]
+@
+
+
+1.9
+log
+@Removed all monitors
+@
+text
+@d26 1
+a26 2
+	% O_CREAT | O_WRONLY | O_TRUNC = 01000 + 1 + 02000
+	outf <- OutStream.toUnix[indexfilename, 03001, 0666]
+d35 1
+a35 3
+      var root : String
+      var mode : Integer
+      primitive "GETROOTDIR" [root] <- []
+d39 1
+a39 1
+	mode <- 03001 % O_CREAT | O_WRONLY | O_TRUNC = 01000 + 1 + 02000
+d43 1
+a43 1
+	inf <- InStream.fromUnix[indexfilename, 0, 0666]
+d51 1
+a51 1
+	mode <- 01011 % O_CREAT | O_WRONLY | O_APPEND = 01000 + 1 + 010
+d53 2
+a54 1
+      cpf <- OutStream.toUnix[cpfilename, mode, 0777]
+d57 1
+a57 1
+	const header <- "#!  " || root || "/bin/emx"
+@
+
+
+1.8
+log
+@Made generation of debugging info optional
+@
+text
+@a2 1
+  monitor
+a69 1
+  end monitor
+@
+
+
+1.7
+log
+@type -> typeobject sed
+@
+text
+@d60 9
+a68 1
+	cpf.putString["#!  " || root || "/bin/emx\n"]
+@
+
+
+1.6
+log
+@Only generate the #! on perfiles, don't flush
+@
+text
+@a0 1
+import CPQueue, CPAble from "Jekyll"
+d82 1
+a82 1
+export CP to "Jekyll"
+@
+
+
+1.5
+log
+@Fixed the path name of the interpreter
+@
+text
+@a22 1
+      cpf.flush
+d60 3
+a62 1
+      cpf.putString["#!  " || root || "/bin/emx\n"]
+@
+
+
+1.4
+log
+@Write the EXEC filename to all checkpoint files
+@
+text
+@d61 1
+a61 1
+      cpf.putString["#!  " || root || "/Vm/emx\n"]
+@
+
+
+1.3
+log
+@Got rid of the absolute paths
+@
+text
+@d39 3
+a42 2
+	var root : String
+	primitive "GETROOTDIR" [root] <- []
+d45 1
+a45 4
+	% O_CREAT | O_WRONLY | O_TRUNC = 01000 + 1 + 02000
+	cpf <- OutStream.toUnix[cpfilename, 03001, 0777]
+	assert cpf !== nil
+	cpf.putString["#!  " || root || "/Vm/vm\n"]
+d57 1
+a57 3
+	% O_CREAT | O_WRONLY | O_APPEND = 01000 + 1 + 010
+	cpf <- OutStream.toUnix[cpfilename, 01011, 0666]
+	assert cpf !== nil
+d59 3
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d40 2
+a45 1
+	cpf.putString["#!  /usr/norm/jekyll/Vm/vm\n"]
+d47 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d43 2
+a44 1
+	cpf <- OutStream.toUnix[cpfilename, 03001, 0666]
+@

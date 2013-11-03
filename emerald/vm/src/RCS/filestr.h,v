@@ -1,0 +1,78 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@/****************************************************************************
+ File     : filestreams.h 
+ Date     : 08-11-92
+ Author   : Mark Immel
+
+ Contents : File Streams package
+
+ Modifications
+ -------------
+
+*****************************************************************************/
+
+#ifndef _EMERALD_FILESTREAMS_H
+#define _EMERALD_FILESTREAMS_H
+
+/*
+  This module provides a stream implementation for files.
+
+  The Hook argument to CreateStream should be a char * pointing to the name
+  of the file to open.
+*/
+
+#include "streams.h"
+
+extern StreamConstructor ReadFileStream;
+extern StreamConstructor WriteFileStream;
+extern StreamConstructor AppendFileStream;
+
+#endif /* _EMERALD_FILESSTREAMS_H */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 2
+a14 2
+#ifndef _FILESTREAMS_H
+#define _FILESTREAMS_H
+d29 1
+a29 1
+#endif /* _FILESSTREAMS_H */
+@

@@ -1,0 +1,723 @@
+head	1.23;
+access;
+symbols
+	105alpha:1.23
+	104alpha:1.23
+	103alpha:1.23
+	102alpha:1.23
+	101alpha:1.23
+	100alpha:1.23
+	DIKU_0:1.19
+	carlton_start:1.13
+	immel_start:1.5;
+locks; strict;
+
+
+1.23
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	95.03.23.23.00.17;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	94.12.06.20.12.48;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	94.08.17.16.51.51;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	94.06.10.05.21.58;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.12.20.21.09.40;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.12.11.01.08.40;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.10.21.16.03;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.09.16.01.51.21;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.31.01.50.49;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.58.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.58.56;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.58.55;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.53;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.52;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.23
+log
+@Many changes
+@
+text
+@% File for generating unary expressions.  Type checking code is
+% missing and should be added.
+
+export Unaryexp
+
+const unaryexp <- class Unaryexp (Tree) [xxop : Ident, xxexp : Tree]
+    field xop : Ident <- xxop
+    field exp  : Tree <- xxexp
+    export function upperbound -> [r : Integer]
+      r <- 0
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- exp
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	exp <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nexp : Tree
+      if exp !== nil then nexp <- exp.copy[i] end if
+      r <- unaryexp.create[ln, xop, nexp]
+    end copy
+    operation iremoveSugar -> [r : Tree]
+      const s : String <- xop$name
+      if s = "nameof" then
+	r <- invoc.create[
+	  self$ln,
+	  unaryexp.create[self$ln, opname.literal["codeof"], exp],
+	  opname.literal["getname"],
+	  nil]
+      elseif s = "typeof" then
+	r <- invoc.create[
+	  self$ln,
+	  unaryexp.create[self$ln, opname.literal["codeof"], exp],
+	  opname.literal["gettype"],
+	  nil]
+      else
+	r <- self
+      end if
+    end iremoveSugar
+
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    r <- self.iremoveSugar[]
+    r <- FTree.removeSugar[r, ob]
+  end removeSugar
+
+  export operation getCT -> [r : Tree]
+    const s : String <- xop$name
+    var index : Integer 
+    if s = "locate" then
+      index <- 0x08
+    elseif s = "isfixed" then
+      index <- 0x03
+    elseif s = "islocal" then
+      index <- 0x03
+    elseif s = "codeof" then
+      index <- 0x18
+    elseif s = "nameof" then
+      index <- 0x0b
+    elseif s = "awaiting" then
+      index <- 0x06
+    elseif s = "syntactictypeof" then
+      index <- 0x09
+    end if
+    r <- builtinlit.create[self$ln, index].getInstCT
+  end getCT
+
+  export operation getIsNotManifest -> [r : Boolean]
+    const s : String <- xop$name
+    r <- s != "syntactictypeof"
+  end getIsNotManifest
+
+  export function asType -> [r : Tree]
+    r <- self.execute
+    if r !== nil then r <- r.asType end if
+  end astype
+
+  export operation execute -> [r : Tree]
+    const s : String <- xop$name
+    if s = "syntactictypeof" then
+      r <- exp.getAT
+      if r !== nil then r <- r.execute end if
+    end if
+  end execute
+
+  export operation getAT -> [r : Tree]
+    const s : String <- xop$name
+    var index : Integer 
+    if s = "locate" then
+      index <- 0x08
+    elseif s = "isfixed" then
+      index <- 0x03
+    elseif s = "islocal" then
+      index <- 0x03
+    elseif s = "codeof" then
+      index <- 0x18
+    elseif s = "nameof" then
+      index <- 0x0b
+    elseif s = "awaiting" then
+      index <- 0x06
+    elseif s = "syntactictypeof" then
+      index <- 0x09
+    end if
+    r <- builtinlit.create[self$ln, index].getInstAT
+  end getAT
+
+  export operation generate [xct : Printable]
+    const bc <- view xct as ByteCode
+
+    const s : String <- xop$name
+    if s = "locate" then
+      bc.pushSize[8]
+      exp.generate[bc]
+      bc.popSize
+      bc.addCode["SYS"]
+      bc.addCode["JLOCATE"]
+      bc.addValue[2, 1]			% takes 1 VAR argument (2 words).
+      bc.finishExpr[8, 0x1808, 0x1608]
+    elseif s = "isfixed" then
+      bc.pushSize[8]
+      self$exp.generate[bc]
+      bc.addCode["SYS"]
+      bc.addCode["ISFIXED"]
+      bc.addValue[2, 1]		% ISFIXED takes two words of arguments.
+      bc.popSize
+      bc.finishExpr[8, 0x1803, 0x1603]
+    elseif s = "islocal" then
+      bc.pushSize[8]
+      self$exp.generate[bc]
+      bc.addCode["SYS"]
+      bc.addCode["ISLOCAL"]
+      bc.addValue[2, 1]		% ISLOCAL takes two words of arguments.
+      bc.popSize
+      bc.finishExpr[8, 0x1803, 0x1603]
+    elseif s = "codeof" then
+      % Tell the line after this one to generate both the data for the
+      % object in question and its concrete type object.
+      bc.pushSize[8]
+      self$exp.generate[bc]
+      bc.popSize
+      % Use the CODEOF bytecode so that the compiler doesn't have to worry
+      % about whether we are using concrete types or abcons as the second part
+      % of a variable.  
+      % the stack.
+      bc.addCode["CODEOF"]
+      % Add the second thing for concrete types if necessary.
+      bc.finishExpr[4, 0x1818, 0x1618]
+    elseif s = "nameof" then
+      Environment$env.SemanticError[self$ln, "Nameof should have been removed as sugar", nil]
+    elseif s = "typeof" then
+      Environment$env.SemanticError[self$ln, "Typeof should have been removed as sugar", nil]
+    elseif s = "awaiting" then
+      bc.pushSize[4]
+      self$exp.generate[bc]
+      bc.popSize
+      bc.addCode["CONDAWAITING"]
+      bc.finishExpr[4, 0x1806, 0x1606]
+    elseif s = "syntactictypeof" then
+      const expat <- exp.getAT
+      bc.pushSize[4]
+      expat.generate[bc]
+      bc.popSize
+      bc.finishExpr[4, 0x1809, 0x1609]
+    else
+      Environment$env.SemanticError[self$ln, "Illegal unaryexp name (%s)", {s}]
+    end if
+  end generate
+
+  export function asString -> [r : String]
+    r <- "unaryexp"
+  end asString
+end Unaryexp
+@
+
+
+1.22
+log
+@Re-implement the mobility primitives
+@
+text
+@d57 2
+d67 2
+d73 18
+d96 2
+d106 2
+d123 9
+a131 1
+      bc.finishExpr[4, 0x1808, 0x1608]
+d139 1
+a139 2
+      % Add concrete type object for booleans if necessary.
+      bc.finishExpr[4, 0x1803, 0x1603]
+d163 6
+@
+
+
+1.21
+log
+@Clean up generating the second things in references
+@
+text
+@d91 3
+a93 3
+      % There should be code here to generate the argument.  Also, the
+      % implementation of the GETNODE primitive needs to have the
+      % distribution added back in.
+d95 2
+a96 2
+      bc.addCode["GETNODE"]
+      bc.addValue[0, 1]			% GETNODE takes no arguments.
+@
+
+
+1.20
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d97 1
+a97 1
+      if bc$size != 4 then bc.fetchVariableSecondThing[0x1808, 0x1608] end if
+d106 1
+a106 1
+      if bc$size != 4 then bc.fetchVariableSecondThing[0x1803, 0x1603] end if
+d119 1
+a119 1
+      if bc$size != 4 then bc.fetchVariableSecondThing[0x1818, 0x1618] end if
+d129 1
+a129 1
+      if bc$size != 4 then bc.fetchVariableSecondThing[0x1806, 0x1606] end if
+@
+
+
+1.19
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d28 1
+a28 1
+      const s <- xop$name
+d53 1
+a53 1
+    const s <- xop$name
+d70 1
+a70 1
+    const s <- xop$name
+d89 1
+a89 1
+    const s <- xop$name
+@
+
+
+1.18
+log
+@Reinstalled support for monitored objects and conditions
+@
+text
+@d6 2
+a7 2
+const unaryexp <- class Unaryexp (Tree) [xxop : Tree, xxexp : Tree]
+    field xop : OpName <- view xxop as OpName
+d10 1
+a10 1
+      r <- 1
+a13 2
+	r <- xop
+      elseif i = 1 then
+a18 2
+	xop <- view r as OpName
+      elseif i = 1 then
+d23 1
+a23 2
+      var nxop, nexp : Tree
+      if xop !== nil then nxop <- xop.copy[i] end if
+d25 1
+a25 1
+      r <- unaryexp.create[ln, nxop, nexp]
+d28 1
+a28 1
+      const s <- xop$id.asString
+d53 1
+a53 1
+    const s <- xop$id.asString
+d70 1
+a70 1
+    const s <- xop$id.asString
+d89 1
+a89 1
+    const s <- xop$id.asString
+@
+
+
+1.17
+log
+@First attempt at abcons
+@
+text
+@d68 2
+d85 2
+d129 6
+@
+
+
+1.16
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@d88 2
+a89 9
+    const bc <- view xct as typeobject T
+      operation addCode[String]
+      operation addValue [Integer, Integer]
+      operation fetchVariableSecondThing[Integer, Integer]
+      operation pushSize [Integer]
+      function  getSize -> [Integer]
+      operation popSize
+      function  asString -> [String]
+    end T
+@
+
+
+1.15
+log
+@Preparatory work for Ab/Cons
+@
+text
+@d72 15
+d121 3
+a123 1
+      % Junk the data part of that, which is the next-to-top item on
+d125 2
+a126 6
+      bc.addCode["SWAP"]
+      bc.addCode["POOP"]
+      %
+      % If we are using abcons (Ab/Cons), then we have to fix here
+      %
+      % Add the concrete type object for concrete types if necessary.
+@
+
+
+1.14
+log
+@Finalized merge with Mark Immels version
+@
+text
+@d76 1
+a76 1
+      operation fetchLiteral [Integer]
+d90 1
+a90 1
+      if bc$size != 4 then bc.fetchLiteral[0x1808] end if
+d99 1
+a99 1
+      if bc$size != 4 then bc.fetchLiteral[0x1803] end if
+d105 1
+d110 3
+a112 1
+      bc.popSize
+d114 1
+a114 1
+      if bc$size != 4 then bc.fetchLiteral[0x1818] end if
+@
+
+
+1.13
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d1 3
+d62 2
+d84 3
+d89 1
+a89 1
+      bc.addValue[0, 1]
+d91 9
+d101 2
+d105 2
+d110 1
+@
+
+
+1.12
+log
+@Use nameof rather than asString
+@
+text
+@d50 1
+a50 1
+    r <- iremoveSugar[]
+@
+
+
+1.11
+log
+@Get rid of return on generate
+@
+text
+@d4 1
+a4 1
+    field xop : Tree <- xxop
+d18 1
+a18 1
+	xop <- r
+d30 2
+a31 2
+      const s <- xop.asString
+      if s = "opname (nameof)" then
+d37 1
+a37 1
+      elseif s = "opname (typeof)" then
+d55 1
+a55 1
+    const s <- self$xop.asString
+d57 1
+a57 1
+    if s = "opname (locate)" then
+d59 1
+a59 1
+    elseif s = "opname (codeof)" then
+d61 1
+a61 1
+    elseif s = "opname (nameof)" then
+d77 2
+a78 2
+    const s <- self$xop.asString
+    if s = "opname (locate)" then
+d83 1
+a83 1
+    elseif s = "opname (codeof)" then
+d90 1
+a90 1
+    elseif s = "opname (nameof)" then
+d92 1
+a92 1
+    elseif s = "opname (typeof)" then
+@
+
+
+1.10
+log
+@Removed all monitors
+@
+text
+@d67 1
+a67 2
+  export operation generate [xct : Printable] -> [rct : None]
+    var junk : Any
+d85 1
+a85 1
+      junk <- self$exp.generate[bc]
+@
+
+
+1.9
+log
+@Got rid of monitors and fix
+@
+text
+@a3 1
+  monitor
+a47 1
+  end monitor
+@
+
+
+1.8
+log
+@Implement change to "new" keyword.
+@
+text
+@a64 4
+    elseif s = "opname (awaiting)" then
+      index <- 0x06
+    elseif s = "opname (isfixed)" then
+      index <- 0x03
+a96 12
+    elseif s = "opname (awaiting)" then
+      bc.pushSize[4]
+      junk <- self$exp.generate[bc]
+      bc.popSize
+      bc.addCode["CONDAWAITING"]
+      if bc$size != 4 then bc.fetchLiteral[0x1806] end if
+    elseif s = "opname (isfixed)" then
+      bc.addCode["LDIS"]
+      bc.addValue[0, 2]
+      if bc$size != 4 then
+	bc.fetchLiteral[0x1803]
+      end if
+@
+
+
+1.7
+log
+@Fix code generation.
+@
+text
+@d111 1
+a111 1
+	bc.fetchLiteral[0x1800 + myindex]
+@
+
+
+1.6
+log
+@Implement getCT on unaryExps
+@
+text
+@d108 5
+d114 1
+@
+
+
+1.5
+log
+@type -> typeobject sed
+@
+text
+@d56 17
+@
+
+
+1.4
+log
+@Implemented (a first cut at) concurrency
+@
+text
+@d1 1
+a1 4
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+export Unaryexp to "Jekyll"
+d58 1
+a58 1
+    const bc <- view xct as type T
+@
+
+
+1.3
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d88 5
+@
+
+
+1.2
+log
+@Implemented nameof and codeof
+@
+text
+@d59 2
+a60 1
+  export operation generate [xct : Printable]
+d78 1
+a78 1
+      self$exp.generate[bc]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+d33 19
+d54 5
+d64 1
+d66 2
+d75 11
+@

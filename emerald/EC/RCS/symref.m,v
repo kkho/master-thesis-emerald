@@ -1,0 +1,75 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3
+	carlton_start:1.2
+	immel_start:1.2;
+locks; strict;
+
+
+1.3
+date	93.12.20.21.09.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.44;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.43;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.3
+log
+@Finalized merge with Mark Immels version
+@
+text
+@export Symref
+
+const symref <- immutable object Symref
+  % Don't you love lines like this next one?
+  const x <- 1
+  export operation create [ln : Integer, id : Ident] -> [r : Sym]
+    r <- Sym.create[ln, id]
+  end create
+end Symref
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d4 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 5
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Ident from "Jekyll"
+import Sym from "Jekyll"
+export Symref to "Jekyll"
+@

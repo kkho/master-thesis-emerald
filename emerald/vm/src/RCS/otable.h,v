@@ -1,0 +1,175 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.04.19.20.54;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@The Object Table.
+@
+
+
+1.3
+log
+@Check in current version
+@
+text
+@/*
+ * OTables (searchable collections) are things that map between
+ * oids and objects in both directions.  Operations:
+ *	create, destroy, insert, lookupbyoid, lookupbyobject, size, and print
+ */
+
+#ifndef __EMERALD_OTABLE_H
+#define __EMERALD_OTABLE_H
+
+#include "storage.h"
+#include "types.h"
+
+#define OTableIsNIL(X) (ISNIL(X))
+
+typedef unsigned int indexType;
+
+/*
+ * Hidden, private type declarations.  The only thing
+ * that applications of this package are to see is OTable,
+ * and they are to treat it as opaque:  that is, they may
+ * assign it, and pass it as arguments, but not manipulate
+ * what it points to directly.
+ */
+
+typedef struct OTableTE {
+    OID			 key;		/* the key for this entry */
+    Object		 value;		/* what we want */
+    indexType	 ochain;	/* overflow chain */
+    indexType	 oidchain;	/* overflow chain */
+} OTableTE, *OTableTEPtr;
+
+typedef struct OTableRecord {
+    OTableTEPtr table;
+    int size, count, free;
+    indexType *olookup, *oidlookup;
+} OTableRecord, *OTable;
+
+/* OPERATIONS */
+
+/* Return a new, empty Searchable Collection */
+OTable OTableCreate(void);
+OTable OTableCreateN(int);
+
+/* Destroy a collection */
+void OTableDestroy(OTable sc);
+
+/* Insert the pair <key, value> into collection OTable */
+void OTableInsert(OTable sc, OID a, Object value);
+
+/* Delete the pair with key key from the collection OTable */
+void OTableDeleteByOID(OTable sc, OID a);
+void OTableDeleteByObject(OTable sc, Object o);
+
+/* Return the value associated with key in the collection,
+ * or OTableNIL if no such pair exists */
+Object OTableLookupByOID(OTable sc, OID a);
+OID OTableLookupByObject(OTable sc, Object o);
+
+/* DEBUGGING: Print the collection OTable */
+void OTablePrint(OTable sc);
+
+/* Iterate over the elements of the collection OTable.  
+ * At each iteration, OTablekey and OTablevalue are set to the next
+ * <key, value> pair in the collection.  
+ * Usage:
+ *	OTableForEach(sc, key_a, value) {
+ *	  / * whatever you want to do with key_a, key_b, value * /
+ *	} OTableNext();
+ */
+#define OTableForEach(OTable, OTablekey, OTablevalue) \
+  { \
+    int OTablexx_index; \
+    for (OTablexx_index = 0; OTablexx_index < OTable->size; OTablexx_index++) { \
+      if (!OTableIsNIL((OTable)->table[OTablexx_index].value)) { \
+	*(OID*)(&(OTablekey)) = (OTable)->table[OTablexx_index].key; \
+	*(Object *)(&(OTablevalue)) = (OTable)->table[OTablexx_index].value; \
+	{
+
+#define OTableNext() \
+	} \
+      } \
+    } \
+  }
+
+/* Iterate over the elements of the collection OTable backwards.  
+ * At each iteration, OTablekey and OTablevalue are set to the next
+ * <key, value> pair in the collection.  
+ * Usage:
+ *	OTableForEachBackwards(sc, key_a, value) {
+ *	  / * whatever you want to do with key_a, key_b, value * /
+ *	} OTableNext();
+ */
+#define OTableForEachBackwards(OTable, OTablekey, OTablevalue) \
+  { \
+    int OTablexx_index; \
+    for (OTablexx_index = OTable->size - 1; OTablexx_index >= 0; OTablexx_index--) { \
+      if (!OTableIsNIL((OTable)->table[OTablexx_index].value)) { \
+	*(OID*)(&(OTablekey)) = (OTable)->table[OTablexx_index].key; \
+	*(Object *)(&(OTablevalue)) = (OTable)->table[OTablexx_index].value; \
+	{ 
+
+#define OTableNext() \
+	} \
+      } \
+    } \
+  }
+
+/* Return the number of elements in OTable */
+#define OTableSize(OTable) ((OTable)->count)
+
+extern void OTableUpdateValue(OTable, Object, Object);
+#endif /* _EMERALD_OTABLE_H */
+@
+
+
+1.2
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@d15 1
+a15 1
+typedef unsigned short indexType;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 2
+d28 2
+a29 2
+    unsigned short	 ochain;	/* overflow chain */
+    unsigned short	 oidchain;	/* overflow chain */
+d35 1
+a35 1
+    unsigned short *olookup, *oidlookup;
+@

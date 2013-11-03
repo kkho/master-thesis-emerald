@@ -1,0 +1,56 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.1
+	carlton_start:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	95.06.23.22.14.38;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.08.18.24.35;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Script to load the trees into the compiler for subclassing.
+@
+
+
+1.2
+log
+@Removed obsolete doselfs
+@
+text
+@unset perfile
+set exporttree
+unset dogeneration
+tree.m
+otree.m
+set dogeneration
+unset exporttree
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a3 1
+unset doselfs
+a5 1
+set doselfs
+@

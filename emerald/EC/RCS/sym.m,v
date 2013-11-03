@@ -1,0 +1,1262 @@
+head	1.27;
+access;
+symbols
+	105alpha:1.27
+	104alpha:1.27
+	103alpha:1.27
+	102alpha:1.27
+	101alpha:1.27
+	100alpha:1.27
+	DIKU_0:1.22
+	carlton_start:1.18
+	immel_start:1.6;
+locks; strict;
+
+
+1.27
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	94.12.06.20.12.48;	author norm;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	94.10.04.05.35.14;	author norm;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	94.08.17.16.51.49;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	93.12.20.21.09.40;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.06.21.17.10.03;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.06.11.20.23.04;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.06.10.15.51.27;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.03.01.03.16.18;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.12.16.21.27.42;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.12.10.17.07.45;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.06.19.12.14.42;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.06.01.18.00.16;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.27.15.39.46;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.58.25;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.58.23;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.22;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.20;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.27
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@export Sym
+
+const sym <- class Sym (Tree) [xxid : Ident]
+  class export operation literal [s : String] -> [r : SymType]
+    r <- Sym.create[0, Environment.getEnv.getITable.lookup[s, 999]]
+  end literal
+
+    const field id : Ident <- xxid
+    field mysym : Symbol
+
+    export operation copy [i : Integer] -> [r : symType]
+      var nid : Ident 
+      const it : IdentTable <- Environment.getEnv.getITable
+      if id !== nil then nid <- it.lookup[id.asString, 999] end if
+      r <- sym.create[ln, nid]
+      if mysym !== nil then r$mysym <- mysym.copy[i] end if
+    end copy
+
+    export function getAT -> [r : Tree]
+      r <- view mysym$ATinfo as Tree
+      if r == nil and ! mysym$isNotManifest then
+	if mysym$value == nil then
+	  Environment$env.printf["sym.getat: %s mysym.value is nil\n", {id.asString}]
+	else
+	  r <- (view mysym$value as Tree).getAT
+	end if
+      end if
+    end getAT
+
+    export function getCT -> [r : Tree]
+      const env : EnvironmentType <- Environment$env
+      const tinline <- env$traceInline
+      if mysym$CTInfo !== nil then
+	r <- view mysym$CTInfo as Tree
+	if tinline then 
+	  env.printf["sym.getCT on %s has a ct %s\n", 
+	    { self.pasString, r.asString }]
+	end if
+% was
+%      elseif mysym$isself and mysym$value !== nil and 
+%	 mysym$value.asString == "oblit" then
+% is now
+      elseif mysym$value !== nil then
+	if nameof mysym$value == "anoblit" then
+	  r <- view mysym$value as Tree
+	else
+	  r <- (view mysym$value as Tree).getCT
+	end if
+	if tinline then
+	  env.printf["sym.getCT on %s has a value %s with ct %s\n", 
+	    { self.pasString, mysym$value.asString, FTree.getString[r] }]
+	end if
+% end
+      elseif mysym$ATInfo !== nil then
+	const a <- view mysym$ATInfo as hasInstCT
+	r <- a$instCT
+	if tinline then
+	  env.printf["sym.getCT on %s has an at %s with ct %s\n", 
+	    { self.pasString, a.asString, FTree.getString[r] }]
+	end if
+	if r == nil then
+	  const atid : Integer <- (view mysym$ATInfo as hasID)$id
+	  const ctid : Integer <- IDS.IDtoInstCTID[atid]
+	  if ctid !== nil then
+	    r <- globalref.create[ln, nil, nil, ctid, nil, nil]
+	  end if
+	end if
+      end if
+    end getCT
+      
+    export operation getIsNotManifest -> [r : Boolean]
+      r <- mysym$isNotManifest
+    end getIsNotManifest
+    
+    export operation setIsNotManifest [r : Boolean]
+      mysym$isNotManifest <- r
+    end setIsNotManifest
+    
+    function pasString -> [r : String]
+      var rest : String <- ""
+      r <- "sym (" || id$name || ")"
+      if mysym !== nil then
+	rest <- " " || Environment.getPtr[mysym].asString
+	if mysym$base !== nil and mysym$offset !== nil then
+	  rest <- rest || " " || mysym$base.asString || "@@" || mysym$offset.asString
+	end if
+      end if
+      r <- r || rest
+      if mysym !== nil then
+	if mysym$isUsedOutsideInitially then
+	  r <- r || " uoi"
+	else
+	  r <- r || " !uoi"
+	end if
+	if mysym$isNotManifest then
+	  r <- r || " isNotManifest"
+	end if
+	if mysym$isTypeVariable then
+	  r <- r || " isTypeVariable"
+	end if
+	if mysym$value == nil then
+	  r <- r || " manifest but no value"
+	else
+	  r <- r || " manifest value = " || mysym$value.asString
+	end if
+      end if
+    end pasString
+
+    function mAsString -> [r : String]
+      r <- self.pAsString
+    end mAsString
+
+    export operation resolveSymbols [st : SymbolTable, nexp : Integer]
+      if mysym == nil then
+	const env : EnvironmentType <- Environment.getEnv
+	mysym <- st.Lookup[ln, id, true]
+	if mysym == nil then
+	  env.SemanticError[ln, "Undefined identifier %s", { id$name} ]
+	elseif mysym$mykind = SExternal and env$externalDirectory == nil then
+	  env.SemanticError[ln, "Can't define external symbols without an external directory", nil]
+	end if
+      end if
+    end resolveSymbols
+
+
+  export function asString -> [r : String]
+    r <- self.mAsString
+  end asString
+
+  export function getCodeOID -> [oid : Integer]
+    const ct <- self$ct
+    if ct !== nil then oid <- (view ct as hasIDs)$codeOID end if
+  end getCodeOID
+
+  export function getATOID -> [oid : Integer]
+    const myAT <- self.getat
+    if myAT !== nil then oid <- (view myAT as hasID).getID end if
+  end getATOID
+
+  export operation generate [xct : Printable]
+    if mysym$isself then
+      const bc <- view xct as ByteCode
+
+      if bc$size = 4 then
+	bc.addCode["LDSELF"]
+      else
+	bc.addCode["LDSELFV"]
+      end if
+    else
+      const thev <- view mysym$value as Tree
+      const hasexport <- typeobject t function getIsExported -> [Boolean] end t
+      if !mysym$isNotManifest or 
+	thev !== nil and 
+	nameof thev = "anoblit" and 
+	(view thev as hasexport)$isExported then
+	% Do it by id
+	const v <- view mysym$value as Tree
+	if nameof v = "anoblit" then
+	  const gs <- typeobject gs
+	    operation generateSelf[Printable]
+	  end gs
+	  const vgs <- view v as gs
+	  vgs.generateSelf[xct]
+	else
+	  v.generate[xct]
+	end if
+      else
+	const bc <- view xct as ByteCode
+	const bcsize : Integer <- bc$size
+  
+	if mysym$mykind = SExternal then
+	  % we want to execute:
+	  %   externalDirectory.lookup[id$name]
+	  var dseq, dcseq: Integer
+	  var externalDirectory : Directory
+	  var externalDirectoryCode : ConcreteType
+	  var r : Tree
+    
+	  externalDirectory <- Environment$env$externalDirectory
+	  primitive "GETIDSEQ" [dseq] <- [externalDirectory]
+    
+	  externalDirectoryCode <- codeof externalDirectory
+	  primitive "GETIDSEQ" [dcseq] <- [externalDirectoryCode]
+    
+	  r <- Environment$env$invoc.create[ln, 
+	    GlobalRef.create[ln, dseq, nil, dcseq, nil, nil], 
+	    OpName.Literal["lookup"],
+	    Seq.singleton[view Literal.StringL[ln, id$name] as Tree]]
+      
+	  r.generate[xct]
+	else
+	  var opcode : String
+	  const base : Character <- mysym$base
+	  const offset : Integer <- mysym$offset
+	  var size : Integer <- mysym$size
+	  const opcodev <- VectorOfChar.create[5]
+	  var index : Integer <- 2
+	  var offsetsize : Integer 
+	  opcodev[0] <- 'L'
+	  opcodev[1] <- 'D'
+	  if size == 8 and bcsize == 8 then 
+	    opcodev[index] <- 'V'
+	    index <- index + 1
+	  else
+	    size <- 4
+	  end if
+	  opcodev[index] <- base 
+	  index <- index + 1
+	  if ~128 <= offset and offset <= 127 then
+	    opcodev[index] <- 'B'
+	    index <- index + 1
+	    offsetsize <- 1
+	  elseif ~32768 <= offset and offset <= 32767 then
+	    opcodev[index] <- 'S'
+	    index <- index + 1
+	    offsetsize <- 2
+	  else
+	    offsetsize <- 4
+	  end if
+	  bc.addCode[String.FLiteral[opcodev, 0, index]]
+	  bc.addValue[offset, offsetsize]
+	  bc.finishExpr[size, self$codeOID, self$atOID] 
+	end if
+      end if
+    end if
+  end generate
+  export operation generateLValue [xct : Printable]
+    if mysym$isNotManifest then
+      const bc <- view xct as ByteCode
+
+      if mysym$mykind = SExternal then
+	% we want to execute:
+	%   externalDirectory.insert[id$name, valueonthestack]
+	%
+	var dseq, dcseq: Integer
+	var externalDirectory : Directory
+	var externalDirectoryCode : ConcreteType
+	var r : Tree
+
+	bc.pushSize[8]
+	Literal.StringL[0, id$name].generate[xct]
+	bc.popSize
+	bc.addCode["SWAPV"]
+      
+	externalDirectory <- Environment$env$externalDirectory
+	primitive "GETIDSEQ" [dseq] <- [externalDirectory]
+
+	externalDirectoryCode <- codeof externalDirectory
+	primitive "GETIDSEQ" [dcseq] <- [externalDirectoryCode]
+
+	r <- Environment$env$invoc.create[ln, 
+	  GlobalRef.create[ln, dseq, nil, dcseq, nil, nil], 
+	  OpName.Literal["insert@@2"],
+	  nil]
+	begin
+	  (view r as typeobject x operation setnress[Integer] end x)$nress <- 0
+	end
+	r.generate[xct]
+      else
+	var opcode : String
+	const base : Character <- mysym$base
+	const offset : Integer <- mysym$offset
+	const size : Integer <- mysym$size
+	const bcsize : Integer <- bc$size
+	const opcodev <- VectorOfChar.create[5]
+	var index : Integer <- 2
+	var offsetsize : Integer 
+	opcodev[0] <- 'S'
+	opcodev[1] <- 'T'
+	if size == 8 and bcsize == 8 then opcodev[index] <- 'V' index <- index + 1 end if
+	opcodev[index] <- base 
+	index <- index + 1
+	if ~128 <= offset and offset <= 127 then
+	  opcodev[index] <- 'B'
+	  index <- index + 1
+	  offsetsize <- 1
+	elseif ~32768 <= offset and offset <= 32767 then
+	  opcodev[index] <- 'S'
+	  index <- index + 1
+	  offsetsize <- 2
+	else
+	  offsetsize <- 4
+	end if
+	if bcsize == 8 and size < 8 then bc.addCode["POOP"] end if
+	bc.addCode[String.FLiteral[opcodev, 0, index]]
+	bc.addValue[offset, offsetsize]
+      end if
+    else
+      Environment.getEnv.printf["Attempt to store to manifest symbol %s\n",
+	{ mysym$myident.asString }]
+    end if
+  end generateLValue
+
+  export function asType -> [r : Tree]
+    r <- self.execute.asType
+  end astype
+  export operation execute -> [r : Tree]
+    if ! self$isNotManifest then
+      r <- view self$mysym$value as Tree
+      if r !== nil then r <- r.execute end if
+    end if
+  end execute
+  export function same [o : Tree] -> [r : Boolean]
+    const s <- nameof o
+    r <- false
+    if s = "asym" then
+      r <- self$id == (view o as Sym)$id
+    end if
+  end same
+  export operation findThingsToGenerate [q : Any]
+    var r : Tree
+    if self$mysym !== nil and !self$isNotManifest then
+      r <- view self$mysym$value as Tree
+      if r !== nil then
+	r.findThingsToGenerate[q]
+      end if
+    end if
+  end findThingsToGenerate
+  export operation prune 
+    mysym <- nil
+  end prune
+end Sym
+@
+
+
+1.26
+log
+@Make type stuff work
+@
+text
+@d188 1
+a188 1
+	    Seq.singleton[Literal.StringL[ln, id$name]]]
+@
+
+
+1.25
+log
+@Clean up generating the second things in references
+@
+text
+@d97 5
+a101 1
+	elseif mysym$value == nil then
+@
+
+
+1.24
+log
+@Detect exported non-manifest objects that import non-manifest ones
+@
+text
+@d191 1
+a191 1
+	  const size : Integer <- mysym$size
+d197 6
+a202 1
+	  if size == 8 and bcsize == 8 then opcodev[index] <- 'V' index <- index + 1 end if
+d218 1
+a218 3
+	  if bcsize == 8 and size < 8 then
+	    bc.fetchVariableSecondThing[self$codeOID, self$atOID] 
+	  end if
+@
+
+
+1.23
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d145 21
+a165 11
+    elseif mysym$isNotManifest then
+      const bc <- view xct as ByteCode
+      const bcsize : Integer <- bc$size
+
+      if mysym$mykind = SExternal then
+	% we want to execute:
+	%   externalDirectory.lookup[id$name]
+	var dseq, dcseq: Integer
+	var externalDirectory : Directory
+	var externalDirectoryCode : ConcreteType
+	var r : Tree
+d167 13
+a179 10
+	externalDirectory <- Environment$env$externalDirectory
+	primitive "GETIDSEQ" [dseq] <- [externalDirectory]
+  
+	externalDirectoryCode <- codeof externalDirectory
+	primitive "GETIDSEQ" [dcseq] <- [externalDirectoryCode]
+  
+	r <- Environment$env$invoc.create[ln, 
+	  GlobalRef.create[ln, dseq, nil, dcseq, nil, nil], 
+	  OpName.Literal["lookup"],
+	  Seq.singleton[Literal.StringL[ln, id$name]]]
+d181 18
+a198 16
+	r.generate[xct]
+      else
+	var opcode : String
+	const base : Character <- mysym$base
+	const offset : Integer <- mysym$offset
+	const size : Integer <- mysym$size
+	const opcodev <- VectorOfChar.create[5]
+	var index : Integer <- 2
+	var offsetsize : Integer 
+	opcodev[0] <- 'L'
+	opcodev[1] <- 'D'
+	if size == 8 and bcsize == 8 then opcodev[index] <- 'V' index <- index + 1 end if
+	opcodev[index] <- base 
+	index <- index + 1
+	if ~128 <= offset and offset <= 127 then
+	  opcodev[index] <- 'B'
+d200 16
+a215 7
+	  offsetsize <- 1
+	elseif ~32768 <= offset and offset <= 32767 then
+	  opcodev[index] <- 'S'
+	  index <- index + 1
+	  offsetsize <- 2
+	else
+	  offsetsize <- 4
+a216 16
+	bc.addCode[String.FLiteral[opcodev, 0, index]]
+	bc.addValue[offset, offsetsize]
+	if bcsize == 8 and size < 8 then
+	  bc.fetchVariableSecondThing[self$codeOID, self$atOID] 
+	end if
+      end if
+    else
+      const v <- view mysym$value as Tree
+      if nameof v = "anoblit" then
+	const gs <- typeobject gs
+	  operation generateSelf[Printable]
+	end gs
+	const vgs <- view v as gs
+	vgs.generateSelf[xct]
+      else
+	v.generate[xct]
+@
+
+
+1.22
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d13 1
+a13 1
+      const it <- Environment.getEnv.getITable
+d31 1
+a31 1
+      const env <- Environment$env
+d63 1
+a63 1
+	  const ctid <- IDS.IDtoInstCTID[atid]
+d111 1
+a111 1
+	const env <- Environment.getEnv
+d147 1
+a147 1
+      const bcsize <- bc$size
+d166 1
+a166 1
+	  Seq.singleton[Literal.StringL[id$name]]]
+d171 3
+a173 3
+	const base <- mysym$base
+	const offset <- mysym$offset
+	const size <- mysym$size
+d226 1
+a226 1
+	Literal.StringL[id$name].generate[xct]
+d246 4
+a249 4
+	const base <- mysym$base
+	const offset <- mysym$offset
+	const size <- mysym$size
+	const bcsize <- bc$size
+@
+
+
+1.21
+log
+@First attempt at abcons
+@
+text
+@d32 1
+a32 1
+      const tinline <- Environment$env$traceInline
+d36 1
+a36 1
+	  env.tinline["sym.getCT on %s has a ct %s\n", 
+d50 1
+a50 1
+	  env.tinline["sym.getCT on %s has a value %s with ct %s\n", 
+d58 1
+a58 1
+	  env.tinline["sym.getCT on %s has an at %s with ct %s\n", 
+d62 4
+a65 4
+	  var id : Integer <- (view mysym$ATInfo as hasID)$id
+	  id <- IDS.IDtoInstCTID[id]
+	  if id !== nil then
+	    r <- globalref.create[ln, nil, id, nil, nil]
+d108 1
+d112 1
+a112 1
+	mysym <- st.Lookup[id, true]
+a136 1
+    const mysym <- self$mysym
+d164 1
+a164 1
+	  GlobalRef.create[ln, dseq, dcseq, nil, nil], 
+d166 1
+a166 1
+	  Seq.singleton[StringLit.create[ln, id$name]]]
+a212 1
+    const mysym <- self$mysym
+d226 1
+a226 1
+	StringLit.create[ln, id$name].generate[xct]
+d237 1
+a237 1
+	  GlobalRef.create[ln, dseq, dcseq, nil, nil], 
+d304 3
+@
+
+
+1.20
+log
+@Preparatory work for Ab/Cons
+@
+text
+@a30 1
+      const idType <- typeobject t function getID -> [Integer] end t
+d55 1
+a55 4
+	const a <- view mysym$ATInfo as typeobject t 
+	  op getInstCT->[Tree]
+	  function asString -> [String]
+	end t
+d62 1
+a62 1
+	  var id : Integer <- (view mysym$ATInfo as idType)$id
+d127 1
+a127 2
+    const idType <- typeobject t function getCodeOID -> [Integer] end t
+    if ct !== nil then oid <- (view ct as idType)$codeOID end if
+d132 1
+a132 2
+    const idType <- typeobject t function getID -> [Integer] end t
+    if myAT !== nil then oid <- (view myAT as idType).getID end if
+d138 2
+a139 5
+      const bc <- view xct as typeobject BCType
+	operation addCode[String]
+	operation addValue[Integer, Integer]
+	function  getSize -> [Integer]
+      end BCType
+d146 1
+a146 6
+      const bc <- view xct as typeobject T
+	operation addCode[String]
+	operation addValue[Integer, Integer]
+	function  getSize -> [Integer]
+	operation fetchVariableSecondThing[Integer, Integer]
+      end T
+d215 2
+a216 7
+      const bc <- view xct as typeobject T
+	operation addCode[String]
+	operation addValue[Integer, Integer]
+	function  getSize -> [Integer]
+	operation pushSize[Integer]
+	operation popSize
+      end T
+@
+
+
+1.19
+log
+@Finalized merge with Mark Immels version
+@
+text
+@a31 1
+      const codeIDType <- typeobject t function getCodeOID -> [Integer] end t
+d135 6
+d159 1
+a159 1
+	operation fetchLiteral[Integer]
+d209 3
+a211 1
+	if bcsize == 8 and size < 8 then bc.fetchLiteral[self$codeOID] end if
+@
+
+
+1.18
+log
+@Cleanup extraneous upperbound operation
+@
+text
+@d161 1
+a161 1
+	var dnode, dseq, dcnode, dcseq: Integer
+d167 1
+a167 1
+	primitive "GETID" [dnode, dseq] <- [externalDirectory]
+d170 1
+a170 1
+	primitive "GETID" [dcnode, dcseq] <- [externalDirectoryCode]
+d233 1
+a233 1
+	var dnode, dseq, dcnode, dcseq: Integer
+d244 1
+a244 1
+	primitive "GETID" [dnode, dseq] <- [externalDirectory]
+d247 1
+a247 1
+	primitive "GETID" [dcnode, dcseq] <- [externalDirectoryCode]
+@
+
+
+1.17
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d10 1
+a10 3
+    export function upperbound -> [r : Integer]
+      r <- ~1
+    end upperbound
+@
+
+
+1.16
+log
+@Better error messages related to externals
+@
+text
+@d188 4
+a191 4
+	opcodev(0) <- 'L'
+	opcodev(1) <- 'D'
+	if size == 8 and bcsize == 8 then opcodev(index) <- 'V' index <- index + 1 end if
+	opcodev(index) <- base 
+d194 1
+a194 1
+	  opcodev(index) <- 'B'
+d198 1
+a198 1
+	  opcodev(index) <- 'S'
+d268 4
+a271 4
+	opcodev(0) <- 'S'
+	opcodev(1) <- 'T'
+	if size == 8 and bcsize == 8 then opcodev(index) <- 'V' index <- index + 1 end if
+	opcodev(index) <- base 
+d274 1
+a274 1
+	  opcodev(index) <- 'B'
+d278 1
+a278 1
+	  opcodev(index) <- 'S'
+@
+
+
+1.15
+log
+@Implement external dictionary for symbol lookups
+@
+text
+@d117 1
+a119 1
+	  const env <- Environment.getEnv
+d121 2
+@
+
+
+1.14
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@a155 4
+      var opcode : String
+      const base <- mysym$base
+      const offset <- mysym$offset
+      const size <- mysym$size
+d157 33
+a189 10
+      const opcodev <- VectorOfChar.create[5]
+      var index : Integer <- 2
+      var offsetsize : Integer 
+      opcodev(0) <- 'L'
+      opcodev(1) <- 'D'
+      if size == 8 and bcsize == 8 then opcodev(index) <- 'V' index <- index + 1 end if
+      opcodev(index) <- base 
+      index <- index + 1
+      if ~128 <= offset and offset <= 127 then
+	opcodev(index) <- 'B'
+d191 14
+a204 7
+	offsetsize <- 1
+      elseif ~32768 <= offset and offset <= 32767 then
+	opcodev(index) <- 'S'
+	index <- index + 1
+	offsetsize <- 2
+      else
+	offsetsize <- 4
+a205 3
+      bc.addCode[String.FLiteral[opcodev, 0, index]]
+      bc.addValue[offset, offsetsize]
+      if bcsize == 8 and size < 8 then bc.fetchLiteral[self$codeOID] end if
+d226 2
+d229 41
+a269 15
+      var opcode : String
+      const base <- mysym$base
+      const offset <- mysym$offset
+      const size <- mysym$size
+      const bcsize <- bc$size
+      const opcodev <- VectorOfChar.create[5]
+      var index : Integer <- 2
+      var offsetsize : Integer 
+      opcodev(0) <- 'S'
+      opcodev(1) <- 'T'
+      if size == 8 and bcsize == 8 then opcodev(index) <- 'V' index <- index + 1 end if
+      opcodev(index) <- base 
+      index <- index + 1
+      if ~128 <= offset and offset <= 127 then
+	opcodev(index) <- 'B'
+d271 14
+a284 7
+	offsetsize <- 1
+      elseif ~32768 <= offset and offset <= 32767 then
+	opcodev(index) <- 'S'
+	index <- index + 1
+	offsetsize <- 2
+      else
+	offsetsize <- 4
+a285 3
+      if bcsize == 8 and size < 8 then bc.addCode["POOP"] end if
+      bc.addCode[String.FLiteral[opcodev, 0, index]]
+      bc.addValue[offset, offsetsize]
+@
+
+
+1.13
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d161 18
+a178 34
+
+      if size == 8 then
+	if base = 'A' then
+	  if bcsize == 4 then opcode <- "LDAS" else opcode <- "LDVAS" end if
+	elseif base = 'L' then
+	  if bcsize == 4 then opcode <- "LDLS" else opcode <- "LDVLS" end if
+	elseif base = 'O' then
+	  if bcsize == 4 then opcode <- "LDOS" else opcode <- "LDVOS" end if
+	else
+	  opcode <- "QUIT"
+	  Environment$env.printf[
+	    "Impossible base in sym.generate, name %s base %#x\n",
+	    { self$id.asString, base.ord : Any }]
+	end if
+	bc.addCode[opcode]
+	bc.addValue[offset, 2]
+      else		% size is 4 or 1
+	if base = 'A' then
+	  opcode <- "LDAS"
+	elseif base = 'L' then
+	  opcode <- "LDLS"
+	elseif base = 'O' then
+	  opcode <- "LDOS"
+	else
+	  opcode <- "QUIT"
+	  Environment$env.printf[
+	    "Impossible base in sym.generate, name %s base %#x\n",
+	    { self$id.asString, base.ord : Any }]
+	end if
+	bc.addCode[opcode]
+	bc.addValue[offset, 2]
+	if bcsize == 8 then
+	  bc.fetchLiteral[self$codeOID]
+	end if
+d180 3
+d209 16
+a224 17
+
+%     Environment$env.pass["sym.gLV: size = %d bcsize = %d\n", {size, bcsize}]
+      if size == 8 then
+	if base = 'A' then
+	  if bcsize == 4 then opcode <- "STAS" else opcode <- "STVAS" end if
+	elseif base = 'L' then
+	  if bcsize == 4 then opcode <- "STLS" else opcode <- "STVLS" end if
+	elseif base = 'O' then
+	  if bcsize == 4 then opcode <- "STOS" else opcode <- "STVOS" end if
+	else
+	  opcode <- "QUIT"
+	  Environment$env.printf[
+	    "Impossible base in sym.generate, name %s base %#x\n",
+	    { self$id.asString, base.ord : Any }]
+	end if
+	bc.addCode[opcode]
+	bc.addValue[offset, 2]
+d226 1
+a226 15
+	if bcsize == 8 then bc.addCode["POOP"] end if
+	if base = 'A' then
+	  opcode <- "STAS"
+	elseif base = 'L' then
+	  opcode <- "STLS"
+	elseif base = 'O' then
+	  opcode <- "STOS"
+	else
+	  opcode <- "QUIT"
+	  Environment$env.printf[
+	    "Impossible base in sym.generate, name %s base %#x\n",
+	    { self$id.asString, base.ord : Any }]
+	end if
+	bc.addCode[opcode]
+	bc.addValue[offset, 2]
+d228 3
+@
+
+
+1.12
+log
+@Generate the values of symbols whose values are manifest.  This fixes a
+problem with getting atlits in where clauses generated when Vector.of
+is executed at compile time.
+@
+text
+@d4 1
+a4 1
+  class export operation literal [s : String, isDef : Boolean] -> [r : SymType]
+a5 1
+    if isDef then r.becomeDef end if
+a8 1
+    field isDef : Boolean <- false
+a17 1
+      if isDef then r.becomeDef end if
+a85 6
+    export operation becomeDef
+      isDef <- true
+    end becomeDef
+    export operation becomeRef
+      isDef <- false
+    end becomeRef
+d88 1
+a88 5
+      if isDef then
+	r <- "symdef (" || id$name || ")"
+      else 
+	r <- "symref (" || id$name || ")"
+      end if
+d120 1
+a120 5
+	  if isDef then
+	    env.SemanticError[ln, "Someone forgot to declare me %s", {id$name}]
+	  else
+	    env.SemanticError[ln, "Undefined identifier %s", { id$name} ]
+	  end if
+d130 1
+a130 1
+  export function getCodeOID -> [id : Integer]
+d133 1
+a133 1
+    if ct !== nil then id <- (view ct as idType)$codeOID end if
+@
+
+
+1.11
+log
+@Use nameof rather than asString
+@
+text
+@d295 9
+@
+
+
+1.10
+log
+@Store the AT of exported symbols, do allocation for inlining
+@
+text
+@d51 1
+a51 1
+	if mysym$value.asString == "oblit" then
+d215 1
+a215 1
+      if v.asString = "oblit" then
+d289 1
+a289 1
+    const s <- o.asString
+d291 1
+a291 1
+    if s.length >= 3 and s.getSlice[0, 3] = "sym" then
+@
+
+
+1.9
+log
+@Get rid of return on generate
+@
+text
+@d8 1
+a8 8
+  const RISA <- typeobject RISA
+    function lowerbound -> [Integer]
+    function upperbound -> [Integer]
+    function getElement [Integer] -> [Any]
+  end RISA
+  const hasSemanticError <- typeobject hasSemanticError
+    operation SemanticError[Integer, String, RISA]
+  end hasSemanticError
+a9 1
+    field isRef : Boolean <- true
+a14 4
+    export function getElement [i : Integer] -> [r : Tree]
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+    end setElement
+a89 1
+      isRef <- false
+a92 1
+      isRef <- true
+d97 3
+a99 1
+      if isRef then
+a100 2
+      else 
+	r <- "symdef (" || id$name || ")"
+d133 3
+a135 1
+	  if isRef then
+a136 2
+	  else 
+	    env.SemanticError[ln, "Someone forgot to declare me %s", {id$name}]
+@
+
+
+1.8
+log
+@Removed all monitors
+@
+text
+@d167 1
+a167 2
+  export operation generate [xct : Printable] -> [rct : None]
+    var junk : Any
+d236 1
+a236 1
+	junk <- v.generate[xct]
+@
+
+
+1.7
+log
+@Solve an incestuous monitor problem in sym with asString
+@
+text
+@a15 1
+  monitor
+d109 1
+a109 1
+    private function pasString -> [r : String]
+a155 1
+  end monitor
+@
+
+
+1.6
+log
+@Be more careful with nil in a debugging message
+@
+text
+@d51 2
+d55 4
+a58 2
+	Environment$env.tinline["sym.getCT on %s has a ct %s\n", 
+	  { self.asString, r.asString }]
+d69 4
+a72 2
+	Environment$env.tinline["sym.getCT on %s has a value %s with ct %s\n", 
+	  { self.asString, mysym$value.asString, FTree.getString[r] }]
+d80 4
+a83 2
+	Environment$env.tinline["sym.getCT on %s has an at %s with ct %s\n", 
+	  { self.asString, a.asString, FTree.getString[r] }]
+d110 1
+a110 1
+    export function asString -> [r : String]
+d138 1
+a138 1
+    end asString
+d140 3
+d158 4
+@
+
+
+1.5
+log
+@Better debugging
+@
+text
+@d75 1
+a75 1
+	  { self.asString, a.asString, r.asString }]
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@d53 2
+d65 2
+d69 4
+a72 1
+	const a <- view mysym$ATInfo as typeobject t op getInstCT->[Tree] end t
+d74 2
+@
+
+
+1.3
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d1 1
+a1 7
+import Tree, FTree, Printable from "Jekyll"
+import Symbol, SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+import Ident from "Jekyll"
+import IDS from "Jekyll"
+import GlobalRef from "Jekyll"
+export Sym to "Jekyll"
+d4 1
+a4 1
+  type export operation literal [s : String, isDef : Boolean] -> [r : SymType]
+d8 1
+a8 1
+  const RISA <- type RISA
+d13 1
+a13 1
+  const hasSemanticError <- type hasSemanticError
+d49 2
+a50 2
+      const idType <- type t function getID -> [Integer] end t
+      const codeIDType <- type t function getCodeOID -> [Integer] end t
+d65 1
+a65 1
+	const a <- view mysym$ATInfo as type t op getInstCT->[Tree] end t
+d141 1
+a141 1
+    const idType <- type t function getCodeOID -> [Integer] end t
+d149 1
+a149 1
+      const bc <- view xct as type BCType
+d160 1
+a160 1
+      const bc <- view xct as type T
+d209 1
+a209 1
+	const gs <- type gs
+d222 1
+a222 1
+      const bc <- view xct as type T
+@
+
+
+1.2
+log
+@Additional debugging (used outside of initially)
+@
+text
+@d151 2
+a152 1
+  export operation generate [xct : Printable]
+d221 1
+a221 1
+	v.generate[xct]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d114 5
+@

@@ -1,0 +1,340 @@
+head	1.7;
+access;
+symbols
+	105alpha:1.7
+	104alpha:1.7
+	103alpha:1.7
+	102alpha:1.7
+	101alpha:1.7
+	100alpha:1.7
+	DIKU_0:1.7
+	carlton_start:1.6
+	immel_start:1.3;
+locks; strict;
+
+
+1.7
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.06;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.01.18.10.48;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.21;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.20;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.7
+log
+@First attempt at abcons
+@
+text
+@%
+% @@(#)ident.m	1.2  3/6/91
+%
+export Ident, LookupIdent, IdentTable
+
+const Ident <- immutable class Ident [xxname : String, xxvalue : Integer]
+  const field name : String <- xxname
+  const field value : Integer <- xxvalue
+  export function asString -> [r : String]
+    r <- name
+  end asString
+end Ident
+
+const LookupIdent <- typeobject LookupIdent
+  operation Lookup [String, Integer] -> [Ident]
+end LookupIdent
+
+const IdentTable <- immutable object IdentTable
+  export function getSignature -> [r : Signature]
+    r <- LookupIdent
+  end getSignature
+
+  export operation create -> [r : LookupIdent]
+    r <- object anIdentTable
+	const voi <- Vector.of[Ident]
+	const vos <- Vector.of[String]
+	var currentsize : Integer <- 4327
+	var values : voi <- voi.create[currentsize]
+	var keys   : vos <- vos.create[currentsize]
+	var count  : Integer <- 0
+	var limit  : Integer <- (currentsize * 4) / 5
+
+	operation iInsert [s : String, id : Ident]
+	  const first <- s.hash # currentsize
+	  var h : Integer <- first
+	  loop
+	    const k <- keys[h]
+	    if k == nil then
+	      keys[h] <- s
+	      values[h] <- id
+	      return
+	    elseif s = k then
+	      values[h] <- id
+	      count <- count - 1
+	      return
+	    end if
+	    h <- (h + 1) # currentsize
+	    exit when h = first
+	  end loop
+	end iInsert
+    
+	operation enlarge
+	  const oldvalues <- values
+	  const oldkeys   <- keys
+	  const oldsize   <- currentsize
+
+	  currentsize <- currentsize * 2 + 1
+	  limit <- (currentsize * 4) / 5
+	  values <- voi.create[currentsize]
+	  keys   <- vos.create[currentsize]
+	  for i : Integer <- 0 while i < oldsize by i <- i + 1
+	    const k <- oldkeys[i]
+	    if k !== nil then
+	      self.iInsert[k, oldvalues[i]]
+	    end if
+	  end for
+	end enlarge
+    
+	export function Lookup [s : String, value : Integer] -> [id : Ident]
+	  var h : Integer
+	  if count > limit then self.enlarge end if
+	  h <- s.hash # currentSize
+	  loop
+	    const k <- keys[h]
+	    if k == nil then
+	      id <- Ident.create[s, value]
+	      keys[h] <- s
+	      values[h] <- id
+	      count <- count + 1
+	      return
+	    elseif k = s then
+	      id <- values[h]
+	      return
+	    end if
+	    h <- (h + 1) # currentsize
+	  end loop
+	end Lookup
+    end anIdentTable
+  end create
+end IdentTable
+@
+
+
+1.6
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d4 1
+a4 1
+export Ident, IdentTable
+d14 4
+a18 4
+  const ITType <- typeobject ITType
+    operation Lookup [String, Integer] -> [Ident]
+  end ITType
+
+d20 1
+a20 1
+    r <- ITType
+d23 1
+a23 1
+  export operation create -> [r : ITType]
+@
+
+
+1.5
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d37 1
+a37 1
+	    const k <- keys(h)
+d39 2
+a40 2
+	      keys(h) <- s
+	      values(h) <- id
+d43 1
+a43 1
+	      values(h) <- id
+d62 1
+a62 1
+	    const k <- oldkeys(i)
+d64 1
+a64 1
+	      self.iInsert[k, oldvalues(i)]
+d74 1
+a74 1
+	    const k <- keys(h)
+d77 2
+a78 2
+	      keys(h) <- s
+	      values(h) <- id
+d82 1
+a82 1
+	      id <- values(h)
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d64 1
+a64 1
+	      iInsert[k, oldvalues(i)]
+@
+
+
+1.3
+log
+@Optimized to use vectors and a hash table
+@
+text
+@a24 1
+      monitor
+d33 1
+a33 1
+	private operation iInsert [s : String, id : Ident]
+d52 1
+a52 1
+	private operation enlarge
+a87 1
+      end monitor
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a15 1
+    operation Hash [String] -> [Integer]
+d25 8
+a32 1
+      const tableSize <- 257
+d34 23
+a56 1
+      const aoi <- Array.of[Ident]
+d58 32
+a89 67
+      const hashvalues <- {
+	~1, ~1, ~1, ~1, ~1, ~1, ~1, ~1,
+	~1, ~1, ~1, ~1, ~1, ~1, ~1, ~1,
+	~1, ~1, ~1, ~1, ~1, ~1, ~1, ~1,
+	~1, ~1, ~1, ~1, ~1, ~1, ~1, ~1,
+	~1, 36, ~1, 37, ~1, ~1, 38, ~1, 
+	~1, ~1, 39, 40, ~1, 41, ~1, 42,
+	26, 27, 28, 29, 30, 31, 32, 33,
+	34, 35, ~1, ~1, 43, 44, 45, 46,
+	47,  0,  1,  2,  3,  4,  5,  6,
+	 7,  8,  9, 10, 11, 12, 13, 14,
+	15, 16, 17, 18, 19, 20, 21, 22,
+	23, 24, 25, ~1, ~1, ~1, 48, 49,
+	~1,  0,  1,  2,  3,  4,  5,  6,
+	 7,  8,  9, 10, 11, 12, 13, 14,
+	15, 16, 17, 18, 19, 20, 21, 22,
+	23, 24, 25, ~1, 50, ~1, 51, ~1
+      }
+      
+      const hashTable <- Vector.of[aoi].create[tableSize]
+
+      export function Hash [tokenText : String] -> [r : Integer]
+	const Factor <- 52
+	var result, next : integer
+      
+	next <- tokenText(0).ord
+	result <- hashvalues(next)
+	result <- result * Factor
+	if tokenText.length > 1 then
+	  next <- tokenText(1).ord
+	  result <- result + hashvalues(next)
+	  result <- result * Factor
+	end if
+	if tokenText.length > 2 then
+	  next <- tokenText(2).ord
+	  result <- result + hashvalues(next)
+	end if
+	if result < 0 then
+	  r <- ~result
+	else
+	  r <- result
+	end if
+      end Hash
+
+      export operation Lookup [tokenText : String, value : Integer] -> [r : Ident]
+	const x <- Hash[tokenText] # tableSize
+	var limit : Integer
+	var a : aoi
+	var id : Ident
+	var found : Boolean <- false
+
+	a <- hashTable(x)
+	if a == nil then 
+	  a <- aoi.create[~4] 
+	  hashTable(x) <- a
+	end if
+	limit <- a.upperbound
+	for i : Integer <- 0 while i <= limit and !found by i <- i + 1
+	  id <- a(i)
+	  found <- id$name = tokenText
+	end for
+	if !found then
+	  id <- Ident.create[tokenText, value]
+	  a.addUpper[id]
+	end if
+	r <- id
+      end Lookup
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)ident.m	1.1  5/24/90
+d4 1
+a4 1
+export Ident, IdentTable to "Jekyll"
+d15 1
+a15 1
+  const ITType <- type ITType
+@

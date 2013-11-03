@@ -1,0 +1,445 @@
+head	1.12;
+access;
+symbols
+	105alpha:1.12
+	104alpha:1.12
+	103alpha:1.12
+	102alpha:1.12
+	101alpha:1.12
+	100alpha:1.12
+	DIKU_0:1.7
+	carlton_start:1.5
+	immel_start:1.2;
+locks; strict;
+
+
+1.12
+date	95.04.23.02.48.05;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.03.29.18.19.54;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.03.03.05.44.23;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.12.19.07.19.47;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.08.22.23.43.48;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.08.17.16.51.22;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.07.17.06.40.18;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.02.22.54.06;	author mueller;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.54.10;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.54.09;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.12
+log
+@Deal with String.Token more carefully
+@
+text
+@
+export InvocCache
+
+const InvocCache <- immutable object InvocCache
+  const table <- SIIIATable.create[64]
+
+  export operation load [fn : String]
+    const nfn <- fn || ".idb"
+    var f : InStream
+    var input, first, second, third, fourth, fifth : String
+    var id, codeid, instcodeid : Integer
+    table.reset
+    begin
+      f <- InStream.fromUnix[nfn, "r"]
+      failure
+       f <- nil
+      end failure
+    end
+    if f !== nil then
+      loop
+	begin
+	  input <- f.getString
+	  failure
+	    input <- nil
+	  end failure
+	end
+	exit when input == nil
+	const separators <- " \n\r\t"
+	first, input <- input.token[separators]
+	if input !== nil then second, input <- input.token[separators] end if
+	if first == nil or second == nil then
+	  Environment$env.printf["Syntax error in invoccache file\n", nil]
+	  exit
+	end if
+	id <- Integer.Literal[second]
+	if input == nil then
+	  codeid <- nil
+	else
+	  third, input <- input.token[separators]
+	  if third !== nil then codeid <- Integer.Literal[third] end if
+	end if
+	if input == nil then
+	  instcodeid <- nil
+	else   
+	  fourth, input <- input.token[separators]
+	  if fourth !== nil then instcodeid <- Integer.Literal[fourth] end if
+	end if
+	if input !== nil then fifth, input <- input.token[separators] end if
+	table.Insert[first, id, codeid, instcodeid, fifth, nil]
+      end loop
+      f.close
+    end if
+  end load
+  export operation Lookup [s : String] -> [a:Integer,b:Integer,c:Integer,x : String, d:Any]
+    a, b, c, x, d <- table.Lookup[s]
+  end Lookup
+  export operation Insert [s : String, a:Integer, b:Integer, c:Integer, x : String, d:Any]
+    const env : EnvironmentType <- Environment$env
+    const fn : String <- env$namespacefile
+    var ta, tb, tc : Integer
+    var tx : String
+    var td : Any
+    ta, tb, tc, tx, td <- table.Lookup[s]
+    if fn !== nil and ta == nil and tb == nil and tc == nil and tx == nil then
+      const nfn <- fn || ".idb"
+      const f <- OutStream.toUnix[nfn, "a"]
+      % chmod 0666 nfn
+      if f == nil then
+	env.SemanticError[1, "Can't open cache file \"%s\"", {nfn}]
+      else
+	f.putString[s]
+	f.putChar[' ']
+	f.putInt[a, 0]
+	if b !== nil then
+	  f.putChar[' ']
+	  f.putInt[b, 0]
+	  if c !== nil then
+	    f.putChar[' ']
+	    f.putInt[c, 0]
+	  end if
+	end if
+	f.putChar[' ']
+	f.putString[x]
+	f.putChar['\n']
+	f.close
+      end if
+    end if
+    table.Insert[s, a, b, c, x, d]
+  end Insert
+  export operation resetForSourceFile[fn : String]
+    table.resetForSourceFile[fn]
+  end resetForSourceFile
+
+end InvocCache
+@
+
+
+1.11
+log
+@Get rid of split, and make execute now and eval work again
+@
+text
+@d40 1
+a40 1
+	  codeid <- Integer.Literal[third]
+d46 1
+a46 1
+	  instcodeid <- Integer.Literal[fourth]
+@
+
+
+1.10
+log
+@Use new streams code
+@
+text
+@a6 36
+  operation Split [s : String] -> [v : String, w:String, x:String, y : String, z : String]
+    var first, last : Integer
+    var c : Character
+
+    first <- 0
+    last <- 0
+    for which : Integer <- 0 while which < 5 by which <- which + 1
+      loop
+	exit when first >= s.length
+	c <- s[first]
+	exit when c != ' ' and c != '\^I' and c != '\n'
+	first <- first + 1
+      end loop
+      if first >= s.length then return end if
+      last <- first + 1
+      loop
+	exit when last >= s.length
+	c <- s[last]
+	exit when c = ' ' or c = '\^I' or c = '\n'
+	last <- last + 1
+      end loop
+      if which = 0 then
+	v <- s[first, last - first]
+      elseif which = 1 then
+	w <- s[first, last - first]
+      elseif which = 2 then
+	x <- s[first, last - first]
+      elseif which = 3 then
+	y <- s[first, last - first]
+      else
+	z <- s[first, last - first]
+      end if
+      first <- last + 1
+    end for
+  end Split
+  
+d10 1
+a10 1
+    var first, second, third, fourth, fifth : String
+d22 1
+a22 1
+	  first <- f.getString
+d24 1
+a24 1
+	    first <- nil
+d27 4
+a30 2
+	exit when first == nil
+	first, second, third, fourth, fifth <- self.Split[first]
+d36 1
+a36 1
+	if third == nil then
+d38 2
+a39 1
+	else   
+d42 1
+a42 1
+	if fourth == nil then
+d45 1
+d48 1
+@
+
+
+1.9
+log
+@Deal with file open errors more gracefully
+@
+text
+@d45 1
+a45 1
+    const f <- InStream.fromUnix[nfn, "r"]
+d49 6
+a54 1
+
+d57 6
+a62 1
+	first <- f.getString
+@
+
+
+1.8
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d79 1
+a79 1
+    const env <- Environment$env
+d89 4
+a92 4
+      f.putString[s]
+      f.putChar[' ']
+      f.putInt[a, 0]
+      if b !== nil then
+d94 2
+a95 2
+	f.putInt[b, 0]
+	if c !== nil then
+d97 5
+a101 1
+	  f.putInt[c, 0]
+d103 4
+a107 4
+      f.putChar[' ']
+      f.putString[x]
+      f.putChar['\n']
+      f.close
+@
+
+
+1.7
+log
+@August 94 Checkpoint II
+@
+text
+@d80 1
+a80 1
+    const fn <- env$namespacefile
+@
+
+
+1.6
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d29 1
+a29 1
+	v <- s.getSlice[first, last - first]
+d31 1
+a31 1
+	w <- s.getSlice[first, last - first]
+d33 1
+a33 1
+	x <- s.getSlice[first, last - first]
+d35 1
+a35 1
+	y <- s.getSlice[first, last - first]
+d37 1
+a37 1
+	z <- s.getSlice[first, last - first]
+@
+
+
+1.5
+log
+@Generate code for the results of manifest invocs when recompiling
+@
+text
+@a51 1
+	exit when f.eos
+@
+
+
+1.4
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d7 1
+a7 1
+  operation Split [s : String] -> [w:String, x:String, y : String, z : String]
+d13 1
+a13 1
+    for which : Integer <- 0 while which < 4 by which <- which + 1
+d28 3
+a30 1
+      if which =0 then
+d32 1
+a32 1
+      elseif which = 1 then
+d34 1
+a34 1
+      elseif which = 2 then
+d46 1
+a46 1
+    var first, second, third, fourth : String
+d55 1
+a55 1
+	first, second, third, fourth <- self.Split[first]
+d71 1
+a71 1
+	table.Insert[first, id, codeid, instcodeid, nil]
+d76 2
+a77 2
+  export operation Lookup [s : String] -> [a:Integer,b:Integer,c:Integer,d:Any]
+    a, b, c, d <- table.Lookup[s]
+d79 1
+a79 1
+  export operation Insert [s : String, a:Integer, b:Integer, c:Integer, d:Any]
+d82 5
+a86 1
+    if fn !== nil then
+d101 2
+d106 1
+a106 1
+    table.Insert[s, a, b, c, d]
+d108 4
+@
+
+
+1.3
+log
+@from/toUnix calls changed to new syntax
+@
+text
+@d16 1
+a16 1
+	c <- s(first)
+d24 1
+a24 1
+	c <- s(last)
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d43 1
+a43 1
+    const f <- InStream.FromUnix[nfn, 0, 0]
+d82 2
+a83 2
+      % O_CREAT | O_WRONLY | O_APPEND = 01000 + 1 + 010
+      const f <- OutStream.toUnix[nfn, 01011, 0666]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 2
+import SIIIATable from "Jekyll"
+import Environment from "Jekyll"
+d2 1
+a2 1
+export InvocCache to "Jekyll"
+@

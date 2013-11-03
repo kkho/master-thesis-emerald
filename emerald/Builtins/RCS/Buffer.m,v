@@ -1,0 +1,179 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.4
+	immel_start:1.3;
+locks; strict;
+
+
+1.5
+date	96.09.03.04.15.29;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.06.16.05.25.31;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.05.25.19.44.02;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.43.53;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.43.51;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.5
+log
+@Fix attached for builtins
+@
+text
+@% 
+% @@(#)Buffer.m	1.2   3/6/91
+%
+export Buffer to "Builtins"
+const Buffer == immutable object Buffer builtin 0x1017
+  const BufferType == typeobject BufferType builtin 0x1617
+    operation write
+    operation addChar [Character]
+    operation addString [String]
+    operation Pad [Character, Integer]
+  end BufferType
+
+  export function getSignature -> [r : Signature]
+    r <- BufferType
+  end getSignature
+
+  export operation create [myfd : Integer]-> [r : BufferType]
+    r <- object aBuffer builtin 0x1417
+      const BUFSIZE == 2048
+      monitor
+	var nextToFillIndex : Integer <- 0
+	attached const buf == VectorOfChar.create[BUFSIZE]
+	export operation write 
+	  if nextToFillIndex > 0 then
+	    primitive "SYS" "JWRITE" 3 [] <- [myfd, buf, nextToFillIndex]
+	    nextToFillIndex <- 0
+	  end if
+	end write
+	export operation addChar [c : Character]
+	  buf[nextToFillIndex] <- c
+	  nextToFillIndex <- nextToFillIndex + 1
+	  if nextToFillIndex >= BUFSIZE or (myfd == 1 and c == '\n') then
+	    primitive "SYS" "JWRITE" 3 [] <- [myfd, buf, nextToFillIndex]
+	    nextToFillIndex <- 0
+	  end if
+	end addChar
+	export operation addString [s : String]
+	  var i : Integer <- 0
+	  var limit : Integer <- s.length
+	  var index : Integer <- nextToFillIndex
+	  var c : Character
+	  loop
+	    exit when i >= limit
+	    c <- s[i]
+	    buf[index] <- c
+	    index <- index + 1
+	    i <- i + 1
+	    if index >= BUFSIZE or (myfd == 1 and c = '\n') then
+	      primitive "SYS" "JWRITE" 3 [] <- [myfd, buf, index]
+	      index <- 0
+	    end if
+	  end loop
+	  nextToFillIndex <- index
+	end addString
+	export operation Pad [c : Character, w : Integer]
+	  var i : Integer <- 0
+	  var limit : Integer <- w
+	  var index : Integer <- nextToFillIndex
+	  loop
+	    exit when i >= limit
+	    buf[index] <- c
+	    index <- index + 1
+	    i <- i + 1
+	    if index >= BUFSIZE then
+	      primitive "SYS" "JWRITE" 3 [] <- [myfd, buf, index]
+	      index <- 0
+	    end if
+	  end loop
+	  nextToFillIndex <- index
+	end Pad
+      end monitor
+    end aBuffer
+  end create
+end Buffer
+@
+
+
+1.4
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d22 1
+a22 1
+	const buf == VectorOfChar.create[BUFSIZE]
+@
+
+
+1.3
+log
+@Use smaller buffers that fit in garbage collector pages
+@
+text
+@d30 1
+a30 1
+	  buf(nextToFillIndex) := c
+d44 2
+a45 2
+	    c <- s(i)
+	    buf(index) := c
+d61 1
+a61 1
+	    buf(index) := c
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d19 1
+a19 1
+      const BUFSIZE == 8192
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Buffer.m	1.1   3/6/91
+d6 1
+a6 1
+  const BufferType == type BufferType builtin 0x1617
+@

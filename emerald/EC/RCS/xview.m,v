@@ -1,0 +1,276 @@
+head	1.9;
+access;
+symbols
+	105alpha:1.9
+	104alpha:1.9
+	103alpha:1.9
+	102alpha:1.9
+	101alpha:1.9
+	100alpha:1.9
+	DIKU_0:1.6
+	carlton_start:1.5
+	immel_start:1.3;
+locks; strict;
+
+
+1.9
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.02.07.01.48.31;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.08.25.16.21.14;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.53;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.23.00.21;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.23.00.19;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.23.00.18;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.9
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@export Xview
+
+const xview <- class Xview (Tree) [xxexp : Tree, xxtype : Tree]
+    field isRedundant : Boolean <- false
+    field exp : Tree <- xxexp
+    field xtype : Tree <- xxtype
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- exp
+      elseif i = 1 then
+	r <- xtype
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	exp <- r
+      elseif i = 1 then
+	xtype <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nexp, nxtype : Tree
+      if exp !== nil then nexp <- exp.copy[i] end if
+      if xtype !== nil then nxtype <- xtype.copy[i] end if
+      r <- xview.create[ln, nexp, nxtype]
+    end copy
+
+  export operation flatten [ininvoke : Boolean, indecls : Tree] -> [r : Tree, outdecls : Tree]
+    exp, outdecls <- exp.flatten[true, indecls]
+    xtype, outdecls <- xtype.flatten[true, outdecls]
+    if ininvoke then
+      const id <- newid.newid
+      const asym : Sym <- sym.create[self$ln, id]
+      const c : constdecl <- constdecl.create[self$ln, asym, nil, self]
+      if outdecls == nil then 
+	outdecls <- seq.singleton[c]
+      else
+	outdecls.rcons[c]
+      end if
+      r <- sym.create[self$ln, id]
+    else
+      r <- self
+    end if
+  end flatten
+
+  export operation assignTypes
+    const env : EnvironmentType <- Environment$env
+    var theType : Tree
+    if self$xtype$isNotManifest then
+      env.SemanticError[self$ln,
+	"Type of view expressions must be manifest", nil]
+    else
+      theType <- self$xtype
+      if env$traceassignTypes then env.printf["Type is %S on line %d\n", { theType, self$ln }] end if
+      theType <- theType.execute
+      if env$traceassignTypes then env.printf["  type.execute is %S\n", { theType }] end if
+      if theType !== nil then
+	theType <- theType.asType
+	if env$traceassignTypes then env.printf["  type.execute.asType is %S\n", { theType }] end if
+      end if
+    end if
+    if thetype == nil then
+      if env$traceassignTypes then
+	env.printf["Couldn't find a type in view expression on line %d\n",
+	  { self$ln}]
+      end if
+      env.SemanticError[ln, "Non type in view expression", nil]
+    end if
+    FTree.assignTypes[self]
+  end assignTypes
+
+  export operation getAT -> [r : Tree]
+    r <- self$xtype.execute
+    if r !== nil then r <- r.asType end if
+  end getAT
+
+  export operation generate [xct : Printable]
+    const env : EnvironmentType <- Environment$env
+    if env$generateViewChecking then
+      const bc <- view xct as ByteCode
+      bc.pushSize[8]
+      exp.generate[bc]
+      bc.popSize
+      bc.pushSize[4]
+      xtype.execute.asType.generate[bc]
+      bc.popSize
+      bc.addCode["VIEW"]
+      if bc$size != 8 then
+	bc.addCode["POOP"]
+      end if
+    else
+      self$exp.generate[xct]
+    end if
+  end generate
+
+  export function asString -> [r : String]
+    r <- "xview"
+  end asString
+end Xview
+@
+
+
+1.8
+log
+@Even better semantics checks, avoid invoking nil, fix class
+@
+text
+@d32 18
+@
+
+
+1.7
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d43 4
+a46 2
+      theType <- theType.asType
+      if env$traceassignTypes then env.printf["  type.execute.asType is %S\n", { theType }] end if
+d59 2
+a60 1
+    r <- self$xtype.execute.asType
+@
+
+
+1.6
+log
+@Generate code for view as, new bytecode VIEW
+@
+text
+@d33 2
+d36 1
+a36 1
+      Environment$env.SemanticError[self$ln,
+d38 7
+d46 7
+d61 1
+a61 1
+    const env <- Environment$env
+@
+
+
+1.5
+log
+@Get rid of return on generate
+@
+text
+@d45 16
+a60 1
+    self$exp.generate[xct]
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d44 2
+a45 2
+  export operation generate [xct : Printable] -> [rct : None]
+    const junk <- self$exp.generate[xct]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a30 1
+  end monitor
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d1 1
+a1 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+export Xview to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d48 2
+a49 2
+  export operation generate [xct : Printable]
+    self$exp.generate[xct]
+@

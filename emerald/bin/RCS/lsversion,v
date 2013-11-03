@@ -1,0 +1,54 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	93.06.21.23.33.58;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.42.17;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compiler/Builtins revision maintenance tool
+@
+
+
+1.2
+log
+@Cleaned up checking on execCP
+@
+text
+@#!/bin/csh -f
+set pattern = (CP_*[0-9]*)
+if (-r bestCP) set pattern = ($pattern bestCP)
+if (-r distCP) set pattern = ($pattern distCP)
+if (-r execCP) set pattern = ($pattern execCP)
+if (-r EMCP)   set pattern = ($pattern EMCP)
+exec ls -tl $pattern
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 1
+a5 1
+if (-e execCP) set pattern = ($pattern execCP)
+@

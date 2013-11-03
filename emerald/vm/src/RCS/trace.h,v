@@ -1,0 +1,478 @@
+head	1.11;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.9
+	103alpha:1.8
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	99.02.22.22.24.39;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.05.01.04.47.38;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.04.30.23.24.33;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.04.30.20.45.12;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.11
+log
+@Check in current version
+@
+text
+@/* comment me!
+ */
+
+#ifndef _EMERALD_TRACE_H
+#define _EMERALD_TRACE_H
+
+extern int
+  traceallocate,
+  traceassign,
+  traceatctsort,
+  tracebuiltins,
+  tracecall,
+  traceccalls,
+  tracecheckpoint,
+  traceconform,
+  traceconformfailure,
+  tracecopy,
+  tracectinfo,
+  tracedbm,
+  tracedebug,
+  tracedebuginfo,
+  tracedelay,
+  tracedoto,
+  traceemit,
+  traceemitmove,
+  traceenvironment,
+  tracefindct,
+  tracefold,
+  tracegraph,
+  tracehandler,
+  tracehelp,
+  traceimports,
+  traceindex,
+  traceinitiallies,
+  traceinterpret,
+  traceinvoccache,
+  tracekernel,
+  traceknowct,
+  traceknowlocal,
+  traceknowmanifest,
+  tracegenerate,
+  tracelinenumber,
+  tracelocals,
+  tracemanifest,
+  tracemap,
+  tracematchat,
+  tracememory,
+  tracemessage,
+  traceoid,
+  tracepasses,
+  traceprimitive,
+  traceprocess,
+  tracerecoveries,
+  tracerelocation,
+  tracescc,
+  tracesys,
+  tracetempl,
+  tracetempreg,
+  tracetempstack,
+  tracetrans,
+  tracestreams,
+  tracerinvoke,
+  tracetypecheck,
+  tracegaggle,
+  tracedistgc,
+  tracelocate,
+  tracedist,
+  traceunavailable,
+  tracefailure,
+  tracex,
+  traceT
+;
+
+extern void TraceInit(void);
+extern void TraceFin(void);
+extern void SetTraceFile(char *);
+extern void SetTraceBufferSize(int);
+extern void traceTS(int);
+#ifdef STDARG_WORKS
+extern void ftrace(char *, ...);
+#else
+extern void ftrace();
+#endif
+
+#ifdef lint
+#   define TRACING(t, level) \
+	(level)
+#   define IFTRACE(t, level) \
+	if (level)
+#   define TRACE(t, level, args) \
+	if (level) { \
+	  traceTS(level); \
+	  ftrace args; \
+	}
+#else /* !lint */
+#if defined(NTRACE)
+#   define IFTRACE(t, level) if (0)
+#   define TRACING(t, level) 0
+#   define TRACE(t, level, args)
+#else /* !NTRACE */
+#if (defined(__ANSI__) || defined(__STDC__) || defined(WIN32)) && !defined(aegis)
+#   define IFTRACE(t, level) \
+	if (trace##t >= (level))
+#   define TRACING(t, level) \
+	(trace##t >= (level))
+#   define TRACE(t, level, args) \
+	if (trace##t >= (level)) { \
+	  traceTS((level)); \
+	  ftrace args; \
+	}
+#else /* ! ANSI, etc. */
+#   define IFTRACE(t, level) \
+	if (trace/**/t >= (level))
+#   define TRACING(t, level) \
+	(trace/**/t >= (level))
+#   define TRACE(t, level, args) \
+	if (trace/**/t >= (level)) { \
+	  traceTS((level)); \
+	  ftrace args; \
+	}
+#endif /* ANSI, etc. */
+#endif /* NTRACE */
+#endif /* lint */
+
+#endif /* _EMERALD_TRACE_H */
+@
+
+
+1.10
+log
+@Added a failure trace which is enabled by default
+@
+text
+@d69 3
+a71 1
+  tracefailure
+@
+
+
+1.9
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@d68 2
+a69 1
+  traceunavailable
+@
+
+
+1.8
+log
+@Eradicated all vestiges of the old TRACE0-7 macros
+@
+text
+@a76 1
+extern void etrace(int, char *, ...);
+a78 1
+extern void etrace();
+@
+
+
+1.7
+log
+@Fixed parentheses in level argument of TRACE macros
+@
+text
+@a88 16
+#   define TRACE0(t, level, format) \
+	if (level) etrace(level, format)
+#   define TRACE1(t, level, format, arg1) \
+	if (level) etrace(level, format, arg1)
+#   define TRACE2(t, level, format, arg1, arg2) \
+	if (level) etrace(level, format, arg1, arg2)
+#   define TRACE3(t, level, format, arg1, arg2, arg3) \
+	if (level) etrace(level, format, arg1, arg2, arg3)
+#   define TRACE4(t, level, format, arg1, arg2, arg3, arg4) \
+	if (level) etrace(level, format, arg1, arg2, arg3, arg4)
+#   define TRACE5(t, level, format, arg1, arg2, arg3, arg4, arg5) \
+	if (level) etrace(level, format, arg1, arg2, arg3, arg4, arg5)
+#   define TRACE6(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6) \
+	if (level) etrace(level, format, arg1, arg2, arg3, arg4, arg5, arg6)
+#   define TRACE7(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6,arg7) \
+	if (level) etrace(level, format, arg1, arg2, arg3, arg4, arg5,arg6,arg7)
+a97 8
+#   define TRACE0(t, level, format)
+#   define TRACE1(t, level, format, arg1)
+#   define TRACE2(t, level, format, arg1, arg2)
+#   define TRACE3(t, level, format, arg1, arg2, arg3)
+#   define TRACE4(t, level, format, arg1, arg2, arg3, arg4)
+#   define TRACE5(t, level, format, arg1, arg2, arg3, arg4, arg5)
+#   define TRACE6(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6)
+#   define TRACE7(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6,arg7)
+a104 16
+#   define TRACE0(t, level, format) \
+	if (trace##t >= (level)) etrace((level), format)
+#   define TRACE1(t, level, format, arg1) \
+	if (trace##t >= (level)) etrace((level), format, arg1)
+#   define TRACE2(t, level, format, arg1, arg2) \
+	if (trace##t >= (level)) etrace((level), format, arg1, arg2)
+#   define TRACE3(t, level, format, arg1, arg2, arg3) \
+	if (trace##t >= (level)) etrace((level), format, arg1, arg2, arg3)
+#   define TRACE4(t, level, format, arg1, arg2, arg3, arg4) \
+	if (trace##t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4)
+#   define TRACE5(t, level, format, arg1, arg2, arg3, arg4, arg5) \
+	if (trace##t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4, arg5)
+#   define TRACE6(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6) \
+	if (trace##t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4, arg5, arg6)
+#   define TRACE7(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+	if (trace##t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+a114 16
+#   define TRACE0(t, level, format) \
+	if (trace/**/t >= (level)) etrace((level), format)
+#   define TRACE1(t, level, format, arg1) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1)
+#   define TRACE2(t, level, format, arg1, arg2) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1, arg2)
+#   define TRACE3(t, level, format, arg1, arg2, arg3) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1, arg2, arg3)
+#   define TRACE4(t, level, format, arg1, arg2, arg3, arg4) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4)
+#   define TRACE5(t, level, format, arg1, arg2, arg3, arg4, arg5) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4, arg5)
+#   define TRACE6(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4, arg5, arg6)
+#   define TRACE7(t, level, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+	if (trace/**/t >= (level)) etrace((level), format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+@
+
+
+1.6
+log
+@Added deferred tracing support
+@
+text
+@d126 1
+a126 1
+	if (trace##t >= level)
+d128 1
+a128 1
+	(trace##t >= level)
+d130 1
+a130 1
+	if (trace##t >= level) etrace(level, format)
+d132 1
+a132 1
+	if (trace##t >= level) etrace(level, format, arg1)
+d134 1
+a134 1
+	if (trace##t >= level) etrace(level, format, arg1, arg2)
+d136 1
+a136 1
+	if (trace##t >= level) etrace(level, format, arg1, arg2, arg3)
+d138 1
+a138 1
+	if (trace##t >= level) etrace(level, format, arg1, arg2, arg3, arg4)
+d140 1
+a140 1
+	if (trace##t >= level) etrace(level, format, arg1, arg2, arg3, arg4, arg5)
+d142 1
+a142 1
+	if (trace##t >= level) etrace(level, format, arg1, arg2, arg3, arg4, arg5, arg6)
+d144 1
+a144 1
+	if (trace##t >= level) etrace(level, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+d146 2
+a147 2
+	if (trace##t >= level) { \
+	  traceTS(level); \
+d152 1
+a152 1
+	if (trace/**/t >= level)
+d154 1
+a154 1
+	(trace/**/t >= level)
+d156 1
+a156 1
+	if (trace/**/t >= level) etrace(level, format)
+d158 1
+a158 1
+	if (trace/**/t >= level) etrace(level, format, arg1)
+d160 1
+a160 1
+	if (trace/**/t >= level) etrace(level, format, arg1, arg2)
+d162 1
+a162 1
+	if (trace/**/t >= level) etrace(level, format, arg1, arg2, arg3)
+d164 1
+a164 1
+	if (trace/**/t >= level) etrace(level, format, arg1, arg2, arg3, arg4)
+d166 1
+a166 1
+	if (trace/**/t >= level) etrace(level, format, arg1, arg2, arg3, arg4, arg5)
+d168 1
+a168 1
+	if (trace/**/t >= level) etrace(level, format, arg1, arg2, arg3, arg4, arg5, arg6)
+d170 1
+a170 1
+	if (trace/**/t >= level) etrace(level, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+d172 2
+a173 2
+	if (trace/**/t >= level) { \
+	  traceTS(level); \
+@
+
+
+1.5
+log
+@'.'
+@
+text
+@d72 1
+d74 1
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d67 2
+a68 1
+  tracedist
+d72 2
+d105 1
+a105 2
+	  int xxl = level; \
+	  while (--xxl > 0) putc(' ', stdout); \
+d145 1
+a145 2
+	  int xxl = level; \
+	  while (--xxl > 0) putc(' ', stdout); \
+d171 1
+a171 2
+	  int xxl = level; \
+	  while (--xxl > 0) putc(' ', stdout); \
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@a6 6
+#pragma warning(disable: 4068)
+#pragma pointer_size save
+#pragma pointer_size long
+#include <stdio.h>
+#pragma pointer_size restore
+
+d66 2
+a67 1
+  tracelocate
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d4 4
+a7 2
+#ifndef _TRACE_H
+#define _TRACE_H
+d70 3
+a72 1
+  tracegaggle
+d107 2
+a108 2
+	  int l = level; \
+	  while (--l > 0) putc(' ', stdout); \
+d125 1
+a125 1
+#if (defined(__ANSI__) || defined(__STDC__)) && !defined(aegis)
+d148 2
+a149 2
+	  int l = level; \
+	  while (--l > 0) putc(' ', stdout); \
+d175 2
+a176 2
+	  int l = level; \
+	  while (--l > 0) putc(' ', stdout); \
+d183 1
+a183 1
+#endif /* trace_h */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d67 2
+a68 1
+  tracetypecheck
+@

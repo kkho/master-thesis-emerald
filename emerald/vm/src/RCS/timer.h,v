@@ -1,0 +1,66 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.23.17.01.05;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Timer callback infrastructure.
+@
+
+
+1.3
+log
+@More reliable process management, got xforms working
+@
+text
+@extern void TimerInit(void);
+extern void afterTime(struct timeval t, void (*cb)(void *), void *arg);
+extern void checkForTimeouts(void);
+extern struct timeval nextWakeup(void);
+extern struct timeval TimeMinus(struct timeval a, struct timeval b);
+extern struct timeval TimePlus(struct timeval a, struct timeval b);
+extern int TimeLess(struct timeval a, struct timeval b);
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d6 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 3
+@

@@ -1,0 +1,589 @@
+head	1.19;
+access;
+symbols
+	105alpha:1.19
+	104alpha:1.19
+	103alpha:1.19
+	102alpha:1.19
+	101alpha:1.19
+	100alpha:1.19
+	DIKU_0:1.17
+	carlton_start:1.14
+	immel_start:1.7;
+locks; strict;
+
+
+1.19
+date	98.03.24.16.09.00;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.08.17.16.51.28;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.07.17.06.37.08;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.03.01.03.15.41;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.10.17.07.26;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.04.06.18.18.47;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.05.14.15.55.15;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.55.53;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.55.50;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.55.47;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.55.46;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.55.45;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.19
+log
+@'.'
+@
+text
+@
+export Param
+
+const param <- class Param (Tree) [xxsym : Tree, xxtype : Tree]
+% IF doing move/visit
+%    field isMove : Boolean <- false
+%    field isVisit : Boolean <- false
+    field isAttached : Boolean <- false
+    field xsym : Tree <- xxsym
+    field xtype : Tree <- xxtype
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- xsym
+      elseif i = 1 then
+	r <- xtype
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	xsym <- r
+      elseif i = 1 then
+	xtype <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nxsym, nxtype : Tree
+      if xsym !== nil then nxsym <- xsym.copy[i] end if
+      if xtype !== nil then nxtype <- xtype.copy[i] end if
+      r <- param.create[ln, nxsym, nxtype]
+      (view r as Attachable)$isAttached <- isAttached
+    end copy
+    operation iDefineSymbols [st : SymbolTable]
+      const s <- view xsym as Sym
+      const id : Ident <- (view xsym as hasIdent)$id
+% If doing move/visit
+      const xxx <- st.Define[ln, id, st$kind, isAttached]
+%     xxx$isMove <- isMove
+% else
+%     const xxx <- st.Define[ln, id, st$kind, false]
+      s$mysym <- xxx
+    end iDefineSymbols
+
+
+  export function asType -> [r : Tree]
+    r <- view (view self$xsym as Sym)$mysym$ATinfo as Tree
+    if r == nil then
+      r <- self$xtype.execute
+      if r !== nil then
+	r <- r.asType
+      end if
+    end if
+    if r == nil then
+      const env : EnvironmentType <- Environment$env
+      if env$traceassigntypes then
+	env.printf["param %s on line %d asType -> nil\n", 
+	  {self$xsym.asString, self$ln}]
+      end if
+    end if
+  end asType
+
+  export operation assignTypes 
+    var thetype : Tree
+    const env : EnvironmentType <- Environment$env
+    if env$traceassigntypes then
+      env.printf["param.assigntypes: %s on line %d\n",
+	{ self$xsym.asString, self$ln}]
+    end if
+    if self$xtype$isNotManifest then
+      env.SemanticError[self$ln,
+	"Type of the parameter \"%s\" must be manifest",
+	{(view self$xsym as hasIdent)$id.asString}]
+    else
+      thetype <- self$xtype.execute
+      if thetype == nil then
+	env.SemanticError[self$ln, 
+	  "The type of the parameter \"%s\" is manifest, but execute fails",
+	  {(view self$xsym as hasIdent)$id.asString}]
+      else
+	thetype <- thetype.asType
+      end if
+      if thetype == nil then
+	env.pass["Couldn't find a type for param %s on line %d\n",
+	  { self$xsym.asString, self$ln}]
+	env.SemanticError[ln, "Non type in parameter declaration", nil]
+      end if
+    end if
+    (view self$xsym as Sym)$mysym$ATinfo <- thetype
+    FTree.assignTypes[self]
+  end assignTypes
+
+  export operation generate[xct : Printable]
+    if xct.asString = "bytecode" then
+      const bc <- view xct as ByteCode
+      const s : Symbol <- (view self$xsym as Sym)$mysym
+      assert s$ATinfo !== nil
+      const r <- view s$ATinfo as hasID
+      const id : Integer <- r$id
+      const ctid : Integer <- IDS.IDToInstCTID[id]
+      if s$mykind = SResult and ctid !== nil then
+	bc.fetchVariableSecondThing[id + 0x200, id]
+	assert s$base = 'A'
+	const off : Integer <- s$offset - 4
+	if ~128 <= off and off <= 127 then
+	  bc.addCode["STAB"]
+	  bc.addValue[off, 1]
+	elseif ~32768 <= off and off <= 32767 then
+	  bc.addCode["STAS"]
+	  bc.addValue[off, 2]
+	else
+	  bc.addCode["STA"]
+	  bc.addValue[off, 4]
+	end if
+      elseif s$mykind = SParam and ctid == nil and Environment$env$useAbCons then
+	% Make sure the abcon is right.
+	assert s$base = 'A'
+	const off : Integer <- s$offset / 8
+	assert ~128 <= off and off <= 127
+	bc.fetchLiteral[id]
+	bc.addCode["CHECKARGABCONB"]
+	bc.addValue[off, 1]
+      end if
+    end if
+  end generate
+
+  export operation findManifests -> [changed : Boolean]
+    const s : Symbol <- (view self$xsym as Sym)$mysym
+    changed <- false
+    if ! s$isNotManifest and !s$isTypeVariable then
+      s$isNotManifest <- true
+      changed <- true
+    end if
+    changed <- FTree.findManifests[self] | changed
+  end findManifests
+
+  export operation defineSymbols [st : SymbolTable]
+    self.iDefineSymbols[st]
+    FTree.defineSymbols[st, self]
+  end defineSymbols
+  export function asString -> [r : String]
+    r <- "param"
+  end asString
+end Param
+@
+
+
+1.18
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d34 1
+@
+
+
+1.17
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d37 1
+a37 1
+      const id <- (view xsym as hasIdent)$id
+d56 1
+a56 1
+      const env <- Environment$env
+d66 1
+a66 1
+    const env <- Environment$env
+d87 1
+d97 1
+a97 1
+      const s <- (view self$xsym as Sym)$mysym
+d100 2
+a101 2
+      const id <- r$id
+      const ctid <- IDS.IDToInstCTID[id]
+d129 1
+a129 1
+    const s <- (view self$xsym as Sym)$mysym
+@
+
+
+1.16
+log
+@First attempt at abcons
+@
+text
+@d39 1
+a39 1
+      const xxx <- st.Define[id, st$kind, isAttached]
+d42 1
+a42 5
+%     const xxx <- st.Define[id, st$kind, false]
+      if xxx == nil then
+	Environment.getEnv.SemanticError[ln, "Redefinition of symbol \"%s\"",
+	  { id.asString } ]
+      end if
+d56 5
+a60 2
+      Environment$env.tassigntypes["param %s on line %d asType -> nil\n",
+	{self$xsym.asString, self$ln}]
+d66 5
+a70 2
+    Environment$env.tassigntypes["param.assigntypes: %s on line %d\n",
+      { self$xsym.asString, self$ln}]
+d72 1
+a72 1
+      Environment$env.SemanticError[self$ln,
+d78 1
+a78 1
+	Environment$env.SemanticError[self$ln, 
+d85 1
+a85 1
+	Environment$env.pass["Couldn't find a type for param %s on line %d\n",
+@
+
+
+1.15
+log
+@Preparatory work for Ab/Cons
+@
+text
+@d37 1
+a37 1
+      const id <- (view xsym as hasId)$id
+d72 1
+a72 1
+	{(view self$xsym as hasId)$id.asString}]
+d78 1
+a78 1
+	  {(view self$xsym as hasId)$id.asString}]
+a91 1
+%    Environment$env.printf["Generate on a param\n", {}]
+d95 17
+a111 23
+%      Environment$env.printf["Param.generate: ct is a bytecode\n", {}]
+      if s$ATinfo !== nil then
+	const r <- view s$ATinfo as typeobject t
+	  function getID -> [Integer]
+	end t
+	const id <- r$id
+	const ctid <- IDS.IDToInstCTID[id]
+	if ctid !== nil then
+	  bc.fetchVariableSecondThing[id + 0x200, id]
+	  assert s$base = 'A'
+	  begin
+	    const off : Integer <- s$offset - 4
+	    if ~128 <= off and off <= 127 then
+	      bc.addCode["STAB"]
+	      bc.addValue[off, 1]
+	    elseif ~32768 <= off and off <= 32767 then
+	      bc.addCode["STAS"]
+	      bc.addValue[off, 2]
+	    else
+	      bc.addCode["STA"]
+	      bc.addValue[off, 4]
+	    end if
+	  end
+d113 8
+@
+
+
+1.14
+log
+@Check for multiply define parameters
+@
+text
+@d104 1
+a104 1
+	  bc.fetchLiteral[id + 0x200]
+@
+
+
+1.13
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d37 1
+d39 1
+a39 1
+      const xxx <- st.Define[(view xsym as hasId)$id, st$kind, isAttached]
+d42 5
+a46 1
+%     const xxx <- st.Define[(view xsym as hasId)$id, st$kind, false]
+@
+
+
+1.12
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d130 1
+a130 1
+    iDefineSymbols[st]
+@
+
+
+1.11
+log
+@Better tracing of atlit generation
+@
+text
+@d101 13
+a113 2
+	  bc.addCode["STAS"]
+	  bc.addValue[s$offset - 4, 2]
+@
+
+
+1.10
+log
+@Get rid of return on generate
+@
+text
+@d47 10
+a56 3
+    r <- self$xtype.execute
+    if r !== nil then
+      r <- r.asType
+@
+
+
+1.9
+log
+@Removed all monitors
+@
+text
+@d79 1
+a79 1
+  export operation generate[xct : Printable] -> [rct : None]
+@
+
+
+1.8
+log
+@Implement change to "new" keyword.
+@
+text
+@a4 1
+  monitor
+a44 1
+  end monitor
+@
+
+
+1.7
+log
+@Clean up param
+@
+text
+@d37 1
+d43 1
+@
+
+
+1.6
+log
+@Enabled attach declarations
+@
+text
+@d4 1
+a4 1
+const param <- class Param (Tree) [xxsym : Tree, xxtype : Tree, xxconstraint : Tree]
+d12 1
+a12 1
+    field constraint  : Tree <- xxconstraint
+d14 1
+a14 1
+      r <- 2
+a20 2
+      elseif i = 2 then
+	r <- constraint
+a27 2
+      elseif i = 2 then
+	constraint <- r
+d31 1
+a31 1
+      var nxsym, nxtype, nconstraint : Tree
+d34 1
+a34 2
+      if constraint !== nil then nconstraint <- constraint.copy[i] end if
+      r <- param.create[ln, nxsym, nxtype, nconstraint]
+@
+
+
+1.5
+log
+@type -> typeobject sed
+@
+text
+@d9 1
+a9 1
+%    field isAttached : Boolean <- false
+d43 2
+a44 2
+%      const xxx <- st.Define[(view xsym as hasId)$id, st$kind, isAttached]
+%      xxx$isMove <- isMove
+d46 1
+a46 1
+      const xxx <- st.Define[(view xsym as hasId)$id, st$kind, false]
+@
+
+
+1.4
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@a0 7
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import hasId from "Jekyll"
+import Environment from "Jekyll"
+import Sym from "Jekyll"
+import ByteCode from "Jekyll"
+import IDS from "Jekyll"
+d2 1
+a2 1
+export Param to "Jekyll"
+d91 1
+a91 1
+	const r <- view s$ATinfo as type t
+@
+
+
+1.3
+log
+@Fixed a little bug in iDefineSymbols
+@
+text
+@d91 1
+a91 1
+  export operation generate[xct : Printable]
+@
+
+
+1.2
+log
+@Don't waste space on move/visit/attached
+@
+text
+@d53 1
+a53 1
+%      const xxx <- st.Define[(view xsym as hasId)$id, st$kind, false]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 4
+a16 3
+    field isMove : Boolean <- false
+    field isVisit : Boolean <- false
+    field isAttached : Boolean <- false
+d49 5
+a53 2
+      const xxx <- st.Define[(view xsym as hasId)$id, st$kind, isAttached]
+      xxx$isMove <- isMove
+@

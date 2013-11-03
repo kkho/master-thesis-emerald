@@ -1,0 +1,1100 @@
+head	1.23;
+access;
+symbols
+	105alpha:1.23
+	104alpha:1.23
+	103alpha:1.23
+	102alpha:1.23
+	101alpha:1.23
+	100alpha:1.23
+	DIKU_0:1.18
+	carlton_start:1.15
+	immel_start:1.7;
+locks; strict;
+
+
+1.23
+date	98.02.09.17.55.34;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	95.02.07.01.48.31;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	94.08.17.16.51.53;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.12.04.13.21;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.12.11.01.08.40;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.10.21.16.03;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.06.03.15.01.47;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.04.06.19.38.03;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.05.19.20.00.31;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.18.12.05.03;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.59.43;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.59.41;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.59.40;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.23
+log
+@Checkpoint
+@
+text
+@
+export Xclass
+
+const T <- Tree
+
+const xclass <- class Xclass (OTree) [xxsfname : Tree, xxname : Tree, xxbase : Tree, xxparams : Tree, xxcreators : Tree, xxdecls : Tree, xxops : Tree]
+    field sfname : Tree <- xxsfname
+    field name : Tree <- xxname
+    field base : Tree <- xxbase
+    field params : Tree <- xxparams
+    field creators : Tree <- xxcreators
+    field decls : Tree <- xxdecls
+    field ops : Tree <- xxops
+    field value : Tree <- nil
+    field bid : Integer
+
+    export operation setBuiltinID [t : Tree]
+      const ts <- view t as hasStr
+      const thestr : String <- ts.getStr
+      bid <- Integer.Literal[thestr]
+    end setBuiltinID
+
+    export function upperbound -> [r : Integer]
+      r <- 6
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- sfname
+      elseif i = 1 then
+	r <- name
+      elseif i = 2 then
+	r <- base
+      elseif i = 3 then
+	r <- params
+      elseif i = 4 then
+	r <- creators
+      elseif i = 5 then
+	r <- decls
+      elseif i = 6 then
+	r <- ops
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	sfname <- r
+      elseif i = 1 then
+	name <- r
+      elseif i = 2 then
+	base <- r
+      elseif i = 3 then
+	params <- r
+      elseif i = 4 then
+	creators <- r
+      elseif i = 5 then
+	decls <- r
+      elseif i = 6 then
+	ops <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nsfname, nname, nbase, nparams, ncreators, ndecls, nops, nvalue : Tree
+      if sfname !== nil then nsfname <- sfname.copy[i] end if
+      if name !== nil then nname <- name.copy[i] end if
+      if base !== nil then nbase <- base.copy[i] end if
+      if params !== nil then nparams <- params.copy[i] end if
+      if creators !== nil then ncreators <- creators.copy[i] end if
+      if decls !== nil then ndecls <- decls.copy[i] end if
+      if ops !== nil then nops <- ops.copy[i] end if
+      const newclass <- xclass.create[ln, nsfname, nname, nbase, nparams, 
+	ncreators, ndecls, nops]
+      newclass$value <- value
+      r <- newclass
+    end copy
+
+    function isVowel [c : Character] -> [r : Boolean]
+      r <- c = 'a' | c = 'e' | c = 'i' | c = 'o' | c = 'u'
+    end isVowel
+    
+    function addA [id : Ident] -> [r : Ident]
+      const oname : String <- id$name
+      var nname : String
+      const it <- Environment.getEnv.getITable
+      if self.isVowel[oname[0]] then
+	nname <- "an"
+      else
+	nname <- "a"
+      end if
+      nname <- nname || oname
+      r <- it.Lookup[nname, 999]
+    end addA
+    
+    operation mergebody [kind:Integer, old : Tree, newt : Tree] -> [res : Tree]
+      const hasbody <- typeobject t op getBody -> [Tree] end t
+      const newstats <- sseq.create[old$ln]
+      newstats.rcons[(view old as hasbody)$body.copy[0]]
+      newstats.rcons[(view newt as hasbody)$body.copy[0]]
+      const newblock <- block.create[newt$ln, newstats, nil, nil]
+      if kind == 0 then
+	res <- InitDef.create[newt$ln, newblock]
+      elseif kind == 1 then
+	res <- RecoveryDef.create[newt$ln, newblock]
+      else
+	assert false
+      end if
+    end mergebody
+
+    operation inherit[old : Tree, newt : Tree, kind : Integer] -> [r : Tree]
+      var found : Boolean
+      var lwb : Integer <- kind
+      
+      if old == nil then
+	r <- newt
+	return
+      end if
+
+      if newt == nil then
+	r <- seq.create[old$ln]
+      else
+	r <- newt
+      end if
+      
+      if kind == 2 then 
+	lwb <- 3
+	for i : Integer <- 0 while i < lwb by i <- i + 1
+	  if newt[i] == nil and old[i] !== nil then
+	    newt[i] <- old[i].copy[0]
+	  elseif (i == 0 or i == 1) and newt[i] !== nil and old[i] !== nil then
+	    newt[i] <- self.mergebody[i, old[i], newt[i]]
+	  end if
+	end for
+      end if
+
+      for i : Integer <- lwb while i <= old.upperbound by i <- i + 1
+	const o <- old[i]
+	found <- false
+	if newt !== nil then
+	  for j : Integer <- lwb while j <= newt.upperbound by j <- j + 1
+	    const n <- newt[j]
+	    found <- o.same[n]
+	    exit when found
+	  end for
+	end if
+	if !found then
+	  r.rcons[o.copy[0]]
+	end if
+      end for
+    end inherit
+    
+    operation iRemoveSugar -> [r : Tree]
+      var typeO, instanceO : Oblit
+      var instanceType, tdecls, tops, createparams : Tree
+      var resultdef, resultref, createopsig, p : Tree
+      var createopdef : OpDef
+      var resultId : Ident
+      const env <- Environment.getEnv
+      const classIdent <- (view name as hasIdent)$id
+      const typename <- env.getITable.Lookup[classIdent$name||"type", 999]
+      const typenamedef <- sym.create[ln, typename]
+      const typenameref <- sym.create[ln, typename]
+      const instancename <- self.addA[classIdent]
+      var basesym : Sym
+      var basecreate : Tree
+      var baseobject : Oblit
+      var basev : Tree
+      var baseob : Oblit
+
+      if base !== nil then
+	var sy : Symbol
+	basesym <- view base as Sym
+	env.pass["class.removeSugar base is %s\n", {base.asString}]
+	const theconsts <- env$root[2]
+	if theconsts !== nil then
+	  for i : Integer <- 0 while i <= theconsts.upperbound by i <- i + 1
+	    const theconst <- theconsts[i]
+	    if nameof theconst = "aconstdecl" then
+	      const thesym <- view theconst[0] as Sym
+	      if thesym$id == basesym$id then
+		basev <- theconst[2]
+		exit
+	      end if
+	    end if
+	  end for
+	end if
+	if basev == nil then
+	  sy <- env$rootst.Lookup[ln, basesym$id, false]
+	  if sy == nil or sy$value == nil then
+	    env.SemanticError[base$ln,
+	      "Base %s is undefined.", {basesym$id.asString}]
+	  else
+	    basev <- view sy$value as Tree
+	  end if
+	end if
+	if basev !== nil then
+	  const createname <- OpName.Literal["create"]
+	  env.pass["basev is %s\n", {basev.asString}]
+	  if nameof basev = "anoblit" then
+	    baseob <- view basev as Oblit
+	    var index : Integer
+	    basecreate, index <- baseob.findOp[createname, true, nil, 1]
+	    baseobject <- view baseob.findInvocResult[createname, nil, 1] as Oblit
+	  end if
+	end if
+      end if
+
+      if baseobject == nil then
+      	env.pass[" baseobject is nil\n", nil]
+	instanceO <- oblit.create[ln,
+	  sfname.copy[0],
+	  sym.create[ln, instancename],	% name
+	  decls,				% decls
+	  ops]					% ops
+      else
+      	env.pass[" baseobject is %s\n", {baseobject.asString}]
+	instanceO <- oblit.create[ln,
+	  sfname.copy[0],
+	  sym.create[ln, instancename],	% name
+	  nil,					% decls
+	  nil]					% ops
+	instanceO$decls <- 
+	  self.inherit[baseobject$decls, decls, 0]
+	instanceO$ops <- 
+	  self.inherit[baseobject$ops, ops, 2]
+      end if
+      instanceO$f <- f
+
+%     env$stdout.putstring["Before removing sugar of the instanceO\n"]
+%     instanceO.print[env$stdout, 0]
+      instanceO <- instanceO.removeSugar[nil]
+%     env$stdout.putstring["After removing sugar of the instanceO\n"]
+%     instanceO.print[env$stdout, 0]
+
+      tdecls <- sseq.create[ln]
+%      if baseobject !== nil then
+%	tdecls.rcons[constdecl.create[ln, 
+%	  sym.create[ln, basesym$id],	% id
+%	  nil,				% type
+%	  sym.create[ln, classident]	% value
+%	]]
+%      end if
+      instanceType <- instanceO.getAT
+      tdecls.rcons[constdecl.create[ln, typenamedef, nil, instanceType]]
+      if creators !== nil then
+	tdecls.rappend[creators[0]]
+      end if
+      if baseob !== nil then
+	tdecls <- self.inherit[baseob$decls, tdecls, 1]
+      end if
+      tops <- seq.create[ln]
+      tops.rcons[nil]
+      tops.rcons[nil]
+      tops.rcons[nil]
+      tops.rcons[sugar.doAnOp[Opname.literal["getsignature"], nil, builtinLit.create[ln, 9], nil, typenameref, true]]
+      % we need to add in the parent class's params
+      if basecreate == nil then
+	createparams <- params
+      else
+	const bcod <- view basecreate as opDef
+	const bcos <- view bcod$sig as OpSig
+	const bcp  <- bcos$params
+	if bcp == nil then
+	  createparams <- params
+	else
+	  createparams <- bcp.copy[0]
+	  if params !== nil then createparams.rappend[params] end if
+	end if
+      end if
+      resultid <- newid.newid
+      resultdef <- sym.create[ln, resultid]
+      resultref <- sym.create[ln, resultid]
+      p <- param.create[ln, resultdef, typenameref.copy[0]]
+      p <- seq.singleton[p]
+      createopsig  <- opsig.create[ln, opname.literal["create"], createparams, p, nil]
+      
+      p <- assignstat.create[ln, seq.singleton[resultref], seq.singleton[instanceO] ]
+      p <- sseq.singleton[p]
+      p <- block.create[ln, p, nil, nil]
+      createopdef  <- opdef.create[ln, createopsig, p]
+      createopdef$isExported <- true
+      tops.rcons[createopdef]
+      if creators !== nil then
+	tops.rappend[creators[1]]
+      end if
+      if baseob !== nil then
+	tops <- self.inherit[baseob$ops, tops, 2]
+      end if
+      const theType <-
+	oblit.create[ln, sfname.copy[0], name, tdecls, tops]
+      theType$isImmutable <- true
+      r <- theType
+      if bid !== nil then
+	theType.setBuiltinID[Literal.StringL[0, bid.asString]]
+	instanceO.setBuiltinID[Literal.StringL[0, (bid + 0x400).asString]]
+	(view instanceType as ATLit).setBuiltinID[Literal.StringL[0, (bid + 0x600).asString]]
+      end if
+    end iRemoveSugar
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    if ob == nil or base == nil then 
+      r <- self.iRemoveSugar
+      r <- r.removeSugar[ob]
+    else
+      const oldbase <- base
+      base <- nil
+      value <- self.iRemoveSugar
+      base <- oldbase
+      r <- self
+    end if
+  end removeSugar
+
+  export operation getIsNotManifest -> [r : Boolean]
+    r <- false
+  end getIsNotManifest
+  export operation execute -> [r : Tree]
+    r <- value
+  end execute
+  export operation defineSymbols[thest : SymbolTable]
+    assert value !== nil
+    value.defineSymbols[thest]
+  end defineSymbols
+  export operation resolveSymbols[thest : SymbolTable, nexp : Integer]
+    assert value !== nil
+    value.resolveSymbols[thest, nexp]
+  end resolveSymbols
+  export operation findManifests -> [changed : Boolean]
+    assert value !== nil
+    changed <- value.findManifests
+  end findManifests
+  export operation evaluateManifests
+    assert value !== nil
+    value.evaluateManifests
+  end evaluateManifests
+  export operation assignTypes
+    assert value !== nil
+    value.assignTypes
+  end assignTypes
+  export operation typeCheck
+    assert value !== nil
+    value.typeCheck
+  end typeCheck
+  export operation getAT -> [r : Tree]
+    assert value !== nil
+    r <- value.getAT
+  end getAT
+  export operation getCT -> [r : Tree]
+    assert value !== nil
+    r <- value.getCT
+  end getCT
+  export operation findThingsToGenerate[q : Any]
+    assert value !== nil
+    value.findThingsToGenerate[q]
+  end findThingsToGenerate
+  export operation generate[ct : Printable]
+    assert value !== nil
+    value.generate[ct]
+  end generate
+
+  export function asString -> [r : String]
+    r <- "xclass"
+  end asString
+end Xclass
+@
+
+
+1.22
+log
+@Many changes
+@
+text
+@d15 7
+d92 15
+d127 2
+d286 9
+a294 6
+      begin
+	const theType <-
+	  oblit.create[ln, sfname.copy[0], name, tdecls, tops]
+	theType$isImmutable <- true
+	r <- theType
+      end
+@
+
+
+1.21
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@d14 1
+d54 1
+a54 1
+      var nsfname, nname, nbase, nparams, ncreators, ndecls, nops : Tree
+d62 1
+a62 1
+      r <- xclass.create[ln, nsfname, nname, nbase, nparams, 
+d64 2
+d87 1
+a87 1
+      var lwb : Integer <- 0
+d104 1
+a104 1
+	    newt[i] <- old[i]
+d141 1
+d173 1
+a173 1
+	    const baseasob <- view basev as Oblit
+d175 2
+a176 2
+	    basecreate, index <- baseasob.findOp[createname, true, nil, 1]
+	    baseobject <- view baseasob.findInvocResult[createname, nil, 1] as Oblit
+d196 1
+a196 1
+	  self.inherit[baseobject$decls, decls, 1]
+d218 6
+d257 4
+a260 1
+	tops.rappend[creators]
+d271 10
+a280 2
+    r <- self.iRemoveSugar[]
+    r <- r.removeSugar[ob]
+d282 47
+@
+
+
+1.20
+log
+@Even better semantics checks, avoid invoking nil, fix class
+@
+text
+@d134 1
+d141 1
+a141 1
+	const b <- view base as Sym
+d149 1
+a149 1
+	      if thesym$id == b$id then
+d157 1
+a157 1
+	  sy <- env$rootst.Lookup[ln, b$id, false]
+d160 1
+a160 1
+	      "Base %s is undefined.", {b$id.asString}]
+d204 8
+a212 1
+      tdecls <- seq.create[ln]
+d237 1
+a237 1
+      p <- seq.literal[ln, {p : Tree}]
+d240 2
+a241 2
+      p <- assignstat.create[ln, seq.literal[ln, { resultref : Tree }], seq.literal[ln, { instanceO : Tree }] ]
+      p <- seq.literal[ln, {p : Tree}]
+@
+
+
+1.19
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d85 6
+d128 1
+d130 1
+a130 1
+      const typename <- Environment.getEnv.getITable.Lookup[classIdent$name||"type", 999]
+d136 1
+d141 24
+a164 7
+%	Environment$env.printf["class.removeSugar base is %s\n", {base.asString}]
+	sy <- Environment$env$rootst.Lookup[ln, b$id, false]
+	if sy == nil or sy$value == nil then
+	  Environment.getEnv.SemanticError[base$ln,
+	    "Base %s is undefined.", {b$id.asString}]
+	else
+	  const basev <- view sy$value as Tree
+d166 1
+a166 1
+%	  Environment$env.printf["basev is %s\n", {basev.asString}]
+d177 1
+a177 1
+      	Environment$env.pass[" baseobject is nil\n", nil]
+d184 1
+a184 1
+      	Environment$env.pass[" baseobject is %s\n", {baseobject.asString}]
+d197 2
+a198 2
+%     Environment$env$stdout.putstring["Before removing sugar of the instanceO\n"]
+%     instanceO.print[Environment$env$stdout, 0]
+d200 2
+a201 2
+%     Environment$env$stdout.putstring["After removing sugar of the instanceO\n"]
+%     instanceO.print[Environment$env$stdout, 0]
+@
+
+
+1.18
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d70 1
+a70 1
+      const oname <- id$name
+@
+
+
+1.17
+log
+@First attempt at abcons
+@
+text
+@d134 1
+a134 1
+	sy <- Environment$env$rootst.Lookup[b$id, false]
+d185 1
+a185 1
+      tops.rcons[sugar.doAnOp[Opname.literal["getsignature"], nil, builtinLit.create[ln, 9], nil, typenameref]]
+d204 1
+a204 1
+      p <- seq.literal[ln, {p}]
+d207 2
+a208 2
+      p <- assignstat.create[ln, seq.literal[ln, { resultref }], seq.literal[ln, { instanceO : Tree }] ]
+      p <- seq.literal[ln, {p}]
+@
+
+
+1.16
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@d122 1
+a122 1
+      const classIdent <- (view name as typeobject T op getId -> [Ident] end T)$id
+@
+
+
+1.15
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d144 2
+a145 1
+	    basecreate <- baseasob.findOp[createname, true, nil, 1]
+@
+
+
+1.14
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d73 1
+a73 1
+      if self.isVowel[oname(0)] then
+d94 2
+a95 2
+	  if newt(i) == nil and old(i) !== nil then
+	    newt(i) <- old(i)
+d101 1
+a101 1
+	const o <- old(i)
+d105 1
+a105 1
+	    const n <- newt(j)
+@
+
+
+1.13
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d73 1
+a73 1
+      if isVowel[oname(0)] then
+d126 1
+a126 1
+      const instancename <- addA[classIdent]
+d224 1
+a224 1
+    r <- iRemoveSugar[]
+@
+
+
+1.12
+log
+@Use nameof rather than asString
+@
+text
+@d124 2
+a125 2
+      const typenamedef <- symdef.create[ln, typename]
+      const typenameref <- symref.create[ln, typename]
+d154 1
+a154 1
+	  symdef.create[ln, instancename],	% name
+d161 1
+a161 1
+	  symdef.create[ln, instancename],	% name
+d200 2
+a201 2
+      resultdef <- symdef.create[ln, resultid]
+      resultref <- symref.create[ln, resultid]
+@
+
+
+1.11
+log
+@Fix parsing of operations, initiallies and recoveries
+@
+text
+@d142 1
+a142 1
+	  if basev.asString = "oblit" then
+@
+
+
+1.10
+log
+@Removed all monitors
+@
+text
+@d6 1
+a6 1
+const xclass <- class Xclass (OTree) [xxsfname : Tree, xxname : Tree, xxbase : Tree, xxparams : Tree, xxexport : Tree, xxcreators : Tree, xxdecls : Tree, xyinitially : Tree, xxops : Tree, xxprocess : Tree]
+a10 1
+    field xexport : Tree <- xxexport
+a12 1
+    field yinitially : Tree <- xyinitially
+a13 1
+    field xprocess : Tree <- xxprocess
+d16 1
+a16 1
+      r <- 9
+d28 1
+a28 1
+	r <- xexport
+d30 1
+a30 1
+	r <- creators
+a31 4
+	r <- decls
+      elseif i = 7 then
+	r <- yinitially
+      elseif i = 8 then
+a32 2
+      elseif i = 9 then
+	r <- xprocess
+d45 1
+a45 1
+	xexport <- r
+d47 1
+a47 1
+	creators <- r
+a48 4
+	decls <- r
+      elseif i = 7 then
+	yinitially <- r
+      elseif i = 8 then
+a49 2
+      elseif i = 9 then
+	xprocess <- r
+d53 1
+a53 2
+      var nsfname, nname, nbase, nparams, nxexport, ncreators, ndecls : Tree
+      var nyinitially, nops, nxprocess : Tree
+a57 1
+      if xexport !== nil then nxexport <- xexport.copy[i] end if
+a59 1
+      if yinitially !== nil then nyinitially <- yinitially.copy[i] end if
+d61 2
+a62 3
+      if xprocess !== nil then nxprocess <- xprocess.copy[i] end if
+      r <- xclass.create[ln, nsfname, nname, nbase, nparams, nxexport, 
+	ncreators, ndecls, nyinitially, nops, nxprocess]
+d82 1
+a82 1
+    operation inherit[old : Tree, newt : Tree, othernew : Tree, kind : Integer] -> [r : Tree]
+d84 1
+d91 10
+a100 2
+      if r == nil then r <- Seq.create[9999] end if
+      for i : Integer <- 0 while i <= old.upperbound by i <- i + 1
+d104 1
+a104 1
+	  for j : Integer <- 0 while j <= newt.upperbound by j <- j + 1
+a109 7
+	if !found and othernew !== nil then
+	  for j : Integer <- 0 while j <= othernew.upperbound by j <- j + 1
+	    const n <- othernew(j)
+	    found <- o.same[n]
+	    exit when found
+	  end for
+	end if
+d154 3
+a156 6
+	  symdef.create[ln, instancename],% name
+	  nil,				% export
+	  decls,
+	  yinitially,
+	  ops,
+	  xprocess]
+a157 2
+	const bi <- baseobject$yinitially
+	const mi <- yinitially
+a161 1
+	  nil,					% export
+d163 1
+a163 8
+	  nil,					% initially
+	  nil,					% ops
+	  xprocess]
+	if mi !== nil then
+	  instanceO$yinitially <- mi
+	else 
+	  instanceO$yinitially <- bi
+	end if
+d165 1
+a165 1
+	  self.inherit[baseobject$decls, decls, nil, 1]
+d167 1
+a167 1
+	  self.inherit[baseobject$ops, ops, nil, 2]
+d181 3
+d217 1
+a217 1
+	  oblit.create[ln, sfname.copy[0], name, nil, tdecls, nil, tops, nil]
+@
+
+
+1.9
+log
+@Got rid of monitors and fix
+@
+text
+@a6 1
+  monitor
+d84 1
+a84 1
+    private function isVowel [c : Character] -> [r : Boolean]
+d88 1
+a88 1
+    private function addA [id : Ident] -> [r : Ident]
+d101 1
+a101 1
+    private operation inherit[old : Tree, newt : Tree, othernew : Tree, kind : Integer] -> [r : Tree]
+a248 1
+  end monitor
+@
+
+
+1.8
+log
+@Implement change to "new" keyword.
+@
+text
+@d6 1
+a6 1
+const xclass <- class Xclass (OTree) [xxsfname : Tree, xxname : Tree, xxbase : Tree, xxparams : Tree, xxexport : Tree, xxcreators : Tree, xxdecls : Tree, xymonitor : Tree, xxops : Tree, xxprocess : Tree]
+d15 1
+a15 1
+    field ymonitor : Tree <- xymonitor
+d38 1
+a38 1
+	r <- ymonitor
+d61 1
+a61 1
+	ymonitor <- r
+d70 1
+a70 1
+      var nymonitor, nops, nxprocess : Tree
+d78 1
+a78 1
+      if ymonitor !== nil then nymonitor <- ymonitor.copy[i] end if
+d82 1
+a82 1
+	ncreators, ndecls, nymonitor, nops, nxprocess]
+d175 1
+a175 1
+	  ymonitor,
+d179 2
+a180 2
+	const bm <- view baseobject$ymonitor as XMonitor
+	const mm <- view ymonitor as XMonitor
+d187 1
+a187 1
+	  nil,					% monitor
+d190 4
+a193 28
+	if mm !== nil and bm !== nil then
+	  instanceO$decls <-
+	    self.inherit[baseobject$decls, decls, mm$decls, 1]
+	  mm$decls <- 
+	    self.inherit[bm$decls, mm$decls, decls, 1]
+	  mm$ops <- 
+	    self.inherit[bm$ops, mm$ops, ops, 2]
+	  instanceO$ymonitor <- mm
+	  instanceO$ops <- 
+	    self.inherit[baseobject$ops, ops, mm$ops, 2]
+	elseif mm !== nil then
+	  instanceO$decls <- 
+	    self.inherit[baseobject$decls, decls, mm$decls, 1]
+	  instanceO$ymonitor <- mm
+	  instanceO$ops <-
+	    self.inherit[baseobject$ops, ops, mm$ops, 2]
+	elseif bm !== nil then
+	  instanceO$decls <- 
+	    self.inherit[baseobject$decls, decls, nil, 1]
+	  instanceO$ymonitor <- bm
+	  instanceO$ops <- 
+	    self.inherit[baseobject$ops, ops, nil, 2]
+	else
+	  instanceO$decls <- 
+	    self.inherit[baseobject$decls, decls, nil, 1]
+	  instanceO$ymonitor <- nil
+	  instanceO$ops <- 
+	    self.inherit[baseobject$ops, ops, nil, 2]
+d195 4
+@
+
+
+1.7
+log
+@Hide unexported operations from the outside
+@
+text
+@d102 1
+a102 1
+    private operation inherit[old : Tree, new : Tree, othernew : Tree, kind : Integer] -> [r : Tree]
+d104 1
+a104 1
+      if new == nil then
+d107 1
+a107 1
+	r <- new
+d114 3
+a116 3
+	if new !== nil then
+	  for j : Integer <- 0 while j <= new.upperbound by j <- j + 1
+	    const n <- new(j)
+d247 1
+a247 1
+      resultid <- newid.new
+@
+
+
+1.6
+log
+@Clean up param
+@
+text
+@d162 1
+a162 1
+	    basecreate <- baseasob.findOp[createname, nil, 1]
+@
+
+
+1.5
+log
+@More objectflag corrections
+@
+text
+@d250 1
+a250 1
+      p <- param.create[ln, resultdef, typenameref.copy[0], nil]
+@
+
+
+1.4
+log
+@Get rid of objectflags, use otree
+@
+text
+@d266 1
+a266 1
+	theType$f$isImmutable <- true
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d6 1
+a6 1
+const xclass <- class Xclass (Tree) [xxsfname : Tree, xxname : Tree, xxbase : Tree, xxparams : Tree, xxexport : Tree, xxcreators : Tree, xxdecls : Tree, xymonitor : Tree, xxops : Tree, xxprocess : Tree]
+a7 1
+    field f : ObjectFlags <- ObjectFlags.create
+@
+
+
+1.2
+log
+@Removed unnecessary virtuals
+@
+text
+@a0 21
+import Tree, FTree, Printable from "Jekyll"
+import Symbol, SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+import ObjectFlags from "Jekyll"
+import Ident from "Jekyll"
+import Sym from "Jekyll"
+import Symdef from "Jekyll"
+import Symref from "Jekyll"
+import Oblit from "Jekyll"
+import Seq from "Jekyll"
+import Constdecl from "Jekyll"
+import Sugar from "Jekyll"
+import Opname from "Jekyll"
+import Builtinlit from "Jekyll"
+import Param from "Jekyll"
+import Opsig from "Jekyll"
+import Assignstat from "Jekyll"
+import Block from "Jekyll"
+import Opdef from "Jekyll"
+import Newid from "Jekyll"
+import XMonitor from "Jekyll"
+d2 1
+a2 1
+export Xclass to "Jekyll"
+d141 1
+a141 1
+      const classIdent <- (view name as type T op getId -> [Ident] end T)$id
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d27 1
+a27 1
+const xclass <- class Xclass (Tree) [xxsfname : Tree, xxname : Tree, xxbase : Tree, xxparams : Tree, xxexport : Tree, xxcreators : Tree, xxdecls : Tree, xymonitor : Tree, xxops : Tree, xxprocess : Tree, xxvirtuals : Tree]
+a39 1
+    field virtuals : Tree <- xxvirtuals
+d42 1
+a42 1
+      r <- 10
+a64 2
+      elseif i = 10 then
+	r <- virtuals
+a87 2
+      elseif i = 10 then
+	virtuals <- r
+d92 1
+a92 1
+      var nymonitor, nops, nxprocess, nvirtuals : Tree
+a102 1
+      if virtuals !== nil then nvirtuals <- virtuals.copy[i] end if
+d104 1
+a104 1
+	ncreators, ndecls, nymonitor, nops, nxprocess, nvirtuals]
+@

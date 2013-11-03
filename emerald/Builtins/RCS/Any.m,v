@@ -1,0 +1,114 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.3
+	immel_start:1.2;
+locks; strict;
+
+
+1.5
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.19.22.42.38;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.03.01.22.18.44;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.43.35;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.43.34;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.5
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)Any.m	1.2  3/6/91
+%
+const Any <- immutable object Any builtin 0x1001
+  const AnyType <- typeobject AnyType builtin 0x1601
+  end AnyType
+
+  export function getSignature -> [result : Signature]
+    result <- AnyType
+  end getSignature
+  export operation create -> [ n : AnyType ]
+    n <- immutable object anAny builtin 0x1401
+    end anAny
+  end create
+end Any
+
+export Any to "Builtins"
+@
+
+
+1.4
+log
+@Stop using mutable objects with no state, changed the name of instanceFlags
+@
+text
+@d4 2
+a5 2
+const Any == immutable object Any builtin 0x1001
+  const AnyType == typeobject AnyType builtin 0x1601
+@
+
+
+1.3
+log
+@Create any instances
+@
+text
+@d12 1
+a12 1
+    n <- object anAny builtin 0x1401
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d11 4
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Any.m	1.1  3/6/91
+d5 1
+a5 1
+  const AnyType == type AnyType builtin 0x1601
+@

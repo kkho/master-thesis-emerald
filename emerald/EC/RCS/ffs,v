@@ -1,0 +1,104 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3
+	carlton_start:1.3
+	immel_start:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	93.06.04.00.07.11;	author mueller;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.04.00.05.23;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.25.16.57.34;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Script to recompile the compiler from scratch.
+@
+
+
+1.3
+log
+@replaced by ffs target in makefile
+@
+text
+@#!/bin/sh
+# for backwards compatibility
+emmake ffs
+
+@
+
+
+1.2
+log
+@changed Etc to lib
+uses EMERALDROOT and EMERALDARCH to find tools
+@
+text
+@d1 3
+a3 5
+#!/bin/csh -f
+hostname
+echo EMERALDROOT is $EMERALDROOT
+echo EMERALDARCH is $EMERALDARCH
+date
+a4 22
+make reset
+(cd ../lib ; make reset)
+
+set time=0
+
+$EMERALDROOT/bin/$EMERALDARCH/emx -M8 -v $EMERALDROOT/lib/Compiler << theend
+unset perfile
+unset dotypecheck
+unset generateats
+unset generateconcurrent
+set generatedebuginfo
+source b
+source input.0
+source t
+source input.1
+source input.2
+source input.3
+source input.4
+source input.5
+theend
+
+date
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 3
+d6 1
+d8 1
+a8 1
+(cd ../Etc ; make reset)
+d12 1
+a12 2
+echo EMERALDROOT is $EMERALDROOT
+../bin/emx -M8 -Tmemory -v execCP << theend
+d15 2
+@

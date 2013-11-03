@@ -1,0 +1,710 @@
+head	1.23;
+access;
+symbols
+	105alpha:1.23
+	104alpha:1.23
+	103alpha:1.23
+	102alpha:1.23
+	101alpha:1.23
+	100alpha:1.23
+	DIKU_0:1.14
+	immel_start:1.5;
+locks; strict;
+comment	@# @;
+
+
+1.23
+date	98.02.23.16.20.22;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	98.02.09.17.54.45;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	96.09.03.04.15.29;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	95.11.23.17.12.36;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	95.06.23.22.17.16;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	95.04.04.05.09.54;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	95.03.16.19.14.23;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	95.03.03.05.46.25;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	94.08.17.17.02.25;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.06.15.05.35.08;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.01.19.03.33.42;	author aveitch;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.25.15.56.49;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.09.22.21.25;	author mueller;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.02.22.44.10;	author mueller;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.02.17.17.20.28;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.02.17.00.09.58;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.18.17.38.31;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.06.08.11.48.49;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.03.10.16.47;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.08.22.28.51;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.08.07.16.47.38;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.05.18.14.59.30;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.23
+log
+@'./Builtins'
+@
+text
+@#
+# Builtins Makefile
+#
+
+EMX = emx
+EMC = emc
+
+CRITICALSOURCES = \
+	AType.m \
+	Any.m \
+	Boolean.m \
+	Char.m \
+	Cond.m \
+	Integer.m \
+	Nil.m \
+	NLElem.m \
+	NodeL.m \
+	Handler.m \
+	VOfAny.m \
+	VOfChar.m \
+	VOfInt.m \
+	String.m \
+	Node.m \
+	Bitchunk.m \
+	OutStr.m \
+	InStr.m \
+	Real.m \
+	AParamL.m \
+	AOpVecE.m \
+	AOpVec.m \
+	Signat.m \
+	COpVecE.m \
+	COpVec.m \
+	IVOfInt.m \
+	CType.m \
+	RISC.m \
+	IState.m \
+	Time.m \
+	Direct.m \
+	IVOfAny.m \
+	RISA.m \
+	Stub.m \
+	Literal.m \
+	IVOfStr.m \
+	VOfStr.m \
+	RDirect.m
+
+EMBEDDEDSOURCES = \
+	AType.m \
+	Any.m \
+	Boolean.m \
+	Char.m \
+	Cond.m \
+	Integer.m \
+	Nil.m \
+	NLElem.m \
+	NodeL.m \
+	Handler.m \
+	VOfAny.m \
+	VOfChar.m \
+	VOfInt.m \
+	String.m \
+	Node.m \
+	Bitchunk.m \
+	OutStr.m \
+	InStr.m \
+	Real.m \
+	AParamL.m \
+	AOpVecE.m \
+	AOpVec.m \
+	Signat.m \
+	COpVecE.m \
+	COpVec.m \
+	IVOfInt.m \
+	CType.m \
+	RISC.m \
+	IState.m \
+	Time.m \
+	Direct.m \
+	IVOfAny.m \
+	RISA.m \
+	Stub.m \
+	Literal.m \
+	IVOfStr.m \
+	VOfStr.m
+
+
+OTHERSOURCES = \
+	Array.m \
+	Sequence.m \
+	Vec.m \
+	IVec.m
+
+all:	$(CRITICALSOURCES) $(OTHERSOURCES)
+	rm -f CP CPIndex
+	rm -f name.ats name.idb name name.opd name.oid
+	cp /dev/null name
+	cp $(EMLIBDIR)/opoid name.opd ; chmod +w name.opd
+	echo >  xxinput  unset tracepasses
+	echo >> xxinput  unset docompilation
+	echo >> xxinput  unset dotypecheck
+	echo >> xxinput  unset perfile
+	echo >> xxinput  set compilingbuiltins
+	echo >> xxinput  set exporttree
+	echo >> xxinput  load name
+	for x in $(CRITICALSOURCES) ; do \
+	    echo >> xxinput  $$x ;\
+	done
+	echo source xxinput | $(EMC) -O4m
+	rm -f xxinput
+
+embeddedall:	$(EMBEDDEDSOURCES) $(OTHERSOURCES)
+	rm -f CP CPIndex
+	rm -f name.idb name name.opd name.oid
+	cp /dev/null name
+	cp $(EMLIBDIR)/opoid name.opd ; chmod +w name.opd
+	echo >  xxinput  unset tracepasses
+	echo >> xxinput  unset docompilation
+	echo >> xxinput  unset dotypecheck
+	echo >> xxinput  unset perfile
+	echo >> xxinput  unset generatedebuginfo
+	echo >> xxinput  set compilingbuiltins
+	echo >> xxinput  set exporttree
+	echo >> xxinput  load name
+	for x in $(EMBEDDEDSOURCES) ; do \
+	    echo >> xxinput  $$x ;\
+	done
+	echo source xxinput | $(EMC) -O4m
+	rm -f xxinput
+
+install:
+	$(EMX) -B -C -b CP
+	rm -f $(EMLIBDIR)/Builtins
+	cp CP $(EMLIBDIR)/Builtins
+	chmod -w $(EMLIBDIR)/Builtins
+	cp name.opd $(EMLIBDIR)/opoid
+
+embeddedinstall:
+	$(EMX) -B -C -b CP
+	rm -f $(EMLIBDIR)/EBuiltins
+	cp CP $(EMLIBDIR)/EBuiltins
+	chmod -w $(EMLIBDIR)/EBuiltins
+	cp name.opd $(EMLIBDIR)/opoid
+
+VOfChar.m: Vec.m vec-ed
+	csh vec-ed Vec.m VectorOfChar Character 16 VOfChar.m
+
+VOfAny.m: Vec.m vec-ed
+	csh vec-ed Vec.m VectorOfAny Any 28 VOfAny.m
+
+VOfInt.m: Vec.m vec-ed
+	csh vec-ed Vec.m VectorOfInt Integer 1e VOfInt.m
+
+VOfStr.m:	Vec.m vec-ed
+	csh vec-ed Vec.m VectorOfString String 2a VOfStr.m
+
+NodeL.m:	IVec.m vec-ed
+	csh vec-ed IVec.m NodeList NodeListElement 0f NodeL.m
+
+COpVec.m:	IVec.m vec-ed
+	csh vec-ed IVec.m COpVector COpVectorE 19 COpVec.m
+
+AOpVec.m:	IVec.m vec-ed
+	csh vec-ed IVec.m AOpVector AOpVectorE 1b AOpVec.m
+
+AParamL.m:	IVec.m vec-ed
+	csh vec-ed IVec.m AParamList Signature 1d AParamL.m
+
+IVOfAny.m:	IVec.m vec-ed
+	csh vec-ed IVec.m ImmutableVectorOfAny Any 21 IVOfAny.m
+
+IVOfStr.m:	IVec.m vec-ed
+	csh vec-ed IVec.m ImmutableVectorOfString String 29 IVOfStr.m
+
+IVOfInt.m:	IVec.m vec-ed
+	csh vec-ed IVec.m ImmutableVectorOfInt Integer 23 IVOfInt.m
+
+Literal.m:	IVec.m vec-ed
+	csh vec-ed IVec.m LiteralList Integer 27 Literal.m
+
+clean:
+	rm -f *.bak .emacs_[0-9]* *.ckp 
+
+@
+
+
+1.22
+log
+@Checkpoint
+@
+text
+@d96 1
+a96 1
+	rm -f name.idb name name.opd name.oid
+@
+
+
+1.21
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@d39 1
+d46 41
+a86 1
+	Direct.m
+d112 19
+d136 7
+@
+
+
+1.20
+log
+@Fix attached for builtins
+@
+text
+@a40 1
+	Decoder.m \
+d49 1
+d90 2
+a91 2
+NodeL.m:	Vec.m vec-ed
+	csh vec-ed Vec.m NodeList NodeListElement 0f NodeL.m
+@
+
+
+1.19
+log
+@Root directory creation, some small cleanups
+@
+text
+@d68 1
+a68 1
+	echo source xxinput | $(EMC)
+@
+
+
+1.18
+log
+@Fixed obsolete setting of oid
+@
+text
+@a13 1
+	Direct.m \
+d19 1
+d43 4
+a46 1
+	Literal.m
+d81 3
+d87 3
+d104 3
+@
+
+
+1.17
+log
+@Fixed serious GC bugs, added a new builtin
+@
+text
+@a53 1
+	echo > name.oid 524288
+@
+
+
+1.16
+log
+@New emmake needs "all" defined
+@
+text
+@d42 2
+a43 1
+	Stub.m
+d99 3
+@
+
+
+1.15
+log
+@Use new streams code
+@
+text
+@d49 1
+a49 1
+doit:	$(CRITICALSOURCES) $(OTHERSOURCES)
+@
+
+
+1.14
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d69 1
+a70 1
+	$(EMX) -B -C -b CP
+@
+
+
+1.13
+log
+@Getting filenames into 8.3 format
+@
+text
+@d51 1
+a51 2
+	rm -f name.idb name
+	cp /dev/null name.idb
+d53 2
+a54 1
+	(cd $(EMLIBDIR) ; make resetforbuiltins)
+d59 1
+d61 1
+a66 1
+	(cd $(EMLIBDIR) ; make resetfrombuiltins)
+d73 1
+@
+
+
+1.12
+log
+@Add Decoder.m and Stub.m to CRITICALSOURCES
+@
+text
+@d12 3
+a14 3
+	Character.m \
+	Condition.m \
+	Directory.m \
+d17 2
+a18 2
+	NLElement.m \
+	NodeList.m \
+d20 2
+a21 2
+	VectorOfChar.m \
+	VectorOfInt.m \
+d25 2
+a26 2
+	OutStream.m \
+	InStream.m \
+d28 7
+a34 7
+	AParamList.m \
+	AOpVectorE.m \
+	AOpVector.m \
+	Signature.m \
+	COpVectorE.m \
+	COpVector.m \
+	IVectorOfInt.m \
+d39 1
+a39 1
+	IVectorOfAny.m \
+d46 2
+a47 2
+	Vector.m \
+	IVector.m
+d73 2
+a74 2
+VectorOfChar.m: Vector.m vec.ed
+	csh vec.ed Vector.m VectorOfChar Character 16 VectorOfChar.m
+d76 2
+a77 2
+VectorOfInt.m: Vector.m vec.ed
+	csh vec.ed Vector.m VectorOfInt Integer 1e VectorOfInt.m
+d79 2
+a80 2
+NodeList.m:	Vector.m vec.ed
+	csh vec.ed Vector.m NodeList NodeListElement 0f NodeList.m
+d82 2
+a83 2
+COpVector.m:	IVector.m vec.ed
+	csh vec.ed IVector.m COpVector COpVectorE 19 COpVector.m
+d85 2
+a86 2
+AOpVector.m:	IVector.m vec.ed
+	csh vec.ed IVector.m AOpVector AOpVectorE 1b AOpVector.m
+d88 2
+a89 2
+AParamList.m:	IVector.m vec.ed
+	csh vec.ed IVector.m AParamList Signature 1d AParamList.m
+d91 2
+a92 2
+IVectorOfAny.m:	IVector.m vec.ed
+	csh vec.ed IVector.m ImmutableVectorOfAny Any 21 IVectorOfAny.m
+d94 2
+a95 2
+IVectorOfInt.m:	IVector.m vec.ed
+	csh vec.ed IVector.m ImmutableVectorOfInt Integer 23 IVectorOfInt.m
+@
+
+
+1.11
+log
+@Create dummy name and name.idb files to make the version scripts happy
+@
+text
+@d40 3
+a42 1
+	RISA.m
+@
+
+
+1.10
+log
+@Clean up to use EMLIBDIR + Create new builtin IVectorOfInt
+@
+text
+@d49 3
+@
+
+
+1.9
+log
+@changes to support move of Etc/CP to lib/Builtins
+@
+text
+@d2 1
+a2 1
+# %W%  %G%
+d5 1
+d34 1
+d49 6
+a54 6
+	(cd ../lib; make resetforbuiltins)
+	echo >  xxinput unset tracepasses
+	echo >> xxinput unset docompilation
+	echo >> xxinput unset dotypecheck
+	echo >> xxinput unset perfile
+	echo >> xxinput set exporttree
+d56 1
+a56 1
+	    echo $$x >> xxinput ;\
+d60 1
+a60 1
+	(cd ../lib; make resetfrombuiltins)
+d63 4
+a66 4
+	rm -f ../lib/Builtins
+	emx -B -C -b CP
+	cp CP ../lib/Builtins
+	chmod -w ../lib/Builtins
+d88 3
+@
+
+
+1.8
+log
+@Implement new builtins: ivectorofany, risa
+@
+text
+@d4 3
+d47 6
+a52 6
+	(cd ../Etc; make resetforbuiltins)
+	echo unset tracepasses > xxinput
+	echo unset docompilation >> xxinput
+	echo unset dotypecheck >> xxinput
+	echo unset perfile >> xxinput
+	echo set exporttree >> xxinput
+d56 1
+a56 1
+	echo source xxinput | emx -v ../XEC/execCP
+d58 1
+a58 1
+	(cd ../Etc; make resetfrombuiltins)
+d61 1
+a61 1
+	rm -f ../Etc/CP
+d63 2
+a64 2
+	cp CP ../Etc/CP
+	chmod -w ../Etc/CP
+@
+
+
+1.7
+log
+@Generate type objects for concretetypes
+@
+text
+@d33 3
+a35 1
+	Time.m
+d80 3
+@
+
+
+1.6
+log
+@Add [gs]etrootdirectory
+@
+text
+@d51 1
+a51 1
+	echo source xxinput | emx -v ../EC/execCP
+@
+
+
+1.5
+log
+@Obsolete Buffer.m
+@
+text
+@d10 1
+@
+
+
+1.4
+log
+@Explicitly unset perfile to get the builtins all in one file
+@
+text
+@a17 1
+	Buffer.m \
+@
+
+
+1.3
+log
+@Corrected problems with shortened names.
+@
+text
+@d46 1
+@
+
+
+1.2
+log
+@Renamed to deal with Unix SysV
+@
+text
+@d5 1
+a5 1
+	AbstractType.m \
+d30 1
+a30 1
+	ConcreteType.m \
+d67 1
+a67 1
+	csh vec.ed Vector.m NodeList NLElement 0f NodeList.m
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 1
+a12 1
+	NodeListElement.m \
+d38 1
+a38 1
+	ImmutableVector.m
+d67 1
+a67 1
+	csh vec.ed Vector.m NodeList NodeListElement 0f NodeList.m
+d69 2
+a70 2
+COpVector.m:	ImmutableVector.m vec.ed
+	csh vec.ed ImmutableVector.m COpVector COpVectorE 19 COpVector.m
+d72 2
+a73 2
+AOpVector.m:	ImmutableVector.m vec.ed
+	csh vec.ed ImmutableVector.m AOpVector AOpVectorE 1b AOpVector.m
+d75 2
+a76 2
+AParamList.m:	ImmutableVector.m vec.ed
+	csh vec.ed ImmutableVector.m AParamList Signature 1d AParamList.m
+@

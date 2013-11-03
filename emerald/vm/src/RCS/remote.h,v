@@ -1,0 +1,352 @@
+head	1.10;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.9
+	103alpha:1.8
+	102alpha:1.7
+	101alpha:1.6
+	100alpha:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	99.02.22.22.22.01;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.05.08.19.37.48;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.05.01.07.21.05;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.10
+log
+@Removed extern declaration for a static variable.
+@
+text
+@#ifndef _EMERALD_REMOTE_H
+#define _EMERALD_REMOTE_H
+
+#ifndef _EMERALD_RINVOKE_H
+#include "rinvoke.h"
+#endif
+
+typedef struct RemoteOpHeader {
+  unsigned int marker;
+  unsigned char kind;
+  unsigned char status;
+  unsigned char option1;
+  unsigned char option2;
+  unsigned int distgcseq;
+  OID ss;
+  Node sslocation;
+  OID target;
+  OID targetct;
+} RemoteOpHeader;
+
+typedef enum {
+  EchoRequest, EchoReply,
+  InvokeRequest, InvokeReply,
+  ObjectRequest, ObjectReply,
+  LocateRequest, LocateReply,
+  MoveRequest, MoveReply,
+  Move3rdPartyRequest, Move3rdPartyReply,
+  InvokeForwardRequest, InvokeForwardReply,
+  IsFixedRequest, IsFixedReply,
+  GaggleUpdate, DistGCInfo,
+  DistGCDoneRequest, DistGCDoneReply,
+  DistGCDoneReport
+} MesageType;
+
+#define EMERALDMARKER 0xdeafdeaf
+extern void handleEchoRequest(RemoteOpHeader *, Node, Stream);
+extern void handleObjectRequest(RemoteOpHeader *, Node, Stream);
+extern void handleMoveRequest(RemoteOpHeader *, Node, Stream);
+extern void handleMove3rdPartyRequest(RemoteOpHeader *, Node, Stream);
+extern void handleLocateRequest(RemoteOpHeader *, Node, Stream);
+extern void handleLocateReply(RemoteOpHeader *, Node, Stream);
+extern void handleInvokeRequest(RemoteOpHeader *, Node, Stream);
+extern void handleInvokeReply(RemoteOpHeader *, Node, Stream);
+extern void handleInvokeForwardRequest(RemoteOpHeader *, Node, Stream);
+extern void handleMoveReply(RemoteOpHeader *, Node, Stream);
+extern void handleGaggleUpdate(RemoteOpHeader *, Node, Stream);
+extern void handleIsFixedRequest(RemoteOpHeader *, Node, Stream);
+extern void handleIsFixedReply(RemoteOpHeader *, Node, Stream);
+extern void handleDistGCInfo(RemoteOpHeader *, Node, Stream);
+extern void handleDistGCDoneRequest(RemoteOpHeader *, Node, Stream);
+extern void handleDistGCDoneReply(RemoteOpHeader *, Node, Stream);
+extern void handleDistGCDoneReport(RemoteOpHeader *, Node, Stream);
+extern int extractHeader(RemoteOpHeader *h, Stream str);
+extern void ReadNode(Node *srv, Stream theStream);
+extern void InsertNode(Node *t, Bits8 *data);
+extern void WriteNode(Node *srv, Stream theStream);
+/*
+ * We will report as unavailable any object that we can't get the message
+ * to.  Sending either a request or a reply message gets into all kinds of
+ * trouble, as we would have to come up with a duplicate detection scheme, a
+ * scheme for deallocating reply messages when we see the next requests and
+ * all sort of other stuff.  Instead we will send a message one time and
+ * put the responsibility on the node at the end of the forwarding chain to
+ * find the object and send it the message.
+ *
+ * We still have to figure out how to detect when some message has gotten
+ * dropped on the floor.
+ *
+ * We should check out the status of every remote operation each time a node
+ * dies.
+ * 
+ * For invocations, if the object in question isn't alive, our invocation
+ * isn't coming back.  Otherwise we can't know whether the invocation that
+ * we did is still in progress, the invocation message got lost, or the
+ * reply got lost unless we come up with a way to name the invocation so we
+ * can search for it.   We could do that if the sender of the invocation
+ * decided what oid the state would get, it could then be located.  This
+ * would chew up an oid for every remote invocation, but there are a lot of
+ * oids around.
+ *
+ * For moves we can just locate the two objects in question and then retry
+ * the move.
+ */
+extern int sendMsg(Node srv, Stream str);
+extern void sendMsgTo(Node srv, Stream str, OID target);
+extern void findAndSendTo(OID target, Stream str);
+extern int forwardMsg(Node srv, RemoteOpHeader *h, Stream str);
+extern Stream StartMsg(RemoteOpHeader *h);
+extern void moveDone(State *state, RemoteOpHeader *request, int fail);
+extern void locateDone(State *state);
+extern int agressivelyLocate(Object o);
+extern void checkForUnavailableInvokes(Object o);
+extern void unavailableState(struct State *);
+extern void isFixedDone(RemoteOpHeader *request, State *state, int answer);
+extern void serveRequest(void);
+extern void doRequest(Node srv, Stream str);
+extern void processMessages(void);
+extern noderecord *allnodes, *thisnode;
+extern Object rootdir, rootdirg, node, inctm;
+extern void ctcallback(Object);
+extern void cticallback(int (*)(IISc, Object), IISc);
+extern void sendUnavailableReply(Stream);
+extern void *ctstr;
+extern Node ctsrv;
+extern Node myid, limbo;
+extern int isLimbo(Node);
+extern noderecord *limbonode;
+#endif /* _EMERALD_REMOTE_H */
+@
+
+
+1.9
+log
+@Reply to stranded messages when a location fails to find the object
+@
+text
+@a97 1
+extern int nodecount;
+@
+
+
+1.8
+log
+@Implemented isfixed and unfix remotely
+@
+text
+@d103 1
+a103 1
+
+@
+
+
+1.7
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@a37 1
+extern void handleInvokeForwardRequest(RemoteOpHeader *, Node, Stream);
+d44 1
+d47 2
+a48 1
+
+d89 1
+a89 1
+extern void moveDone(State *state, RemoteOpHeader *request);
+d94 1
+a94 1
+extern void isfixedDone(State *state, int answer);
+d103 1
+a103 1
+extern void isFixedDone(State *state, int answer);
+@
+
+
+1.6
+log
+@More reliable process management, got xforms working
+@
+text
+@d92 1
+a92 1
+extern void unavailableRemoteInvoke(struct State *);
+d95 1
+@
+
+
+1.5
+log
+@'.'
+@
+text
+@d103 1
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d56 27
+d84 2
+d92 1
+d101 1
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d16 1
+a16 1
+  vmThreadId sslocation;
+d32 1
+a32 1
+  DistGCDoneReport,
+d36 11
+a46 11
+extern void handleEchoRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleObjectRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleInvokeForwardRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleMoveRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleMove3rdPartyRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleLocateRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleLocateReply(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleInvokeRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleInvokeReply(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleMoveReply(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleGaggleUpdate(RemoteOpHeader *, vmThreadId, Stream);
+d48 4
+a51 4
+extern void handleDistGCInfo(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleDistGCDoneRequest(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleDistGCDoneReply(RemoteOpHeader *, vmThreadId, Stream);
+extern void handleDistGCDoneReport(RemoteOpHeader *, vmThreadId, Stream);
+d53 5
+a57 6
+extern void ExtractThreadID(vmThreadId *t, Bits8 *data);
+extern void ReadThreadId(vmThreadId *srv, Stream theStream);
+extern void InsertThreadID(vmThreadId *t, Bits8 *data);
+extern void WriteThreadId(vmThreadId *srv, Stream theStream);
+extern int sendMsg(vmThreadId srv, Stream str);
+extern int forwardMsg(vmThreadId srv, RemoteOpHeader *h, Stream str);
+d64 2
+d72 2
+a73 1
+extern vmThreadId myid, limbo;
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d1 7
+a7 2
+#ifndef _REMOTE_H
+#define _REMOTE_H
+d9 1
+d14 1
+d30 3
+a32 1
+  GaggleUpdate,
+d35 12
+d48 4
+a51 12
+extern void handleEchoRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleObjectRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleInvokeForwardRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleMoveRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleMove3rdPartyRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleLocateRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleLocateReply(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleInvokeRequest(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleInvokeReply(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleMoveReply(RemoteOpHeader *header, vmThreadId srv, Stream str);
+extern void handleGaggleUpdate(RemoteOpHeader *h, vmThreadId srv, Stream str);
+
+d62 2
+d73 1
+a73 1
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d52 1
+a52 1
+extern Object rootdir, node, inctm;
+d56 2
+@

@@ -1,0 +1,14 @@
+#!/bin/csh -f
+@ i = 1
+unset passed
+
+
+    rm -f bestCP
+    make bestCP
+    make ftffs EMC=xemc
+    csh newversion
+
+
+    set old = $new
+
+endif

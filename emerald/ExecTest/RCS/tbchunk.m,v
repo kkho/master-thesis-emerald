@@ -1,0 +1,62 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.01.22.00.05.57;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.29.20.28.44;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@A test for bitchunks.
+@
+
+
+1.2
+log
+@Fix to use <- instead of ==, better tests of vectors
+@
+text
+@const tbitchunk <- object tbitchunk
+  const myTest <- runtest.create[stdin, stdout, "tbitchunk"]
+  initially
+    % each test looks like myTest.check[<Boolean expression>, "<same exp>"]
+    var i, j : BitChunk
+    i <- BitChunk.create[12]
+    j <- BitChunk.create[12]
+
+    myTest.check[i = j, "i = j"]
+    i[3, 1] <- 1
+    myTest.check[!(i = j), "!(i = j)"]
+    j <- BitChunk.create[11]
+    myTest.check[!(i = j), "!(i = j)"]
+    myTest.done
+  end initially
+end tbitchunk
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "tbitchunk"]
+@

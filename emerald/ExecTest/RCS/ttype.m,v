@@ -1,0 +1,139 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	96.03.28.23.08.22;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.17.03.10.10;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.01.08.00.07.03;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.25.16.31.59;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.5
+log
+@Add a check for conforming to None
+@
+text
+@const ttype <- object ttype
+  const myTest <- runtest.create[stdin, stdout, "ttype"]
+  initially
+    % each test looks like myTest.check[<boolean expression>, "<same exp>"]
+    var a : type
+    a <- type
+    myTest.check[a *> type, "a *> type"]
+    myTest.check[typeof a.getSignature *> type, "typeof a.getSignature *> type"]
+    myTest.check[typeof a.getSignature *> Signature, "typeof a.getSignature *> Signature"]
+    myTest.check[typeof a.getSignature.getSignature *> type, "typeof a.getSignature.getSignature *> type"]
+    myTest.check[typeof a.getSignature.getSignature *> Signature, "typeof a.getSignature.getSignature *> Signature"]
+    myTest.check[typeof typeobject x op y end x *> Signature, "typeof typeobject x op y end x *> Signature"]
+    myTest.check[typeof typeobject x op y end x *> type, "typeof typeobject x op y end x *> type"]
+    myTest.check[Signature *> Signature, "Signature *> Signature"]
+    myTest.check[Signature *> type, "Signature *> type"]
+    myTest.check[Signature.getSignature *> Signature, "Signature.getSignature *> Signature"]
+    myTest.check[Signature.getSignature *> type, "Signature.getSignature *> type"]
+    myTest.check[typeof 3 *> Integer, "typeof 3 *> Integer"]
+    myTest.check[Integer *> typeof 3, "Integer *> typeof 3"]
+    myTest.check[typeof "abc" *> String, "typeof \"abc\" *> String"]
+    myTest.check[String *> typeof "abc", "String *> typeof \"abc\""]
+    myTest.check[typeof 2.3 *> Real, "typeof 2.3 *> Real"]
+    myTest.check[Real *> typeof 2.3, "Real *> typeof 2.3"]
+    myTest.check[typeof { 3, 4 } *> Immutablevector.of[Integer], "typeof { 3, 4 } *> Immutablevector.of[Integer]"]
+    myTest.check[Immutablevector.of[Integer] *> typeof { 3, 4 } , "Immutablevector.of[Integer] *> typeof { 3, 4 } "]
+    myTest.check[ImmutableVector.of[Integer] *> ImmutableVector.of[Integer], "ImmutableVector.of[Integer] *> ImmutableVector.of[Integer]"]
+    myTest.check[Vector.of[Integer] *> VectorOfInt, "Vector.of[Integer] *> VectorOfInt"]
+    myTest.check[VectorOfInt *> Vector.of[Integer], "VectorOfInt *> Vector.of[Integer]"]
+    myTest.check[! (typeof 3 *> String), "! (typeof 3 *> String)"]
+    myTest.check[! (typeof 2.3 *> Integer), "! (typeof 2.3 *> Integer)"]
+    myTest.check[! (ImmutableVector.of[Character] *> String), "! (ImmutableVector.of[Character] *> String)"]
+    myTest.check[! (String *> ImmutableVector.of[Character]), "! (String *> ImmutableVector.of[Character])"]
+    myTest.check[None *> Integer, "None *> Integer"]
+    myTest.check[None *> Any, "None *> Any"]
+    myTest.check[None *> None, "None *> None"]
+    myTest.check[!(String *> None), "!(String *> None)"]
+    const faker <- immutable typeobject t
+      function getElement[Integer] -> [Character]
+      function upperbound -> [Integer]
+      function lowerbound -> [Integer]
+      function getSlice[Integer, Integer] -> [t]
+      function getElement[Integer, Integer] -> [t]
+      operation catenate[t] -> [t]
+    end t
+    myTest.check[!(faker *> ImmutableVector.of[Character]), "!(faker *> ImmutableVector.of[Character])"]
+    myTest.check[!(ImmutableVector.of[Character] *> faker), "!(ImmutableVector.of[Character] *> faker)"]
+    myTest.done
+  end initially
+end ttype
+@
+
+
+1.4
+log
+@Add isvector field to Signatures
+@
+text
+@d36 1
+@
+
+
+1.3
+log
+@Add some checks on None
+@
+text
+@d45 1
+@
+
+
+1.2
+log
+@Implement more type related checking
+@
+text
+@d33 3
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "ttype"]
+d18 24
+@

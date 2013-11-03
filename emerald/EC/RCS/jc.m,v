@@ -1,0 +1,836 @@
+head	1.24;
+access;
+symbols
+	105alpha:1.24
+	104alpha:1.24
+	103alpha:1.24
+	102alpha:1.24
+	101alpha:1.24
+	100alpha:1.24
+	DIKU_0:1.17
+	carlton_start:1.15
+	immel_start:1.4;
+locks; strict;
+
+
+1.24
+date	98.02.09.18.16.27;	author norm;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	96.03.04.06.20.37;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	95.11.23.17.14.17;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	95.04.23.02.48.05;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	95.03.29.18.19.54;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	95.03.03.05.44.23;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.08.22.23.43.50;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.08.17.16.51.23;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.07.15.20.33.15;	author mueller;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.06.25.15.52.55;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.10.15.51.27;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.02.22.56.26;	author mueller;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.03.11.20.39.13;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.03.11.00.15.06;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.03.06.19.48.05;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.24.18.53.12;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.10.17.07.14;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.54.18;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.54.17;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.54.15;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.54.14;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.24
+log
+@Cleaned up
+@
+text
+@
+const driver <- object driver
+  const myCompiler : Compiler <- Compiler.create
+  const separators <- " \n\r\t"
+  var ins : InStream
+  var outs : OutStream
+
+  operation reportTime [startTime : Time]
+    const endTime : Time <- (locate 1).getTimeOfDay
+    const elapsed : Time <- endTime - startTime
+    outs.putString["Elapsed time = "]
+    outs.putString[elapsed.asString]
+    outs.putString[" seconds\n"]
+  end reportTime
+
+  operation exists [name : String] -> [exists : Boolean]
+    var inf : InStream
+    inf <- InStream.fromUnix[name, "r"]
+    inf.close
+    exists <- true
+    failure
+      exists <- false
+    end failure
+  end exists
+
+  operation loadDefaultEnvironment
+    %
+    % Try to find the user's standard compilation environment.  
+    % 1. If EMENV is set in the environment, then use it
+    % 2. If .emenv exists in the current directory, then use it.
+    % 3. If .emenv exists in the home directory, then use it.
+    % 4. Load nothing
+    var envname, home : String
+    primitive "NCCALL" "MISK" "UGETENV" [envname] <- ["EMENV"]
+    primitive "NCCALL" "MISK" "UGETENV" [home] <- ["HOME"]
+
+    if envname !== nil and envname != "" then
+      myCompiler.load[envname]
+    elseif self.exists[".emenv"] then
+      myCompiler.load[".emenv"]
+    elseif home !== nil and self.exists[home || "/.emenv"] then
+      myCompiler.load[home||"/.emenv"]
+    end if
+  end loadDefaultEnvironment
+
+  operation doit
+    var input : String
+    var first, second, third : String
+    var inputfile : InStream <- ins
+    const fstdout : FormattedOutput <- FormattedOutput.ToStream[outs]
+    const inputFiles <- Array.of[InStream].create[~8]
+    const here <- locate 1
+    var reportTimes : Boolean <- false
+    var dieOnError : Boolean <- false
+    var startTime : Time
+
+    myCompiler.setup[outs]
+
+    self.loadDefaultEnvironment
+    loop
+      if inputfile == ins and ins.isatty then
+	outs.putString["Command: "]
+	outs.flush
+      end if
+      if inputfile.eos then
+	if inputFiles.upperbound >= 0 then
+	  inputfile.close
+	  inputFile <- inputFiles.removeUpper
+	else
+	  exit
+	end if
+      else
+	input <- inputfile.getString
+	first, input <- input.token[separators]
+	second <- nil
+	third <- nil
+
+	if first == nil then
+	  % do nothing
+	elseif first = "q" or first = "quit" or first = "exit" then 
+	  exit
+	elseif first = "checkpoint" then
+	  var a : Any <- self
+	  if input !== nil then second, input <- input.token[separators] end if
+	  if second == nil then
+	    fstdout.printf["Checkpoint requires a file name\n", nil]
+	  else
+	    fstdout.printf["Checkpointing to \"%s\" ...", {second}];
+	    fstdout.flush
+	    primitive var "CHECKPOINT" [] <- [a, second]
+	    fstdout.printf["done.\n", nil];
+	  end if
+	elseif first = "set" or first = "unset" then
+	  const value <- first = "set"
+	  if input !== nil then second, input <- input.token[separators] end if
+	  if second == nil then
+	    fstdout.printf["%s requires a variable name\n", {first}]
+	  elseif second = "reporttimes" then
+	    reporttimes <- value
+	  elseif second = "dieonerror" then
+	    dieOnError <- value
+	  else
+	    myCompiler.option[second, value]
+	  end if
+	elseif first = "load" then
+	  if input !== nil then second, input <- input.token[separators] end if
+	  myCompiler.load[second]
+	elseif first = "source" then
+	  if input !== nil then second, input <- input.token[separators] end if
+	  var thefile : InStream
+	  begin
+	    thefile <- InStream.fromUnix[second, "r"]
+	    failure thefile <- nil end failure
+	  end
+	  if thefile == nil then
+	    fstdout.printf["Can't open \"%s\"\n", {second}]
+	  else
+	    inputFiles.addUpper[inputfile]
+	    inputfile <- thefile
+	  end if
+	elseif first = "eval" then
+	  if reportTimes then startTime <- here.getTimeOfDay end if
+	  if input !== nil then second, input <- input.token["\n\r"] end if
+	  if second == nil then
+	    fstdout.printf["eval needs an argument", nil]
+	  else
+	    myCompiler.eval["const t <- " || second]
+	    if reportTimes then self.reportTime[startTime] end if
+	  end if
+	elseif first = "evals" then
+	  if reportTimes then startTime <- here.getTimeOfDay end if
+	  if input !== nil then second, input <- input.token["\n\r"] end if
+	  if second == nil then
+	    fstdout.printf["evals needs an argument", nil]
+	  else
+	    myCompiler.eval["const t <- object t initially " || second || " end initially end t"]
+	    if reportTimes then self.reportTime[startTime] end if
+	  end if
+	elseif first = "break" then
+	  assert false
+	elseif first = "gcollect" then
+	  primitive "GCOLLECT" [] <- []
+	elseif first = "mkdir" then
+	  myCompiler$env$externalDirectory <- object aDirectory
+	    const aos <- Array.of[String]
+	    const names <- aos.empty
+	    const vals : aoa  <- aoa.empty
+	    
+	    export operation list -> [allNames : ImmutableVectorOfString]
+	      allNames <- ImmutableVectorofString.literal[names]
+	    end list
+
+	    export operation insert [name : String, val : Any]
+	      var loc : Integer
+	      if name == nil then return end if
+	      for i : Integer <- 0 while i <= names.upperbound by i <- i + 1
+		if names[i] == nil then
+		  if loc == nil then loc <- i end if
+		elseif names[i] = name then
+		  vals[i] <- val
+		  return
+		end if
+	      end for
+	      if loc == nil then
+		names.addUpper[name]
+		vals.addUpper[val]
+	      else
+		names[loc] <- name
+		vals[loc] <- val
+	      end if
+	    end insert
+	    export operation condinsert[name : String, old : Any, val : Any]  -> [now : Any]
+	      assert false
+	    end condinsert
+	    export function lookup[name : String] -> [val : Any]
+	      for i : Integer <- 0 while i <= names.upperbound by i <- i + 1
+		const n <- names[i]
+		if n !== nil and n = name then
+		  val <- vals[i]
+		  return
+		end if
+	      end for
+	    end lookup
+	    export operation delete[name : String]
+	      for i : Integer <- 0 while i <= names.upperbound by i <- i + 1
+		const n <- names[i]
+		if n !== nil and names[i] = name then
+		  names[i] <- nil
+		  vals[i] <- nil
+		  return
+		end if
+	      end for
+	    end delete
+	  end aDirectory
+	elseif first = "add" then
+	  if input !== nil then second, input <- input.token[separators] end if
+	  if input !== nil then third,  input <- input.token[separators] end if
+	  if second == nil or third == nil then
+	    fstdout.printf["add requires two arguments\n", nil]
+	  elseif myCompiler$env$externalDirectory == nil then
+	    fstdout.printf["No directory defined\n", nil]
+	  else
+	    myCompiler$env$externalDirectory.insert[second, third]
+	  end if
+	elseif first = "lookup" then
+	  if input !== nil then second, input <- input.token[separators] end if
+	  if second == nil then
+	    fstdout.printf["lookup requires one argument\n", nil]
+	  elseif myCompiler$env$externalDirectory == nil then
+	    fstdout.printf["No directory defined\n", nil]
+	  else
+	    const answer : Any <- myCompiler$env$externalDirectory.lookup[second]
+	    fstdout.printf["lookup[%s] -> \"%s\"\n", {second, answer}]
+	  end if
+	elseif first = "delete" then
+	  if input !== nil then second, input <- input.token[separators] end if
+	  if second == nil then
+	    fstdout.printf["delete requires one argument\n", nil]
+	  elseif myCompiler$env$externalDirectory == nil then
+	    fstdout.printf["No directory defined\n", nil]
+	  else
+	    myCompiler$env$externalDirectory.delete[second]
+	  end if
+	else
+	  if input !== nil then second, input <- input.token[separators] end if
+	  if second == nil then
+	    if reportTimes then startTime <- here.getTimeOfDay end if
+	    myCompiler.compile[first]
+	    if dieOnError and myCompiler$env$nErrors > 0 then
+	      var exitStatus : Integer <- 1
+	      primitive "NCCALL" "MISK" "UEXIT" [] <- [exitStatus]
+	    end if
+	    if reportTimes then self.reportTime[startTime] end if
+	  else
+	    fstdout.printf["Invalid command \"%s\"\n", {first}]
+	  end if
+	end if
+      end if
+    end loop
+  end doit
+
+  initially
+    ins <- stdin
+    outs <- stdout
+  end initially
+
+  recovery
+    primitive "SYS" "GETSTDIN" 0 [ins] <- []
+    primitive "SYS" "GETSTDOUT" 0 [outs] <- []
+    nextoid.reset
+  end recovery
+  
+  process
+    self.doit
+  end process
+end driver
+@
+
+
+1.23
+log
+@Many changes
+@
+text
+@d41 1
+a41 1
+    elseif self.exists[home || "/.emenv"] then
+@
+
+
+1.22
+log
+@Use a process to do the compilation
+@
+text
+@d16 30
+d59 1
+d172 3
+d231 1
+a231 1
+	      primitive "CCALL" "EXIT" [] <- [exitStatus]
+@
+
+
+1.21
+log
+@New builtins
+@
+text
+@a210 1
+    self.doit
+d217 3
+d221 1
+a221 1
+  end recovery
+@
+
+
+1.20
+log
+@Deal with String.Token more carefully
+@
+text
+@d118 4
+@
+
+
+1.19
+log
+@Get rid of split, and make execute now and eval work again
+@
+text
+@d93 6
+a98 2
+	  myCompiler.eval["const t <- " || second]
+	  if reportTimes then self.reportTime[startTime] end if
+d102 6
+a107 2
+	  myCompiler.eval["const t <- object t initially " || second || " end initially end t"]
+	  if reportTimes then self.reportTime[startTime] end if
+@
+
+
+1.18
+log
+@Use new streams code
+@
+text
+@d3 4
+a6 1
+  const myCompiler <- Compiler.create
+d8 1
+a8 46
+  operation Split [s : String] -> [x : String, y : String, z : String]
+    var first, last : Integer
+    var c : Character
+
+    first <- 0
+    last <- 0
+    for which : Integer <- 0 while which < 3 by which <- which + 1
+      loop
+	exit when first >= s.length
+	c <- s[first]
+	exit when c != ' ' and c != '\^I' and c != '\n'
+	first <- first + 1
+      end loop
+      if first >= s.length then return end if
+      last <- first + 1
+      if c = '"' then
+	first <- first + 1
+	loop
+	  exit when last >= s.length
+	  c <- s[last]
+	  exit when c = '\n'
+	  last <- last + 1
+	end loop
+	if s[last - 1] = '"' then
+	  last <- last - 1
+	end if
+      else
+	loop
+	  exit when last >= s.length
+	  c <- s[last]
+	  exit when c = ' ' or c = '\^I' or c = '\n'
+	  last <- last + 1
+	end loop
+      end if
+      if which = 0 then
+	x <- s[first, last - first]
+      elseif which = 1 then
+	y <- s[first, last - first]
+      else
+	z <- s[first, last - first]
+      end if
+      first <- last + 1
+    end for
+  end Split
+
+  operation reportTime [stdout : OutStream, startTime : Time]
+d11 3
+a13 3
+    stdout.putString["Elapsed time = "]
+    stdout.putString[elapsed.asString]
+    stdout.putString[" seconds\n"]
+d15 2
+a16 1
+  operation doit[stdin : InStream, stdout : OutStream]
+d19 2
+a20 2
+    var inputfile : InStream <- stdin
+    const fstdout <- FormattedOutput.ToStream[stdout]
+d27 1
+a27 1
+    myCompiler.setup[stdout]
+d30 3
+a32 3
+      if inputfile == stdin and stdin.isatty then
+	stdout.putString["Command: "]
+	stdout.flush
+d43 4
+a46 1
+	first, second, third <- self.Split[input]
+d53 1
+d64 1
+d75 1
+d78 1
+d92 8
+a99 2
+	  myCompiler.eval[second]
+	  if reportTimes then self.reportTime[stdout, startTime] end if
+d108 1
+a108 1
+	    const vals  <- aoa.empty
+d150 2
+d160 3
+a162 2
+	  if second == nil or third !== nil then
+	    fstdout.printf["lookup requires one arguments\n", nil]
+d166 1
+a166 1
+	    const answer <- myCompiler$env$externalDirectory.lookup[second]
+d170 3
+a172 2
+	  if second == nil or third !== nil then
+	    fstdout.printf["delete requires one arguments\n", nil]
+d178 12
+a189 6
+	elseif second == nil then
+	  if reportTimes then startTime <- here.getTimeOfDay end if
+	  myCompiler.compile[first]
+	  if dieOnError and myCompiler$env$nErrors > 0 then
+	    var exitStatus : Integer <- 1
+	    primitive "CCALL" "EXIT" [] <- [exitStatus]
+a190 3
+	  if reportTimes then self.reportTime[stdout, startTime] end if
+	else
+	  fstdout.printf["Invalid command \"%s\"\n", {first}]
+d197 3
+a199 1
+    self.doit[stdin, stdout]
+d203 2
+a204 4
+    var i : InStream
+    var o : OutStream
+    primitive "SYS" "GETSTDIN" 0 [i] <- []
+    primitive "SYS" "GETSTDOUT" 0 [o] <- []
+d206 1
+a206 1
+    self.doit[i, o]
+@
+
+
+1.17
+log
+@August 94 Checkpoint II
+@
+text
+@d113 5
+a117 1
+	  const thefile <- InStream.fromUnix[second, "r"]
+@
+
+
+1.16
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d40 1
+a40 1
+	x <- s.getSlice[first, last - first]
+d42 1
+a42 1
+	y <- s.getSlice[first, last - first]
+d44 1
+a44 1
+	z <- s.getSlice[first, last - first]
+@
+
+
+1.15
+log
+@added reset operation, fixes long standing bug in which the oid
+file is not read and oids are reused
+@
+text
+@d124 2
+a130 1
+	    const aoa <- Array.of[Any]
+d202 2
+a203 1
+	    exit
+@
+
+
+1.14
+log
+@Added "dieonerror" variable to parser loop
+@
+text
+@d220 1
+@
+
+
+1.13
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d65 1
+d105 2
+d200 3
+@
+
+
+1.12
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d14 1
+a14 1
+	c <- s(first)
+d24 1
+a24 1
+	  c <- s(last)
+d28 1
+a28 1
+	if s(last - 1) = '"' then
+d34 1
+a34 1
+	  c <- s(last)
+d134 1
+a134 1
+		if names(i) == nil then
+d136 2
+a137 2
+		elseif names(i) = name then
+		  vals(i) <- val
+d145 2
+a146 2
+		names(loc) <- name
+		vals(loc) <- val
+d151 1
+a151 1
+		const n <- names(i)
+d153 1
+a153 1
+		  val <- vals(i)
+d160 4
+a163 4
+		const n <- names(i)
+		if n !== nil and names(i) = name then
+		  names(i) <- nil
+		  vals(i) <- nil
+@
+
+
+1.11
+log
+@Implement external dictionary for symbol lookups
+@
+text
+@d120 1
+a120 1
+	  if reportTimes then reportTime[stdout, startTime] end if
+d197 1
+a197 1
+	  if reportTimes then reportTime[stdout, startTime] end if
+@
+
+
+1.10
+log
+@fromUnix calls changed to new syntax
+@
+text
+@d123 71
+@
+
+
+1.9
+log
+@Report elapsed times
+@
+text
+@d110 1
+a110 1
+	  const thefile <- InStream.fromUnix[second, 0, 0]
+@
+
+
+1.8
+log
+@Forgot the increment
+@
+text
+@d50 7
+d63 3
+d102 2
+d118 1
+d120 1
+d124 1
+d126 1
+@
+
+
+1.7
+log
+@Separated the interactive cli from the compiler proper
+@
+text
+@d107 2
+@
+
+
+1.6
+log
+@Installed experimental bytecodes
+@
+text
+@d4 123
+a126 4
+    initially
+      var a : Any <- self
+      myCompiler.doit[stdin, stdout]
+    end initially
+@
+
+
+1.5
+log
+@Removed all monitors
+@
+text
+@a6 1
+%     primitive var "CHECKPOINT" [] <- [a]
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a8 4
+    recovery
+      myCompiler.doit[stdin, stdout]
+    end recovery
+  end monitor
+@
+
+
+1.3
+log
+@Save the environment across checkpoints
+@
+text
+@a0 1
+import Compiler from "Jekyll"
+@
+
+
+1.2
+log
+@First cut at a checkpointable compiler
+@
+text
+@d9 1
+a9 1
+      primitive var "CHECKPOINT" [] <- [a]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+import parsertest from "Jekyll"
+d4 11
+a14 3
+  initially
+    parsertest.doit[stdin, stdout]
+  end initially
+@

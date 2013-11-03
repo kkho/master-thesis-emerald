@@ -1,0 +1,103 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.3
+	100alpha:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@/* comment me!
+ */
+
+#ifndef _EMERALD_CREATION_H
+#define _EMERALD_CREATION_H
+
+#include "types.h"
+
+extern Object AllocateObject(ConcreteType p, int size);
+extern Vector CreateVector(ConcreteType p, unsigned nelems);
+extern Object CreateUninitializedObject(ConcreteType);
+extern Object CreateObjectFromOutside(ConcreteType, unsigned int);
+extern String CreateString(char *);
+
+extern void run(Object o, int kind, int asynch);
+extern void makeReady(struct State *state);
+extern int isReady(struct State *state);
+extern int bottomStackFrame(struct State *state);
+extern void runState(struct State *state, int asynch);
+void scheduleProcess(Object o, int opIndex);
+struct State *newState(Object o, ConcreteType ct);
+extern void tryToFindState(struct State *state);
+void deleteState(struct State *);
+void setupState(struct State *s, Object o, ConcreteType ct);
+#endif /* _EMERALD_CREATION_H */
+@
+
+
+1.3
+log
+@'.'
+@
+text
+@d17 1
+d22 1
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d21 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 2
+#ifndef _CREATION_H
+#define _CREATION_H
+d22 1
+a22 1
+#endif /* _CREATION_H */
+@

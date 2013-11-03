@@ -1,0 +1,641 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.18.13.58;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Check in current version
+@
+text
+@/* threads.c - threads abstractions (for MTHREADS)
+ */
+
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdio.h>
+#include <stdlib.h>
+#pragma pointer_size short
+#include "threads.h"
+#include "types.h"
+#include "trace.h"
+#include "read.h"
+#include "write.h"
+#include "assert.h"
+#include "misc.h"
+#include "vm_exp.h"
+
+extern int nMessagesSent, nMessagesReceived, nBytesSent, nBytesReceived;
+#ifdef WIN32
+extern semaphore theBigLock;
+#endif /* not WIN32 */
+
+#if defined(MALLOCPARANOID)
+#if 1
+static FILE *junk;
+#define PMEXTRA 0
+#define MAXBLOCKS 1024
+#define TRWINDOW 1
+static int trindex = 0;
+typedef struct {
+  char command;
+  short size;
+  void *buf1, *buf2;
+  unsigned NodeAddr;
+} trrec;
+trrec trbuf[TRWINDOW];
+#define lassert(b) if (!(b)) { printf("lassert failure at %s, %d\n", __FILE__, __LINE__); trdump(); fflush(stdout); abort(); }
+void trdump(void);
+
+static void trm(char c, int size, void *buf1, void *buf2)
+{
+  trbuf[trindex].command = c;
+  trbuf[trindex].size = size;
+  trbuf[trindex].buf1 = buf1;
+  trbuf[trindex].buf2 = buf2;
+  trbuf[trindex].NodeAddr = MTGetCurrentNodeAddr();
+  trindex = (trindex + 1) % TRWINDOW;
+  if (trindex == 0) trdump();
+#if 0
+  if (c == 'M') {
+    int i = (trindex - 2 + TRWINDOW) % TRWINDOW;
+    while (i != trindex) {
+      if (trbuf[i].command == 'R' && trbuf[i].buf2 == buf1) break;
+      if (trbuf[i].buf1 == buf1) {
+	lassert(trbuf[i].command == 'F');
+	break;
+      }
+      i = (i - 1 + TRWINDOW) % TRWINDOW;
+    }
+  }
+#endif
+}
+
+void trdump(void)
+{
+  int i, j;
+  for (i = 0; i < TRWINDOW; i++) {
+    j = (trindex + i) % TRWINDOW;
+    printf("%08x: [%4d] %c %d ", trbuf[j].NodeAddr, j, trbuf[j].command, trbuf[j].size);
+    if (trbuf[j].command == 'R')
+      printf(" %x", trbuf[j].buf2);
+    printf(" -> %x\n", trbuf[j].buf1);
+  }
+  fflush(stdout);
+}
+
+static unsigned *allblocks[MAXBLOCKS];
+
+static void setupOne(unsigned *t, int b)
+{
+  int i;
+  t[0] = 0xaaaabbbb;
+  t[1] = 0xbbbbcccc;
+  t[2] = b;
+  t[3] = (unsigned)t;
+  t[((b + 3)>>2) + 4] = 0xccccdddd;
+  t[((b + 3)>>2) + 5] = 0xddddeeee;
+  t[((b + 3)>>2) + 6] = 0xeeeeffff;
+  t[((b + 3)>>2) + 7] = 0xffffaaaa;
+  for (i = 0; i < PMEXTRA; i++) {
+    t[((b + 3)>>2) + 8 + i] = 0xffffaaaa + i;
+  }
+}
+
+static void checkOne(unsigned *t)
+{
+  int a, i;
+  lassert(t[0] == 0xaaaabbbb);
+  lassert(t[1] == 0xbbbbcccc);
+  a = t[2];
+  lassert(t[3] == (unsigned)t);
+  lassert(t[((a + 3)>>2) + 4] == 0xccccdddd);
+  lassert(t[((a + 3)>>2) + 5] == 0xddddeeee);
+  lassert(t[((a + 3)>>2) + 6] == 0xeeeeffff);
+  lassert(t[((a + 3)>>2) + 7] == 0xffffaaaa);
+  for (i = 0; i < PMEXTRA; i++) {
+    lassert(t[((a + 3)>>2) + 8 + i] == 0xffffaaaa + i);
+  }
+}
+
+void checkAll(void)
+{
+  int i;
+  return;
+  for (i = 0; i < MAXBLOCKS; i++) {
+    if (allblocks[i] != NULL) {
+      checkOne(allblocks[i]);
+    }
+  }
+}
+
+void rememberOne(unsigned *t)
+{
+  int i;
+  return;
+  for (i = 0; i < MAXBLOCKS; i++) {
+    if (allblocks[i] == 0) {
+      allblocks[i] = t;
+      return;
+    }
+  }
+  assert(0);
+}
+
+void forgetOne(unsigned *t)
+{
+  int i;
+  return;
+  for (i = 0; i < MAXBLOCKS; i++) {
+    if (allblocks[i] == t) {
+      allblocks[i] = NULL;
+      return;
+    }
+  }
+  assert(0);
+}
+  
+void *vmMalloc(a)
+{
+  unsigned *t = (unsigned *)malloc(((a + 3)&~3) + (8 + PMEXTRA) * sizeof(int));
+
+  /*  if (!junk) junk = fopen("junk", "w");*/
+  setupOne(t, a);
+  rememberOne(t);
+  trm('M', a, &t[4], 0);
+  /*  fprintf(junk, "M %d -> %#x\n", a, &t[4]); fflush(junk); */
+  checkAll();
+  return (void *)&t[4];
+}
+
+void *vmRealloc(void *old, int b)
+{
+  int a;
+  unsigned *t = (unsigned *)old - 4;
+  a = t[2];
+  checkOne(t);
+  forgetOne(t);
+  t = (unsigned *)realloc(t, ((b + 3)&~3) + (8 + PMEXTRA) * sizeof(int));
+  setupOne(t, b);
+  rememberOne(t);
+  trm('R', b, &t[4], old);
+  /*  fprintf(junk, "R %#x[%d] %d -> %#x\n", old, a, b, &t[4]); fflush(junk); */
+  checkAll();
+  return (void *)&t[4];
+}
+void *vmCalloc(int a, int b)
+{
+  void *t = vmMalloc(a * b);
+  memset(t, 0, a * b);
+  return t;
+}
+
+void vmFree(void *old)
+{
+  int a;
+  unsigned *t = (unsigned *)old - 4;
+  if (!old) return;
+  checkAll();
+  checkOne(t);
+  a = t[2];
+  forgetOne(t);
+  trm('F', a, old, 0);
+  /*  fprintf(junk, "F %#x[%d]\n", old, a); fflush(junk); */
+  free(t);
+}
+#else
+static int nmallocs, nfrees, nbigmallocs;
+void *vmMalloc(int a)
+{
+  if (a > 40000) {
+    nbigmallocs ++;
+  }
+  nmallocs++;
+  return malloc(a);
+}
+
+void *vmRealloc(void *old, int b)
+{
+  if (b > 40000) {
+    nbigmallocs++;
+  }
+  return realloc(old, b);
+}
+void *vmCalloc(int a, int b)
+{
+  if (a * b > 40000) {
+    nbigmallocs ++;
+  }
+  nmallocs++;
+  return malloc(a * b);
+}
+
+void vmFree(void *old)
+{
+  if (old) nfrees++;
+  free(old);
+}
+#endif
+#endif
+#ifdef MTHREADS
+
+#ifdef WIN32MALLOCDEBUG
+_CrtMemState onceinitialized;
+#endif
+
+int
+vmInitThreads()
+{
+  extern Node MyNode;
+  extern OID MyBaseOID;
+  int port;
+  char *plane;
+  extern char *getenv(const char *);
+
+#ifdef WIN32MALLOCDEBUG
+   // Send all reports to STDOUT
+
+#define  SET_CRT_DEBUG_FIELD(a) \
+	_CrtSetDbgFlag((a) | _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG))
+
+#if 0
+   // Set the debug-heap flag so that freed blocks are kept on the
+   // linked list, to catch any inadvertent use of freed memory
+   // You only can do this if you are allocating a few blocks
+   SET_CRT_DEBUG_FIELD( _CRTDBG_DELAY_FREE_MEM_DF );
+#endif
+
+   _CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_FILE );
+   _CrtSetReportFile( _CRT_WARN, _CRTDBG_FILE_STDOUT );
+   _CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_FILE );
+   _CrtSetReportFile( _CRT_ERROR, _CRTDBG_FILE_STDOUT );
+   _CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_FILE );
+   _CrtSetReportFile( _CRT_ASSERT, _CRTDBG_FILE_STDOUT );
+#endif
+
+  MyNode.Epoch = random() & 0xffff;
+  /* start up the network subsystem */
+  port = EMERALDFIRSTPORT + getplane();
+
+  while (MTNetStart(0,  port, MyNode.Epoch) != 0) {
+    port = EMERALDPORTPROBE(port);
+    if (port > 0x10000) return -1;
+  }
+  MyNode.IPAddress = myid.ipaddress;
+  MyNode.EmeraldInstance = myid.port;
+  MyNode.Epoch = myid.incarnation;
+  MyBaseOID.IPAddress = ntohl(MyNode.IPAddress);
+  MyBaseOID.EmeraldInstance = MyNode.EmeraldInstance;
+  MyBaseOID.Epoch = MyNode.Epoch;
+
+  return 0;
+}
+
+#ifndef WORKERSTACKSIZE
+#define WORKERSTACKSIZE (32 * 1024)
+#endif
+
+#ifdef WIN32MALLOCDEBUG
+void vmDoneInit()
+{
+    // Store a memory checkpoint in the memory-state structure
+	_CrtMemCheckpoint( &onceinitialized );
+}
+
+void vmMallocCheck()
+{
+  _CrtCheckMemory();
+}
+
+void vmMallocDump()
+{
+  _CrtMemState temp;
+  _CrtMemCheckpoint( &temp );  
+  _CrtMemDumpStatistics(&temp);
+
+  _CrtCheckMemory( );
+
+  /* This one dumps all objects. */
+  /* _CrtDumpMemoryLeaks( ); */
+
+  /*
+   * This will only dump the objects that have been allocated
+   * since the node finished initializing
+   */
+  _CrtMemDumpAllObjectsSince( &onceinitialized );
+
+}
+
+
+void vmMallocDumpAll()
+{
+  _CrtMemState temp;
+  _CrtMemCheckpoint( &temp );  
+  _CrtMemDumpStatistics(&temp);
+
+  _CrtCheckMemory( );
+
+  _CrtDumpMemoryLeaks( );
+}
+#endif
+
+char *NodeAddrString(NodeAddr srv)
+{
+  static char buf[5][60];
+  static int i = 0;
+  char *rval;
+
+  rval = buf[i]; i = (i+1) % 5;
+  sprintf(rval, "%08lx.%04x.%04x", srv.ipaddress, srv.port, srv.incarnation);
+  return rval;
+}
+#endif /* MTHREADS */
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d268 1
+a268 3
+  port = EMERALDFIRSTPORT;
+  plane = getenv("EMPLANE");
+  if (plane) port += mstrtol(plane, 0, 10);
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d34 1
+a34 1
+  unsigned threadid;
+d46 1
+a46 1
+  trbuf[trindex].threadid = (int)MTMe();
+d69 1
+a69 1
+    printf("%08x: [%4d] %c %d ", trbuf[j].threadid, j, trbuf[j].command, trbuf[j].size);
+a243 1
+  threadid myid;
+a275 1
+  myid = MTThreadID(0);
+d334 1
+a334 86
+int vmCreateThread(void (*fn)(void *), void *arg)
+{
+  thread t;
+
+  t = MTCreate(fn, arg, 0, 10, WORKERSTACKSIZE);
+  return 0;
+}
+
+vmThreadId vmStartServerThread(void (*fn)(void *))
+{
+  thread t;
+
+  t = MTCreate(fn, 0, 1, 8, WORKERSTACKSIZE);
+  TRACE(process, 3, ("vmStartServerThread: ok"));
+  return MTThreadID(t);
+}
+
+void vmGetServerThread(vmThreadId *t, int addr, int port, int epoch)
+{
+  t->ipaddress = addr;
+  t->port = port;
+  t->incarnation = epoch;
+}
+
+int
+vmThreadSend(vmThreadId t, void *obuf, int olen)
+{
+  int rval;
+  if((rval = MTSend(t, obuf, olen)) < 0) {
+    TRACE(rinvoke, 1, ("vmThreadSend: MTSend failed!"));
+  } else {
+    nMessagesSent++;
+    nBytesSent += olen;
+  }
+  return rval;
+}
+
+int
+vmThreadReceive(vmThreadId *tid, void **buf, int *len)
+{
+  int rval;
+  extern int nRequestServersWaiting;
+
+  nRequestServersWaiting++;
+  if((rval = MTReceive(tid, buf, len)) < 0) {
+    TRACE(rinvoke, 0, ("vmThreadReceive: MtReceive failed!"));
+  } else {
+    nMessagesReceived++;
+    nBytesReceived += *len;
+  }
+  nRequestServersWaiting--;
+  return rval;
+}
+
+void GainExclusive(void)
+{
+#ifdef SIN32
+  MTSemP(&theBigLock);
+  /*  MTPrio(1); */
+#endif
+}
+
+void LoseExclusive(void)
+{
+#ifdef WIN32
+  MTSemV(&theBigLock);
+  /*  MTPrio(-1); */
+#endif
+}
+
+void
+vmThreadSleep(int t)
+{
+  MTSleep(t);
+}
+
+void
+vmThreadMSleep(int secs, int usecs)
+{
+  struct timeval howlong;
+  howlong.tv_sec = secs;
+  howlong.tv_usec = usecs;
+  MTMSleep(howlong);
+}
+
+char *ThreadIdString(vmThreadId srv)
+d341 1
+a341 1
+  sprintf(rval, "%08lx.%04x.%04x", ntohl(srv.ipaddress), srv.port, srv.incarnation);
+a343 23
+#ifdef WIN32
+#define ssize_t size_t
+#endif
+#undef vmRead
+ssize_t vmRead(int fd, void *buf, size_t nbytes)
+{
+  int res;
+  WNotUseful();
+  res = MTread(fd, buf, nbytes);
+  WUseful();
+  return res;
+}
+
+#undef vmWrite
+ssize_t vmWrite(int fd, void *buf, size_t nbytes)
+{
+  int res;
+  WNotUseful();
+  res = MTwriten(fd, buf, nbytes);
+  WUseful();
+  return res;
+}
+
+a344 2
+
+/* EOF */
+@
+
+
+1.2
+log
+@Cleaned up
+@
+text
+@d4 1
+d19 3
+d24 25
+d50 98
+d150 9
+a158 8
+  unsigned *t = (unsigned *)malloc(a + 4 * sizeof(int));
+/*  if (!junk) junk = fopen("junk", "w"); */
+  t[0] = 0xdeadbeec;
+  t[1] = a;
+  t[((a + 3)>>2) + 2] = 0xfeedfacd;
+  t[((a + 3)>>2) + 3] = 0xdeadbeed;
+/*  fprintf(junk, "Malloc %d returns %#x\n", a, &t[2]); fflush(junk); */
+  return (void *)&t[2];
+d164 11
+a174 13
+  unsigned *t = (unsigned *)old - 2;
+  assert(t[0] == 0xdeadbeec);
+  a = t[1];
+  assert(t[((a + 3)>>2) + 2] == 0xfeedfacd);
+  assert(t[((a + 3)>>2) + 3] == 0xdeadbeed);
+  t = (unsigned *)realloc(t, b + 4 * sizeof(int));
+  t[0] = 0xdeadbeec;
+  t[1] = b;
+  t[((b + 3)>>2) + 2] = 0xfeedfacd;
+  t[((b + 3)>>2) + 3] = 0xdeadbeed;
+/*  fprintf(junk, "Realloc %#x[%d] %d returns %#x\n", old, a, b, &t[2]);
+  fflush(junk); */
+  return (void *)&t[2];
+d178 3
+a180 1
+  return vmMalloc(a * b);
+d186 1
+a186 1
+  unsigned *t = (unsigned *)old - 2;
+d188 6
+a193 5
+  assert(t[0] == 0xdeadbeec);
+  a = t[1];
+  assert(t[((a + 3)>>2) + 2] == 0xfeedfacd);
+  assert(t[((a + 3)>>2) + 3] == 0xdeadbeed);
+/*  fprintf(junk, "Free %#x[%d]\n", old, a); fflush(junk); */
+d232 4
+d246 21
+d284 1
+d292 13
+a304 1
+int vmCreateThread(void (*fn)(void *), void *arg)
+d306 14
+a319 1
+  thread t;
+a320 2
+  t = MTCreate(fn, arg, 0, 10, WORKERSTACKSIZE);
+  return 0;
+d323 2
+a324 2
+int
+vmActivateThread(vmThread t)
+d326 7
+a332 3
+  TRACE(process, 3, ("vmResumeThread %#lx ok", (unsigned int) t));
+  MTResume(t);
+  return 0;
+d334 1
+d336 1
+a336 1
+int vmSuspendThread(void)
+d338 3
+a340 2
+  TRACE(process, 3, ("vmSuspendThread ok"));
+  MTSuspend();
+d348 1
+a348 1
+  t = MTCreate(fn, 0, 1, 8, 24 * 1024);
+d390 16
+d431 4
+a434 1
+
+d444 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d181 1
+a181 1
+    TRACE(rinvoke, 0, ("vmThreadSend: MTSend failed!"));
+@

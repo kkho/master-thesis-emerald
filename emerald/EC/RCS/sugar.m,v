@@ -1,0 +1,395 @@
+head	1.15;
+access;
+symbols
+	105alpha:1.15
+	104alpha:1.15
+	103alpha:1.15
+	102alpha:1.15
+	101alpha:1.15
+	100alpha:1.15
+	DIKU_0:1.14
+	carlton_start:1.11
+	immel_start:1.5;
+locks; strict;
+
+
+1.15
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	94.08.17.16.51.48;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.21.19.14.40;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.04.06.19.38.02;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.14.15.55.19;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.58.18;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.16;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.15;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.15
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@export sugar
+
+const Sugar <- immutable object Sugar
+  const x <- 1
+  export operation doAnOp [oname : Ident, pt:Tree, rt:Tree, al:Tree, ar:Tree, isFunction : Boolean] -> [r:OpDef]
+    var ln : Integer
+    var rsym, psym, rsymr, psymr, pl, rl, ral, rar, asstat, ablock : Tree
+    var lid : Ident
+%    newid.reset
+    if pt !== nil then
+      ln <- pt$ln
+      lid <- newid.newid
+      psym <- sym.create[ln, lid]
+      psymr <- sym.create[ln, lid]
+      pl <- seq.singleton[param.create[ln, psym, pt.copy[0]]]
+    end if
+    if rt !== nil then
+      ln <- rt$ln
+      lid <- newid.newid
+      rsym <- sym.create[ln, lid]
+      rsymr<- sym.create[ln, lid]
+      rl <- seq.singleton[param.create[ln, rsym, rt.copy[0]]]
+    end if
+    const asig <- opsig.create[ln, oname, pl, rl, nil]
+    asig$isFunction <- isFunction
+    if al == nil then ral <- rsymr else ral <- al end if
+    if ar == nil then rar <- psymr else rar <- ar end if
+    asstat <- assignstat.create[ln, 
+      seq.singleton[ral],
+      seq.singleton[rar]]
+    ablock <- block.create[ln, sseq.singleton[asstat], nil, nil]
+    r <- opdef.create[ln, asig, ablock]
+    r$isexported <- true
+  end doAnOp
+
+  export operation doAField [ops:Tree, f:FieldDecl] -> [nops:Tree, nf:Tree]
+    const s <- view f$sym as sym
+    const sr <- s.copy[0]
+    const id <- s$id
+    var anOp : OpDef
+
+    if ops == nil then nops <- seq.create[f$ln] else nops <- ops end if
+
+    if f$isConst then
+      nf <- constdecl.create[f$ln, s, f$xtype, f$value]
+    else
+      nf <- vardecl.create[f$ln, s, f$xtype, f$value]
+      nops.rcons[self.doAnOp[opname.literal["set"||id.asString], f$xtype, nil, sr, nil, false]]
+    end if
+% If doing move/visit
+    (view nf as attachable)$isattached <- f$isattached
+    nops.rcons[self.doAnOp[opname.literal["get"||id.asString], nil, f$xtype, nil, sr, true]]
+  end doAField
+
+  export operation doFields [decls:Tree, ops:Tree] -> [nops:Tree]
+    nops <- ops
+    if decls == nil then return end if
+    for i:Integer <- 0 while i <= decls.upperbound by i <- i + 1
+      begin
+	const d <- decls[i]
+	var f : Tree
+	if nameof d = "afielddecl" then
+	  nops, f <- self.doAField[nops, view d as fielddecl]
+	  decls[i] <- f
+	end if
+      end
+    end for
+  end doFields
+  
+end Sugar
+@
+
+
+1.14
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d9 1
+a9 1
+    newid.reset
+d15 1
+a15 1
+      pl <- seq.literal[ln, { param.create[ln, psym, pt.copy[0]] : Tree } ]
+d22 1
+a22 1
+      rl <- seq.literal[ln, { param.create[ln, rsym, rt.copy[0]] : Tree } ]
+d29 3
+a31 3
+      seq.literal[ln, { ral : Tree } ],
+      seq.literal[ln, { rar : Tree } ] ]
+    ablock <- block.create[ln, seq.literal[ln, { asstat : Tree } ], nil, nil]
+@
+
+
+1.13
+log
+@First attempt at abcons
+@
+text
+@d5 1
+a5 1
+  export operation doAnOp [oname : Tree, pt:Tree, rt:Tree, al:Tree, ar:Tree] -> [r:OpDef]
+d7 1
+a7 1
+    var rsym, psym, rsymr, psymr, pl, rl, asig, ral, rar, asstat, ablock : Tree
+d24 2
+a25 1
+    asig <- opsig.create[ln, oname, pl, rl, nil]
+d29 3
+a31 3
+      seq.literal[ln, { ral } ],
+      seq.literal[ln, { rar } ] ]
+    ablock <- block.create[ln, seq.literal[ln, { asstat } ], nil, nil]
+d48 1
+a48 1
+      nops.rcons[self.doAnOp[opname.literal["set"||id.asString], f$xtype, nil, sr, nil]]
+d52 1
+a52 1
+    nops.rcons[self.doAnOp[opname.literal["get"||id.asString], nil, f$xtype, nil, sr]]
+@
+
+
+1.12
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@a35 2
+% If doing move/visit
+    const attachable <- typeobject attachable op setisattached[boolean] end attachable
+@
+
+
+1.11
+log
+@Renamed the isImmutable component of fields to isConst
+@
+text
+@d9 1
+@
+
+
+1.10
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d44 1
+a44 1
+    if f$isImmutable then
+@
+
+
+1.9
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d60 1
+a60 1
+	const d <- decls(i)
+d64 1
+a64 1
+	  decls(i) <- f
+@
+
+
+1.8
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d48 1
+a48 1
+      nops.rcons[doAnOp[opname.literal["set"||id.asString], f$xtype, nil, sr, nil]]
+d52 1
+a52 1
+    nops.rcons[doAnOp[opname.literal["get"||id.asString], nil, f$xtype, nil, sr]]
+d63 1
+a63 1
+	  nops, f <- doAField[nops, view d as fielddecl]
+@
+
+
+1.7
+log
+@Use nameof rather than asString
+@
+text
+@d12 1
+a12 1
+      psym <- symdef.create[ln, lid]
+d19 1
+a19 1
+      rsym <- symdef.create[ln, lid]
+d41 1
+a41 1
+    sr.becomeRef
+@
+
+
+1.6
+log
+@Implement change to "new" keyword.
+@
+text
+@d62 1
+a62 1
+	if d.asString = "fielddecl" then
+@
+
+
+1.5
+log
+@Clean up param
+@
+text
+@d11 1
+a11 1
+      lid <- newid.new
+d18 1
+a18 1
+      lid <- newid.new
+@
+
+
+1.4
+log
+@Enabled attach declarations
+@
+text
+@d14 1
+a14 1
+      pl <- seq.literal[ln, { param.create[ln, psym, pt.copy[0], nil] : Tree } ]
+d21 1
+a21 1
+      rl <- seq.literal[ln, { param.create[ln, rsym, rt.copy[0], nil] : Tree } ]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d36 1
+a36 1
+%    const attachable <- type attachable op setisattached[boolean] end attachable
+d51 1
+a51 1
+%    (view nf as attachable)$isattached <- f$isattached
+@
+
+
+1.2
+log
+@Don't waste space on move/visit/attached
+@
+text
+@d1 1
+a1 17
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import FieldDecl from "Jekyll"
+import opdef from "Jekyll"
+import sym from "Jekyll"
+import ident from "Jekyll"
+import newid from "Jekyll"
+import param from "Jekyll"
+import opsig from "Jekyll"
+import assignstat from "Jekyll"
+import block from "Jekyll"
+import constdecl from "Jekyll"
+import vardecl from "Jekyll"
+import seq from "Jekyll"
+import opname from "Jekyll"
+import symdef from "Jekyll"
+export sugar to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d51 2
+a52 1
+    const attachable <- type attachable op setisattached[boolean] end attachable
+d66 2
+a67 1
+    (view nf as attachable)$isattached <- f$isattached
+@

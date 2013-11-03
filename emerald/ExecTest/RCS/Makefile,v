@@ -1,0 +1,325 @@
+head	1.12;
+access;
+symbols
+	105alpha:1.11
+	104alpha:1.10
+	103alpha:1.10
+	102alpha:1.10
+	101alpha:1.10
+	100alpha:1.10
+	DIKU_0:1.8;
+locks; strict;
+comment	@# @;
+
+
+1.12
+date	2007.06.11.01.22.59;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	99.01.22.00.26.09;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.10.14.17.55.12;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.03.29.20.28.33;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.08.17.17.02.56;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.06.20.05.16.14;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.09.28.14.28.57;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.06.08.16.39.32;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.06.08.16.14.53;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.07.14.49.36;	author mueller;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.02.02.55.13;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.40.20;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test makefile
+@
+
+
+1.12
+log
+@Add a missing quote and deal with broken versions of rm -f
+@
+text
+@#
+# ExecTests Makefile
+#
+
+SOURCES = taaaa.m ta.m ttype.m tarray.m tbchunk.m tboolean.m tchar.m \
+	  tclass.m thairy.m \
+	  tiostr.m tinstr.m tinteger.m tnil.m tnode.m toutstr.m \
+	  treal.m trecord.m tstack.m tstring.m ttime.m tv.m tvector.m
+
+TARGETS = $(SOURCES:.m=.x)
+
+EMX = emx
+EMC = emc
+
+compile:	$(SOURCES)
+	cp /dev/null name
+	rm -f name.idb name.ats name.oid
+	rm -f xxinput
+	echo >> xxinput load name
+	echo >> xxinput unset docompilation
+	echo >> xxinput runtest.m
+	echo >> xxinput set docompilation
+	for x in $? ; do \
+	    echo $$x >> xxinput ;\
+	done
+	echo source xxinput | $(EMC)
+	rm -f xxinput
+	touch compile
+
+fasttest:
+	@@rm -f tmp
+	$(EMX) runtest.x `echo $(TARGETS) | sed -e 's/tinstr.x//' -e 's/toutstr.x//'`
+	@@rm -f tmp
+
+test dotest:
+	@@rm -f tmp
+	@@-for name in ${TARGETS} ; do \
+	    bn=`basename $$name .x` ; \
+	    if  [ -r $$bn.in ] ; then \
+		if [ -r $$bn.out ] ; then \
+		    rm -f $$bn.ou~; \
+		    ${EMX}  runtest.x $$bn.x < $$bn.in > $$bn.ou~ ; \
+		    if cmp -s $$bn.out $$bn.ou~ ; then \
+			echo "Test \"$$bn\" starting ... completed successfully." ; \
+			rm $$bn.ou~ ; \
+		    else \
+			echo "Test \"$$bn\" starting ... failed." ; \
+			diff -c $$bn.out $$bn.ou~ ; \
+		    fi ; \
+		else \
+		    ${EMX} runtest.x $$bn.x < $$bn.in ; \
+		fi ; \
+	    else \
+		if [ -r $$bn.out ] ; then \
+		    ${EMX} runtest.x $$bn.x > $$bn.ou~ ; \
+		    if cmp -s $$bn.out $$bn.ou~ ; then \
+			echo "Test \"$$bn\" starting ... completed successfully." ; \
+			rm $$bn.ou~ ; \
+		    else \
+			echo "Test \"$$bn\" starting ... failed." ; \
+			diff -c $$bn.out $$bn.ou~ ; \
+		    fi ; \
+		else \
+		    ${EMX} runtest.x $$bn.x ; \
+		fi ; \
+	    fi ; \
+	    true ; \
+	done
+	@@rm -f tmp
+
+sources src source:
+	@@echo "${SOURCES}"
+
+clean:
+	-rm -f core *.bak *.ckp *.x
+	cp /dev/null name
+	rm -f name.idb name.ats name.oid
+	rm -f compile
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+@
+
+
+1.11
+log
+@Added tnil to the collection
+@
+text
+@d32 2
+a33 1
+	$(EMX) runtest.x `echo $(TARGETS) | sed -e 's/tinstr.x//' -e s/toutstr.x//'`
+d69 1
+d75 1
+a75 1
+	rm -f core *.bak *.ckp *.x
+@
+
+
+1.10
+log
+@Removed unnecessary SUFFIX junk.
+@
+text
+@d7 1
+a7 1
+	  tiostr.m tinstr.m tinteger.m tnode.m toutstr.m \
+@
+
+
+1.9
+log
+@Added a bitchunk test
+@
+text
+@a14 5
+.SUFFIXES:
+.SUFFIXES:	.x .m
+
+.m.x:
+
+d71 1
+a71 1
+	
+@
+
+
+1.8
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d5 1
+a5 1
+SOURCES = taaaa.m ta.m ttype.m tarray.m tboolean.m tchar.m \
+@
+
+
+1.7
+log
+@Changed names to 8.3
+@
+text
+@d22 1
+a22 1
+	rm -f name.idb
+d24 1
+a24 2
+	echo >> xxinput source b
+	echo >> xxinput set perfile
+d80 1
+a80 1
+	rm -f name.idb
+@
+
+
+1.6
+log
+@Use the installed compiler
+@
+text
+@d5 1
+a5 1
+SOURCES = taaaa.m ta.m ttype.m tarray.m tboolean.m tcharacter.m \
+d7 1
+a7 1
+	  tinoutstream.m tinstream.m tinteger.m tnode.m toutstream.m \
+d38 1
+a38 1
+	$(EMX) runtest.x `echo $(TARGETS) | sed -e 's/tinstream.x//' -e s/toutstream.x//'`
+@
+
+
+1.5
+log
+@Repair the cleanup before running tests
+@
+text
+@d13 1
+a13 1
+EMC = xemc
+@
+
+
+1.4
+log
+@Clean up temp files before running tests
+@
+text
+@d41 1
+a41 1
+	@@rm -f tmp *.ou~
+d46 1
+@
+
+
+1.3
+log
+@simplified definition of TARGETS
+@
+text
+@d37 1
+d41 1
+@
+
+
+1.2
+log
+@EMC is now a macro, so it can be overridden on the command line
+@
+text
+@d10 1
+a10 4
+TARGETS = taaaa.x ta.x ttype.x tarray.x tboolean.x tcharacter.x \
+	  tclass.x thairy.x \
+	  tinoutstream.x tinstream.x tinteger.x tnode.x toutstream.x \
+	  treal.x trecord.x tstack.x tstring.x ttime.x tv.x tvector.x
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 4
+d16 1
+d27 5
+a31 5
+	echo source b >> xxinput
+	echo set perfile >> xxinput
+	echo unset docompilation >> xxinput
+	echo runtest.m >> xxinput
+	echo set docompilation >> xxinput
+d35 1
+a35 1
+	echo source xxinput | xemc
+d40 1
+a40 1
+	${EMX} runtest.x `echo $(TARGETS) | sed -e 's/tinstream.x//' -e s/toutstream.x//'`
+@

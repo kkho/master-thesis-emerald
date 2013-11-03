@@ -1,0 +1,169 @@
+head	1.7;
+access;
+symbols
+	105alpha:1.7
+	104alpha:1.7
+	103alpha:1.7
+	102alpha:1.7
+	101alpha:1.7
+	100alpha:1.7
+	DIKU_0:1.7
+	carlton_start:1.6
+	immel_start:1.3;
+locks; strict;
+
+
+1.7
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.25.15.50.57;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.35;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.57.18;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.57.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.57.16;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.7
+log
+@First attempt at abcons
+@
+text
+@export Returnstat
+
+const returnstat <- class Returnstat (Tree)
+    export function upperbound -> [r : Integer]
+      r <- ~1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      r <- self
+    end copy
+
+  export operation generate[xct : Printable]
+    const bc <- view xct as ByteCode
+    const nb <- bc.nestBase
+    bc.lineNumber[self$ln]
+    bc.addCode["BR"]
+    bc.addLabelReference[nb, 2]
+  end generate
+
+  export function asString -> [r : String]
+    r <- "returnstat"
+  end asString
+end Returnstat
+@
+
+
+1.6
+log
+@Cleaned up the definition of nesting in bytecodes
+@
+text
+@d16 1
+a16 7
+    const bc <- view xct as typeobject T
+	operation addCode[String]
+	operation addValue [Integer, Integer]
+	operation nestBase -> [Integer]
+	operation addLabelReference[Integer, Integer]
+	op lineNumber[Integer]
+      end T
+@
+
+
+1.5
+log
+@Get rid of return on generate
+@
+text
+@d19 1
+a19 1
+	operation nestBase -> [Any]
+d23 1
+a23 1
+    const nb <- view bc.nestBase as Integer
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d15 1
+a15 1
+  export operation generate[xct : Printable] -> [rct : None]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a13 1
+  end monitor
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d1 1
+a1 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+export Returnstat to "Jekyll"
+d18 1
+a18 1
+    const bc <- view xct as type T
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d19 1
+a19 1
+  export operation generate[xct : Printable]
+@

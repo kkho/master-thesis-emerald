@@ -1,0 +1,50 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.01.21.23.47.45;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.09.03.04.25.15;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Yacc modified to generate emerald
+@
+
+
+1.2
+log
+@Clean ups and move to the modern language
+@
+text
+@const YYLEXTYPE <- typeobject YYLEXTYPE
+operation lex [YYSTYPE] -> [integer]
+end YYLEXTYPE
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+const YYLEXTYPE == typeobject YYLEXTYPE
+@

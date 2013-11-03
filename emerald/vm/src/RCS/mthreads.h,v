@@ -1,0 +1,328 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.13.19.53.20;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@#ifndef _EMERALD_MTHREADS_H
+#define _EMERALD_MTHREADS_H
+#pragma warning(disable: 4068)
+#pragma pointer_size save
+#pragma pointer_size long
+#include <sys/types.h>
+
+#ifndef WIN32
+#include <sys/time.h>
+#include <stdarg.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
+#pragma pointer_size restore
+
+#ifdef WIN32
+#ifdef MSVC40
+#include <winsock.h>
+#else
+#include <winsock2.h>
+#endif
+#endif
+
+typedef struct NodeAddr {
+  unsigned int ipaddress;
+  unsigned short port;
+  unsigned short incarnation;
+} NodeAddr;
+
+extern void MTInit(void);
+void MTStart(void);
+
+void MTRegisterExitRoutine(void (*)(void));
+
+int MTNetStart(unsigned int, unsigned short, unsigned short);
+int MTSend(NodeAddr receiver, void *sbuf, int slen);
+int MTProd(NodeAddr *receiver);
+typedef void (*NotifyFunction)(NodeAddr id, int isup);
+void MTRegisterNotify(NotifyFunction);
+#endif /* _EMERALD_MTHREADS_H */
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d24 1
+a24 59
+#if defined(MTINTERNAL)
+/*
+ * Configuration
+ */
+#if defined(hpux)
+static const int C_StacksGrowDown = 0;
+#undef USESIGIO
+#else
+static const int C_StacksGrowDown = 1;
+#undef USESIGIO
+#endif
+
+/* 
+ * Debugging stuff
+ * If MTPARANOID is defined, then check thread control blocks for corruption
+ * and also check for stack overflow on every context switch.
+ *
+ * If MTDEBUG is defined then trace messages get generated under the control
+ * of the external variable MTdebuglevel.
+ */
+#ifndef WIN32
+
+#ifndef MTPARANOID
+#define ReturnToProc returnToProc
+#endif
+struct threadState;
+struct savearea;
+extern void returnToProc(struct threadState *);
+extern void startNewProc(void (*)(void), void *);
+extern int saveProcContext(struct savearea *);
+#define MTMIsLocal(t) ((t).ipaddress == myipaddress && (t).port == myport)
+
+#define THREADPOOLSIZE 5
+
+#define newthread() ( nfreethreads > 0 ? pool[--nfreethreads] : (thread)malloc(sizeof(struct threadState)))
+#define freethread(t) { if (nfreethreads < THREADPOOLSIZE) pool[nfreethreads++] = (t); else free(t); }
+#endif /* not WIN32 */
+
+#if defined(MTDEBUG)
+extern void mtprintf(char *a, ...);
+#define TRACE(level, printfstuff) \
+  if (MTdebuglevel >= level) { \
+    printf("%.*s", level, "          "); \
+    printf printfstuff; \
+    fflush(stdout); \
+  }
+#define CTRACE(level, printfstuff) \
+  if (MTdebuglevel >= level) { \
+    printf(stdout, "%.*sThread %#x: ", level, "          ", (unsigned int)currp); \
+    printf printfstuff; \
+    fflush(stdout); \
+  }
+#else
+#define TRACE(level, printstuff)
+#define CTRACE(level, printstuff)
+#endif
+#endif /* MTINTERNAL */
+
+typedef struct threadID {
+d28 1
+a28 36
+} threadid;
+
+#define WORKERSTACKSIZE (32 * 1024)
+extern void GainExclusive(void), LoseExclusive(void);
+
+#ifdef WIN32
+typedef void *semaphore;
+typedef void *thread;
+#else /* not WIN32 */
+typedef struct semaphore {
+  int count;
+  struct threadState *queue;
+} semaphore;
+
+struct savearea {
+  long stuff[40];
+};
+
+typedef struct threadState {
+#ifdef MTPARANOID
+  unsigned int deadbeef;
+#endif
+  struct savearea savearea;
+#ifdef MTPARANOID
+  unsigned int feedface;
+#endif
+  void (*resume)(struct threadState *);
+  void (*proc)(void *);
+  void *arg;
+  unsigned char *stackbase, *sp;
+  int isSys, stackSize;
+  struct threadState *next, *prev;
+  struct timeval waketime;
+  unsigned int priority;
+} *thread;
+#endif /* not WIN32 */
+a30 5
+thread MTCreate(void (*)(void *), void *, int, unsigned, unsigned);
+threadid MTThreadID(thread);
+void MTSleep(unsigned);
+void MTMSleep(struct timeval t);
+void MTSleepUntil(struct timeval t);
+a31 5
+void MTSemInit(semaphore *, int);
+void MTSemFree(semaphore *);
+void MTSemP(semaphore *);
+void MTSemV(semaphore *);
+void MTSemVAll(semaphore *);
+a32 3
+thread MTMe(void);
+void MTDeregisterFD(int);
+void MTRegisterFD(int);
+a33 48
+#ifdef WIN32
+#define MTread(fd, buf, nbytes) _read(fd, buf, nbytes)
+size_t MTreadn(int fd, void *buf, size_t nbytes);
+#define MTwrite(fd, buf, nbytes) _write(fd, buf, nbytes)
+extern size_t MTwrite2(int fd, void *buf, size_t nbytes, void *buf2, size_t nbytes2);
+extern size_t MTwriten(int fd, void *buf, size_t nbytes);
+#define MTsocket(domain, type, protocol) socket(domain, type, protocol)
+#define MTbind(sockfd, my_addr, addrlen) _bind(sockfd, my_addr, addrlen)
+#define MTconnect(sockfd, addr, addrlen) _connect(sockfd, addr, addrlen)
+#define MTaccept(sockfd, addr, addrlen) _accept(sockfd, addr, addrlen)
+#define MTlisten(sockfd, backlog) _listen(sockfd, backlog)
+#define MTopen(pathname, flags, mode) _open(pathname, flags, mode)
+#define MTclose(fd) _close(fd)
+#define MTshutdown(fd, how) _shutdown(fd, how)
+#define MTrecv(s, buf, len, flags) recv(s, buf, len, flags)
+#define MTsend(s, msg, len, flags) send(s, msg, len, flags)
+#else /* not WIN32 */
+#ifndef ssize_t
+#define ssize_t size_t
+#endif
+ssize_t MTread(int fd, void *buf, size_t nbytes);
+ssize_t MTreadn(int fd, void *buf, size_t nbytes);
+ssize_t MTwrite(int fd, void *buf, size_t nbytes);
+ssize_t MTwriten(int fd, const void *buf, size_t nbytes);
+ssize_t MTwrite2(int fd, void *buf, size_t nbytes, void *buf2, size_t nbytes2);
+int MTsocket(int domain, int type, int protocol);
+int MTbind(int sockfd, struct sockaddr *my_addr, int addrlen);
+int MTconnect(int sockfd, struct sockaddr *serv_addr, int addrlen);
+int MTaccept(int sockfd, struct sockaddr *addr, int *addrlen);
+int MTlisten(int sockfd, int backlog);
+#ifdef __NeXT__
+typedef int mode_t;
+#endif
+int MTopen(const char *pathname, int flags, mode_t mode);
+int MTclose(int fd);
+int MTshutdown(int fd, int how);
+int MTrecv(int s, void *buf, int len, unsigned int flags);
+int MTrecvfrom(int s, void *buf, int len, unsigned int flags, struct sockaddr *from, int *fromlen);
+int MTsend(int s, const void *msg, int len, unsigned int flags);
+int MTsendto(int s, const void *msg, int len, unsigned int flags, const struct sockaddr *to, int tolen);
+#ifndef SENDMSGCONST
+#   define SENDMSGCONST const
+#endif
+#if !defined(linux)
+int MTrecvmsg(int s, struct msghdr *msg, unsigned int flags);
+int MTsendmsg(int s, SENDMSGCONST struct msghdr *msg, unsigned int flags);
+#endif
+#endif /* not WIN32 */
+d36 3
+a38 6
+int MTReceive(threadid *sender, void **rbuf, int *rlen);
+int MTSend(threadid receiver, void *sbuf, int slen);
+int MTProd(threadid *receiver);
+void MTSetPriority(int);
+void MTYield(void);
+typedef void (*NotifyFunction)(threadid id, int isup);
+a39 3
+void MTInit(void);
+void MTSetDebugLevel(int);
+extern void MTCheckStackOverflow(void);
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d7 2
+d13 1
+d16 8
+d44 1
+d60 1
+d66 2
+a67 2
+    fprintf(stdout, "%.*s", level, "          "); \
+    mtprintf printfstuff; \
+d72 2
+a73 2
+    fprintf(stdout, "%.*sThread %#x: ", level, "          ", (unsigned int)currp); \
+    mtprintf printfstuff; \
+a81 5
+typedef struct semaphore {
+  int count;
+  struct threadState *queue;
+} semaphore;
+
+d88 12
+d121 1
+d123 1
+a133 1
+void MTSemVN(semaphore *, int);
+a134 2
+void MTSuspend(void);
+void MTResume(thread);
+d140 17
+d158 1
+a158 1
+#define ssize_t int
+d187 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 3
+a3 2
+#ifndef _MTHREADS_H
+#define _MTHREADS_H
+d109 1
+d134 3
+d160 1
+a160 1
+
+d163 1
+a163 1
+#endif /* _MTHREADS_H */
+@

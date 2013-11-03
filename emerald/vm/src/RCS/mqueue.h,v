@@ -1,0 +1,107 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.23.17.01.05;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Message queues.
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@#ifndef _EMERALD_MQUEUE_H
+#define _EMERALD_MQUEUE_H
+#include "assert.h"
+#include "dist.h"
+#include "types.h"
+
+typedef struct {
+  Node id;
+  int length;
+  void *msg;
+} Message;
+
+/*
+ * MessageQueues are an queue of messages.
+ * Operations:
+ *	create, destroy, insert, remove, size, and print.
+ */
+
+/*
+ * Hidden, private type declarations.  The only thing
+ * that applications of this package are to see is MQueue,
+ * and they are to treat it as opaque:  that is, they may
+ * assign it, and pass it as arguments, but not manipulate
+ * what it points to directly.
+ */
+
+typedef struct MQueueRecord {
+    Message *table;
+    int size, count, firstfull, firstempty;
+} MQueueRecord, *MQueue;
+
+/* OPERATIONS */
+
+/* Return a new, empty Message Queue */
+MQueue MQueueCreate(void);
+
+/* Destroy a queue */
+void MQueueDestroy(MQueue);
+
+/* Insert the message into the queue q */
+void MQueueInsert(MQueue q, Node id, int length, void *msg);
+
+/* Remove the first element from the queue */
+void MQueueRemove(MQueue q, Node *idp, int *lengthp, void **msgp);
+
+/* DEBUGGING: Print the MQueue */
+void MQueuePrint(MQueue q);
+
+/* Return the number of elements in MQueue */
+#define MQueueSize(MQueue) ((MQueue)->count)
+
+#endif /* _EMERALD_MQUEUE_H */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 1
+#include "threads.h"
+d8 1
+a8 1
+  NodeAddr id;
+d41 1
+a41 1
+void MQueueInsert(MQueue q, NodeAddr id, int length, void *msg);
+d44 1
+a44 1
+void MQueueRemove(MQueue q, NodeAddr *idp, int *lengthp, void **msgp);
+@

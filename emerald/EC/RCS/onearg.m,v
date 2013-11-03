@@ -1,0 +1,61 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2
+	carlton_start:1.2
+	immel_start:1.2;
+locks; strict;
+
+
+1.2
+date	91.04.22.22.55.15;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.55.14;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@export OneArg
+
+const onearg <- immutable object OneArg
+  const x <- 1
+  export operation create[a : Tree] -> [r : Tree]
+    r <- seq.create[a$ln]
+    r.rcons[a]
+  end create
+end OneArg
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 5
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Arg from "Jekyll"
+import Seq from "Jekyll"
+export OneArg to "Jekyll"
+@

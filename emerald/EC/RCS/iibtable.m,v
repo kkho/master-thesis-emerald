@@ -1,0 +1,238 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.6
+	carlton_start:1.6
+	immel_start:1.3;
+locks; strict;
+
+
+1.6
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.09;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.01.18.05.25;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.43;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.42;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.6
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@const IIBTable <- class IIBTable [size : Integer]
+    const voi <- Vector.of[Integer]
+    const vob <- Vector.of[Boolean]
+    var currentsize : Integer <- size
+    var keya : voi <- voi.create[currentsize]
+    var keyb : voi <- voi.create[currentsize]
+    var value: vob <- vob.create[currentsize]
+    var count  : Integer <- 0
+    var limit  : Integer <- (currentsize * 4) / 5
+
+    operation iInsert [a:Integer,b:Integer,v:Boolean]
+      const first <- (a + b).abs # currentsize
+      var h : Integer <- first
+      loop
+	const ka <- keya[h]
+	if ka == nil then
+	  value[h] <- v
+	  keya[h] <- a keyb[h] <- b
+	  return
+	elseif a = ka and b = keyb[h] then
+	  value[h] <- v
+	  count <- count - 1
+	  return
+	end if
+	h <- (h + 1) # currentsize
+	exit when h = first
+      end loop
+    end iInsert
+
+    operation enlarge
+      const oldkeya <- keya
+      const oldkeyb <- keyb
+      const oldvalue   <- value
+      const oldsize   <- currentsize
+
+      currentsize <- currentsize * 2
+      limit <- (currentsize * 4) / 5
+      keya <- voi.create[currentsize]
+      keyb <- voi.create[currentsize]
+      value   <- vob.create[currentsize]
+      for i : Integer <- 0 while i < oldsize by i <- i + 1
+	const ka <- oldkeya[i]
+	if ka !== nil then
+	  self.iInsert[ka, oldkeyb[i], oldvalue[i]]
+	end if
+      end for
+    end enlarge
+
+    export operation Lookup [a:Integer,b:Integer] -> [v:Boolean]
+      var h : Integer <- (a + b).abs # currentsize
+      loop
+	const ka <- keya[h]
+	if ka == nil then
+	  return
+	elseif ka = a and keyb[h] = b then
+	  v <- value[h]
+	  return
+	end if
+	h <- (h + 1) # currentsize
+      end loop
+    end Lookup
+
+    export operation Insert [a:Integer,b:Integer,v:Boolean]
+      count <- count + 1
+      if count > limit then self.enlarge end if
+      self.iInsert[a, b, v]
+    end Insert
+
+    export operation reset
+      for i : Integer <- 0 while i < currentsize by i <- i + 1
+	keya[i] <- nil
+      end for
+      count <- 0
+    end reset
+end IIBTable
+
+export IIBTable
+@
+
+
+1.5
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d15 1
+a15 1
+	const ka <- keya(h)
+d17 2
+a18 2
+	  value(h) <- v
+	  keya(h) <- a keyb(h) <- b
+d20 2
+a21 2
+	elseif a = ka and b = keyb(h) then
+	  value(h) <- v
+d42 1
+a42 1
+	const ka <- oldkeya(i)
+d44 1
+a44 1
+	  self.iInsert[ka, oldkeyb(i), oldvalue(i)]
+d52 1
+a52 1
+	const ka <- keya(h)
+d55 2
+a56 2
+	elseif ka = a and keyb(h) = b then
+	  v <- value(h)
+d71 1
+a71 1
+	keya(i) <- nil
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d44 1
+a44 1
+	  iInsert[ka, oldkeyb(i), oldvalue(i)]
+@
+
+
+1.3
+log
+@Fixed the hash function, repaired enlarging the table
+@
+text
+@a1 1
+  monitor
+d11 1
+a11 1
+    private operation iInsert [a:Integer,b:Integer,v:Boolean]
+d30 1
+a30 1
+    private operation enlarge
+a74 1
+  end monitor
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d13 1
+a13 1
+      const first <- (a + b) # currentsize
+d26 1
+a26 2
+	h <- h + 1
+	if h >= currentsize then h <- 0 end if
+d42 2
+a43 2
+      for i : Integer <- 0 while i < currentsize by i <- i + 1
+	const ka <- keya(i)
+d45 1
+a45 1
+	  iInsert[ka, keyb(i), value(i)]
+d51 1
+a51 1
+      var h : Integer <- (a + b) # currentsize
+d60 1
+a60 2
+	h <- h + 1
+	if h >= currentsize then h <- 0 end if
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d81 1
+a81 1
+export IIBTable to "Jekyll"
+@

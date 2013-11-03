@@ -1,0 +1,96 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	97.01.22.00.05.57;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.16.05.25.40;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.3
+log
+@Fix to use <- instead of ==, better tests of vectors
+@
+text
+@const tstring <- object tstring
+  const myTest <- runtest.create[stdin, stdout, "tstring"]
+  initially
+    var i, j : String
+    i <- "\^@@"
+    myTest.check[i = "\^@@", "i = \"\\^@@\""]
+    i <- "abcdef"
+    j <- "ghi"
+    myTest.check[i = "abcdef", "i = \"abcdef\""]
+    myTest.check[i[3] = 'd', "i[3] = 'd'"]
+    myTest.check[i != j, "i != j"]
+    myTest.check[i.length = 6, "i.length = 6"]
+    myTest.check[j.length = 3, "j.length = 3"]
+    myTest.check["".length = 0, "\"\".length = 0"]
+    myTest.check[i = i, "i = i"]
+    myTest.check[i == i, "i == i"]
+    myTest.check[j > i, "j > i"]
+    myTest.check[i < j, "i < j"]
+    myTest.check[j >= i, "j >= i"]
+    myTest.check[i <= j, "i <= j"]
+    myTest.check[i != j, "i != j"]
+    myTest.check[i.asString = i, "i.asString = i"]
+    myTest.check[("\^@@").asString = "\^@@", "(\"\\^@@\").asString = \"\\^@@\""]
+    myTest.check[self.id[i] == i, "self.id[i] == i"]
+    myTest.check[self.id[i] = i, "self.id[i] = i"]
+    myTest.check["abcde".getslice[0,3] = "abc", "\"abcde\".getslice[0,3] = \"abc\""]
+    myTest.check["abcde" || "fghij" = "abcdefghij", "\"abcde\" || \"fghij\" = \"abcdefghij\""]
+    myTest.done
+  end initially
+  function id [s : String] -> [r : String]
+    r <- s
+  end id
+end tstring
+@
+
+
+1.2
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "tstring"]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 1
+    myTest.check[i(3) = 'd', "i(3) = 'd'"]
+@

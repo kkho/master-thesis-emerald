@@ -1,0 +1,127 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Check in current version
+@
+text
+@/* comment me!
+ */
+
+#ifndef _EMERALD_GLOBALS_H
+#define _EMERALD_GLOBALS_H
+
+#include "builtins.h"
+#include "iisc.h"
+#include "types.h"
+
+/*
+ * The builtin global array manages the following pointers for each builtin:
+ *
+ * Object it;
+ * AbstractType itsAt;
+ * ConcreteType itsCt;
+ * AbstractType instanceAt;
+ * ConcreteType instanceCt;
+ */
+
+extern Object BuiltinGlobalArray[NUMBUILTINS][NUMTAGS];
+
+#define BuiltinGA(i,tag) (BuiltinGlobalArray[i][(int)tag])
+#define Builtin(i)       (BuiltinGA(i,B_IT))
+#define BuiltinAT(i)     ((AbstractType)BuiltinGA(i,B_ITSAT))
+#define BuiltinCT(i)     ((ConcreteType)BuiltinGA(i,B_ITSCT))
+#define BuiltinInstAT(i) ((AbstractType)BuiltinGA(i,B_INSTAT))
+#define BuiltinInstCT(i) ((ConcreteType)BuiltinGA(i,B_INSTCT))
+
+#define ROUNDUP(x) (((x) + 3) & ~0x3)
+
+extern String TrueString, FalseString;
+
+extern IISc processes;
+extern IISc notHostedMap;
+extern Node MyNode;
+
+extern int
+	getstdin(struct State *),
+	getstdout(struct State *),
+	gettod(struct State *),
+	getlnn(struct State *),
+	getname(struct State *),
+	getnode(struct State *),
+	getactivenodes(struct State *),
+	getallnodes(struct State *),
+	delay(struct State *),
+	jislocal(struct State *),
+	jisfixed(struct State *),
+	jmove(struct State *),
+	jfix(struct State *),
+	junfix(struct State *),
+	jrefix(struct State *),
+	jlocate(struct State *),
+	jgetIncarnationTime(struct State *),
+	jgetLoadAverage(struct State *);
+
+extern int (*(sysfuncs[]))(struct State *),
+	(*(xfuncs[]))(int *);
+extern void initGlobals(void);
+
+#endif /* _EMERALD_GLOBALS_H */
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d54 3
+a56 1
+	jlocate(struct State *);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 2
+#ifndef _GLOBALS_H
+#define _GLOBALS_H
+d60 1
+a60 1
+#endif /* _GLOBALS_H */
+@

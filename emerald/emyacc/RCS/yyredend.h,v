@@ -1,0 +1,40 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.09.03.04.25.15;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Yacc modified to generate emerald
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@(*
+ * Copyright (c) 1986 Robert R. Henry
+ *
+ * @@(#)yyredend.h 1.2 1/8/87
+ *
+ * end of the yyreduce function
+ *)
+yyreduce := yyreducevalue;
+
+end (*yyreduce*);
+@

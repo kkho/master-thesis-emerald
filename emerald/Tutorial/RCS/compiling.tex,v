@@ -1,0 +1,452 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.3
+date	96.03.06.17.42.30;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.03.26.21.12.31;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.03.22.17.01.58;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Updated for 1996
+@
+text
+@\section{Compiling Emerald Programs}
+\label{compiler appendix}
+The latest implementation of Emerald uses an interpreter to increase
+portability.  The compiler is written in Emerald, and generates executable
+files containing byte codes which are then interpreted.  There are three
+commands of (at least historical) interest.
+
+\subsection{ec}
+  The preferred version of the compiler has named ec, and in it's most
+  simple form is invoked as:
+  \begin{quote}
+    ec filename
+  \end{quote}
+  This compiles the emerald program in the named file (whose name by
+  convention ends with .m), and leaves the resulting executable in a file of
+  the same name with the suffix changed to .x.  The only often used argument
+  is:
+  \begin{quote}
+    ec -l environment filename
+  \end{quote}
+  which causes the compilation to be done in the named environment (see
+  section \ref{env}.
+
+
+\subsection{emc}
+    If the ec command doesn't do what you want, then you may need direct
+    access to the interactive compiler (which ec shields you from).
+
+    The emerald compiler is interactive.  The complete set of commands is:
+    \begin{description}
+      \item[load {\it filename\/}]{} ~\\
+	Define the environment in which this compilation is to be executed.
+	Environments are stored in Unix files in the working directory.  
+	Exported identifiers are made known in the environment
+	in order to facilitate separate compilation.  A compilation
+	environment consists of two files:  {\it filename\/} and {\it
+	filename\/}.idb.  Both will be created as needed if they do not
+	already exist.  For those who worry about such things, what load
+	actually does is cause the definitions in the environment file to be
+	defined in top of the current environment definitions, and cause all
+	new exported identifiers to be recorded in the named file.  Thus
+	loading two files in a row causes both sets of definitions to be
+	available (with definitions in the second file overriding ones in
+	the first file with the same names), and causes all new environment
+	information to be written to (appended to) the second file.
+      \item[set {\it variable\/}]{}
+      \item[unset {\it variable\/}]{}~\\
+	These commands set or unset certain options that control how the
+	compiler works.  There are a large number of these variables, most
+	of which are of use only to compiler maintainers.  The complete list
+	follows.  The interesting options have a brief description of what
+	they do.  The others generally cause the emission of voluminous
+	debugging output.
+	\begin{description}
+	  \item[verbose]{}
+	  \item[tracecode]{}
+	  \item[generatebuiltin]{}
+	  \item[executenow]{}~\\
+	    If this variable is set, then rather than generating executable
+	    files for later execution, the compiled code is loaded into the
+	    current Emerald world (the one containing the compiler) and
+	    executed immediately.  No code generation to files is done in this
+	    case. 
+	  \item[generateconcurrent]{}
+	  \item[generateats]{}Default: on~\\
+	    Generate type objects as well as implementation objects.  If
+	    this is reset, then all operations on types at runtime will
+	    fail, probably by reporting invocations on nil but possibly by
+	    failing with addressing problems in the run-time.  If you know
+	    you are not going to be operating on types at runtime this can
+	    result in some space saving in the output.
+	  \item[padbytecodes]{}
+	  \item[usecalloids]{}
+	  \item[tracegenerate]{}
+	  \item[tracegeneratedbuiltin]{}
+	  \item[traceparse]{}
+	  \item[dumpremovesugar]{}
+	  \item[traceassigntypes]{}
+	  \item[tracetypecheck]{}
+	  \item[tracetoplevel]{}
+	  \item[traceinline]{}
+	  \item[tracesizes]{}
+	  \item[dumpassigntypes]{}
+	  \item[tracesymbols]{}
+	  \item[traceevaluatemanifests]{}
+	  \item[dumpevaluatemanifests]{}
+	  \item[tracepasses]{}Default: off~\\
+	    Print messages indicating the progress of the compiler.  There
+	    is a bunch of other junk currently printed when this option is
+	    used - it may be of use to some compiler maintainer some day.
+	  \item[exporttree]{}Default: off~\\
+	    Normally the compiler cleans up between source files so that
+	    only the minimum amount of information is preserved about
+	    exported identifiers (type information for the most part).  With
+	    this option, the entire parse tree is preserved.  Preserving
+	    parse trees allows the compiler to attempt to inline expand very
+	    simple operations.  This is mostly used to load the compiler
+	    with the definitions of the builtin types so that real code can
+	    be generated rather than regular operation invocations for
+	    things like Integer addition.
+	  \item[perfile]{}Default: on~\\
+	    When on, the compiler generates executable code for a source
+	    file ``whatever.m'' into an executable file ``whatever.x''.
+	    When off, the compiler generates adds executable code to the
+	    file ``CP'', which stands for checkpoint - the name of the
+	    format of the file.  When a system is being generated from
+	    multiple source files unsetting perfile allows a single
+	    executable to be constructed.  The format of the checkpoint file
+	    is such that adding to the end of it makes sense.
+	  \item[dogeneration]{}Default: on~\\
+	    If reset, the compiler stops after type checking and storage
+	    allocation has been performed - no code is generated.  This can
+	    be useful to typecheck code that is not yet complete.  It is
+	    also useful in conjunction with exporttree to load definitions
+	    into the compiler's symbol tables without generating code so
+	    that inline expansion and type checking is possible.
+	  \item[docompilation]{}Default: on~\\
+	    If on, the compiler generates a compilation object whose
+	    initially section contains the declarations that comprise the
+	    source file.  If a source file contains only manifest constant
+	    declarations, and if it is part of a larger program, then this
+	    compilation object does nothing interesting and this option
+	    exists to prevent generating such useless objects.
+	  \item[generatedebuginfo]{}Default: on~\\
+	    The -g flag of the compiler.  When on, the compiler generates
+	    information for the debugger such as the names and addresses of
+	    identifiers and the mapping betweens source lines and code
+	    addresses.
+	  \item[dotypecheck]Default: on{}~\\
+	    It's name says it all.
+	  \item[doselfs]{}Default: on ~\\
+	    When on, the compiler replaces occurances of the keyword self
+	    with the name of the object.  This is normally desirable.
+	    However, when an object that is going to be a supertype is
+	    compiled, such replacement is incorrect.
+	\end{description}
+      \item[exit]{}
+      \item[quit]{}
+      \item[q]{} ~\\
+	Exit the compiler.
+      \item[checkpoint {\it filename\/}]{} ~\\
+	Cause the compiler to checkpoint, saving it's state into the named
+	file.  When this file is recovered by being fed to the interpreter
+	{\it emx\/}, the compiler will come back with all of the symbol table
+	information and option settings that it currently has.
+      \item[eval {\it ``string''\/}]{} ~\\
+	Treat the given string as a compilation, and compile and execute it
+	immediately.  Remember that a compilation is a sequence of export
+	statements and constant declarations, so in order to execute other
+	statements you must wrap them in an object.  For example:
+	\begin{quote}
+	  eval ``const x \assign{} object x initially stdout.putstring[``hello''] end
+	  initially end x''
+	\end{quote}
+      \item[source {\it filename\/}]{} ~\\
+	Read commands from the named file.  When that file is exhausted, the
+	compiler will return to reading from the current input stream,
+	initially the standard input.
+      \item[filename]{} ~\\
+	Compile the given file (whose name should end in ``.m'').  The
+	executable is written to a file with the extension ``.x'' (but see
+	the definition of the ``perfile'' option above).
+    \end{description}
+
+  \subsection{emx}
+    The emerald interpreter.  Typically invoked as:
+    \begin{quote}
+      emx filename.x
+    \end{quote}
+    Emx supports a large number of flags, the most useful of which are:
+    \begin{description}
+      \item[-i]{} ~\\
+	Invoke the integrated Emerald debugger when errors occur.
+      \item[-I]{} ~\\
+	With -i, invoke the integrated Emerald debugger immediately upon
+	program startup so that initial breakpoints can be set.
+      \item[-Tcall]{} ~\\
+	Generate a call trace giving the calls and returns of all operations
+	and functions.
+      \item[-v]{} ~\\
+	Generate summary statistics on program termination.
+    \end{description}
+
+\subsection{The environment}
+\label{env}
+An environment mechanism 
+permits the sharing of object
+definitions between compilations.  Objects (actually, identifiers) exported
+from one compilation unit that are to be used in another must be exported to
+the environment in order to be visible to later compilation units.
+An Emerald compilation unit is defined as follows:
+
+\begin{center}
+\begin{tabular}{lcl}
+compilation & $::=$   & \oseq{environmentExport $|$ constantDeclaration } \\
+environmentExport
+            & $::=$   & \kw{export} \sseq{identifier}{\lrq{,}} \\
+\end{tabular}
+\end{center}
+
+For example, if an object $Directory$ is being defined in compilation, and
+needs to be used by other objects (being compiled later), a statement:
+
+\begin{quote}
+  \kw{export}  \it Directory
+\end{quote}
+\noindent
+is needed. Other source code that uses the identifier {\it Directory} must
+be compiled in the context of this export.
+
+Only immutable objects (like classes), type objects, and integers are
+currently handled properly by the environment mechanism.
+
+The command ``load'' specifies to the compiler the environment that it is to
+use.  
+\subsection{A Sample Program}
+\label{sample program}
+This section discusses a trivial sample program which is split across two
+source files.  The first source file ``stack.m'', contains the definition of
+a stack:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\cd{} Define an \tn{Integer} stack creation object\\[1.0ex]{}%
+\kw{export} Stack\\[1.0ex]{}%
+\kw{const} Stack \assign{}\+\\*{}%
+  \kw{immutable} \kw{object} Stack\+\\*{}%
+    \kw{const} StackType \assign{}\+\\*{}%
+      \kw{typeobject} StackType\+\\*{}%
+        \kw{operation} Push\/\LB{}n\CO{} \tn{Integer}\/\RB{}\\*{}%
+        \kw{operation} Pop \returns{} \/\LB{}n\CO{} \tn{Integer}\/\RB{}\\*{}%
+        \kw{function} Empty \returns{} \/\LB{}result \CO{} \tn{Boolean}\/\RB{}\-\\*{}%
+      \kw{end} StackType\-\\[1.0ex]{}%
+    \kw{export} \kw{function} getSignature \returns{} \/\LB{}r \CO{} \tn{Signature}\/\RB{}\+\\*{}%
+      r \assign{} StackType\-\\*{}%
+    \kw{end} getSignature\\[1.0ex]{}%
+    \kw{export} \kw{operation} create \returns{} \/\LB{}result \CO{} StackType\/\RB{}\+\\*{}%
+      result \assign{} \+\\*{}%
+        \kw{object} aStack\+\\*{}%
+	  \kw{const} store \assign{} \tn{Array}.of\/\LB{}\tn{Integer}\/\RB{}.empty\\[1.0ex]{}%
+	  \kw{export} \kw{operation} Push\/\LB{}n\CO{} \tn{Integer}\/\RB{}\+\\*{}%
+	    store.addUpper\/\LB{}n\/\RB{}\-\\*{}%
+	  \kw{end} Push\\[1.0ex]{}%
+	  \kw{export} \kw{operation} Pop \returns{} \/\LB{}n\CO{} \tn{Integer}\/\RB{}\+\\*{}%
+	    n \assign{} store.removeUpper\-\\*{}%
+	  \kw{end} Pop\\[1.0ex]{}%
+	  \kw{export} \kw{function} Empty \returns{} \/\LB{}result \CO{} \tn{Boolean}\/\RB{}\+\\*{}%
+	    result \assign{} store.empty\-\\*{}%
+	  \kw{end} Empty\-\\*{}%
+        \kw{end} aStack\-\-\\*{}%
+    \kw{end} create\-\-\\[1.0ex]{}%
+\kw{end} Stack
+\end{tabbing}\end{minipage}}
+
+The second source ``stacktest.m'' file contains the main program.
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\cd{} This program first creates a stack named myStack by invoking Stack.create.\\*{}%
+\cd{} It pushes 4 integers into myStack, and then pops and prints them.\\[1.0ex]{}%
+\kw{const} Tester \assign{} \kw{object} Tester\+\\*{}%
+  \kw{process}\+\\*{}%
+    \kw{const} myStack\CO{} Stack \assign{} Stack.create\\[1.0ex]{}%
+    \kw{for} i \CO{} \tn{Integer} \assign{} 0 \kw{while} i $<$ 4 \kw{by} i \assign{} i $+$ 1\+\\*{}%
+      stdout.PutString\/\LB{}``Pushing " $|$$|$ i.asString $|$$|$ " on my stack.\mybackslash{}n''\/\RB{}\\*{}%
+      myStack.Push\/\LB{}i\/\RB{}\-\\*{}%
+    \kw{end} \kw{for}\\[1.0ex]{}%
+    stdout.PutString\/\LB{}``Printing in reverse order.\mybackslash{}n''\/\RB{}\\*{}%
+    \kw{loop}\+\\*{}%
+      \kw{var} x \CO{} \tn{Integer}\\*{}%
+      \kw{exit} \kw{when} myStack.Empty\\*{}%
+      x \assign{} myStack.Pop\\*{}%
+      stdout.PutString\/\LB{}``Popped " $|$$|$ x.asString $|$$|$ " from my stack.\mybackslash{}n''\/\RB{}\-\\*{}%
+    \kw{end} \kw{loop}\-\\*{}%
+  \kw{end} \kw{process}\-\\*{}%
+\kw{end} Tester
+\end{tabbing}\end{minipage}}
+
+\subsection{Compiling the Program}
+\label{compiling program}
+\subsubsection{Using ec}
+Compiling the program is as simple as:
+\begin{quote}
+  ec stack.m stacktest.m
+\end{quote}
+or, if you want to be able to compile them one at a time, you must indicate
+an environment:
+\begin{quote}
+  ec -l stackenv stack.m
+  ec -l stackenv stacktest.m
+\end{quote}
+
+\subsubsection{Using emc}
+Compiling the program requires the following steps.  
+The following steps provide
+input to the compiler at its ``Command:'' prompt, after it has been started
+using the Unix command ``emc''.
+\begin{enumerate}
+  \item{} Set up the compiler environment:  ``load stackenv''.  This is not
+    really required if both files are compiled by the same incarnation of
+    the compiler, but is required if you wish to be able to recompile
+    stacktest.m with a new incarnation of the compiler without recompiling
+    stack.m. 
+  \item{} Compile the stack creator: ``stack.m''.
+  \item{} Compile the stack tester: ``stacktest.m''.
+  \item{} Terminate the compiler: ``quit''.
+\end{enumerate}
+\subsection{Executing the Program}
+\label{executing program}
+The previous steps have generated two emerald executable files, stack.x and
+stacktest.x.  These must be executed together:
+\begin{quote}
+  emx stack.x stacktest.x
+\end{quote}
+\noindent
+On executing this command, we get the following output:
+
+\begin{verbatim}
+        Pushing 0 on my stack.
+        Pushing 1 on my stack.
+        Pushing 2 on my stack.
+        Pushing 3 on my stack.
+        Printing in reverse order.
+        Popped 3 from my stack.
+        Popped 2 from my stack.
+        Popped 1 from my stack.
+        Popped 0 from my stack.
+\end{verbatim}
+
+\subsection{Another way to compile (obsolete)}
+The other way of
+compiling this example is to use ``unset perfile'' to cause a single
+executable to be created.  Before running the compiler we must make sure
+that the files CP and CPIndex are removed.  Then run emc providing the
+following input:
+\begin{enumerate}
+  \item{} Set up the compiler environment:  ``load stackenv''.
+  \item{} Indicate that we wish a single executable:  ``unset perfile''.
+  \item{} Compile the stack creator: ``stack.m''.
+  \item{} Compile the stack tester: ``stacktest.m''.
+  \item{} Terminate the compiler ``quit''.
+\end{enumerate}
+
+\noindent
+Finally run the program using ``emx CP''.  The output should be identical to
+that in the previous section.
+
+\subsection{Yet another way to compile (even more obsolete)}
+A final way of executing
+this example is to use ``set executenow'' to cause the objects to
+be created and executed in the same Emerald world that holds the compiler.
+Run emc with the following input:
+\begin{enumerate}
+  \item{} Indicate that we wish immediate execution:  ``set executenow''.
+  \item{} Compile the stack creator: ``stack.m''.
+
+    The compiler will indicate that it is executing stack.m, which will
+    appear to do nothing as it just creates the class object.
+  \item{} Compile the stack tester: ``stacktest.m''.
+
+    The compiler will indicate that it is executing stacktest.m, which will
+    also appear to do nothing.  This may appear surprising, but is not.
+  \item{} Terminate the compiler ``quit''.
+
+    You will now see the output that you desired.  The explanation for this
+    is that the compiler executes as the initially of some object where the
+    stack test runs in a process.  The process is created when stacktest.m
+    is executed but is not run until all initiallies are finished - when you
+    terminate the compiler.  You could ``fix this'' (if you think it is a
+    bug) by getting the compiler to
+    run in a process context, or by putting the interesting code in
+    stacktest.m into the initially section (i.e., substitute initially/end
+    initially for process/end process in stacktest.m).
+\end{enumerate}
+@
+
+
+1.2
+log
+@Fixed a couple of typos that Stephan found
+@
+text
+@d5 19
+a23 2
+files containing byte codes which are then interpreted.  There are two commands of
+interest.
+d26 3
+d185 1
+d281 13
+a315 2
+The order of the .x files used to count, but it no longer does.  Either
+order works fine.
+d330 1
+a330 1
+\subsection{Another way to compile}
+d348 1
+a348 1
+\subsection{Yet another way to compile}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+a9 1
+    The emerald compiler is interactive.  The complete set of commands are:
+d330 1
+a330 1
+    also appear to do nothing.  This may be surprising, but is not.
+@

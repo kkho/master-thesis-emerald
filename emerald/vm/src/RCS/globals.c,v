@@ -1,0 +1,152 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	2007.06.11.02.37.07;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Check in current version
+@
+text
+@/* comment me!
+ */
+
+#include "system.h"
+
+#include "types.h"
+#include "globals.h"
+#include "jsys.h"
+#include "creation.h"
+
+int obsoletesys(struct State *state)
+{
+  printf("Obsolete JSYS\n");
+  abort();
+  return 1;
+}
+
+int codeptrextra;
+Object BuiltinGlobalArray[NUMBUILTINS][NUMTAGS];
+int totalbytecodes;
+String TrueString, FalseString;
+Node MyNode;
+char *gRootNode;
+int (*sysfuncs[JSYS_OPS])(struct State *) = {
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       getstdin,
+       getstdout,
+       gettod,
+       getlnn,
+       getname,
+       obsoletesys,
+       obsoletesys,
+       getactivenodes,
+       getallnodes,
+       delay,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       obsoletesys,
+       jislocal,
+       obsoletesys,
+       jmove,
+       jfix,
+       junfix,
+       jrefix,
+       jlocate,
+       jisfixed,
+       jgetIncarnationTime,
+       jgetLoadAverage
+     };
+
+void initGlobals()
+{
+  TrueString = CreateString("true");
+  FalseString = CreateString("false");
+}
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d18 1
+d63 3
+a65 1
+       jisfixed
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d4 1
+a4 4
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdio.h>
+#pragma pointer_size short
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+d18 1
+@

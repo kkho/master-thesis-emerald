@@ -1,0 +1,334 @@
+head	1.13;
+access;
+symbols
+	105alpha:1.13
+	104alpha:1.13
+	103alpha:1.13
+	102alpha:1.13
+	101alpha:1.13
+	100alpha:1.13
+	DIKU_0:1.11
+	carlton_start:1.10
+	immel_start:1.5;
+locks; strict;
+
+
+1.13
+date	95.06.22.04.45.16;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.10.17.07.33;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.57.03;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.57.01;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.57.00;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.56.58;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.56.57;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.13
+log
+@Implement unavailable handers
+@
+text
+@export Recoverydef
+
+const recoverydef <- class Recoverydef (Tree) [xxbody : Tree]
+    field body : Tree <- xxbody
+
+    export function upperbound -> [r : Integer]
+      r <- 0
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- body
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	body <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nbody : Tree
+      if body !== nil then nbody <- body.copy[i] end if
+      r <- recoverydef.create[ln, nbody]
+    end copy
+
+  export operation resolveSymbols [pst : SymbolTable, nexp : Integer]
+    pst$inInitially <- false
+    FTree.resolveSymbols[pst, self, 0]
+    pst$inInitially <- true
+  end resolveSymbols
+
+  export operation generate[xct : Printable]
+    const ct <- view xct as CTCode
+    const ove <- opvectore.create["recovery"]
+    const templ <- Template.create
+    const mybc <- bytecode.create[ct$literals]
+    const ov <- ct$opVec
+    const bb <- view self$body as hasST
+
+    const returnlabel <- mybc.declareLabel
+    ove$templ <- templ
+    mybc.nest[returnlabel]
+
+    ov[2] <- ove
+    % Generate the template
+    bb$st.writeTemplate[templ, 'L']
+
+    mybc.setLocalSize[bb$st$localSize]
+
+    self$body.generate[mybc]
+
+    mybc.lineNumber[self$ln]
+    mybc.defineLabel[returnlabel]
+    mybc.addCode["QUIT"]
+    mybc.addValue[0, 1]
+    ove$code <- mybc.getString
+    ove$others <- mybc$others
+    begin
+      const lninfo <- mybc.getLNInfo
+      if lninfo !== nil then
+	templ.addLineNumbers[lninfo]
+      end if
+    end
+  end generate
+
+  export function asString -> [r : String]
+    r <- "recoverydef"
+  end asString
+end Recoverydef
+@
+
+
+1.12
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d47 1
+a47 12
+    begin
+      const localSize : Integer <- bb$st$localSize
+      if localSize > 0 then
+	if localSize < 255 * 4 then
+	  mybc.addCode["LINKB"]
+	  mybc.addValue[localSize / 4, 1]
+	else
+	  mybc.addCode["LINK"]
+	  mybc.addValue[localSize, 2]
+	end if
+      end if
+    end
+@
+
+
+1.11
+log
+@First attempt at abcons
+@
+text
+@d48 1
+a48 1
+      const localSize <- bb$st$localSize
+@
+
+
+1.10
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@a36 1
+    const hasst <- typeobject hasst function getST -> [SymbolTable] end hasST
+@
+
+
+1.9
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d44 1
+a44 1
+    ov(2) <- ove
+@
+
+
+1.8
+log
+@Use nameof rather than asString
+@
+text
+@d32 1
+a32 3
+    const ct <- view xct as typeobject X
+      function  getOpVec -> [OpVector]
+    end X
+d35 1
+a35 1
+    const mybc <- bytecode.create
+d51 7
+a57 2
+	mybc.addCode["LINK"]
+	mybc.addValue[localSize, 2]
+@
+
+
+1.7
+log
+@Get rid of return on generate
+@
+text
+@d60 1
+d69 1
+a69 1
+	templ.addLineNumbers[mybc.getLNInfo]
+@
+
+
+1.6
+log
+@Removed all monitors
+@
+text
+@d31 1
+a31 2
+  export operation generate[xct : Printable] -> [rct : None]
+    var junk : Any
+d58 1
+a58 1
+    junk <- self$body.generate[mybc]
+@
+
+
+1.5
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a23 1
+  end monitor
+@
+
+
+1.4
+log
+@Generate the LINK instruction like processdef
+@
+text
+@d1 1
+a1 6
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import opvector from "Jekyll"
+import opvectore, Template from "Jekyll"
+import bytecode from "Jekyll"
+export Recoverydef to "Jekyll"
+d35 1
+a35 1
+    const ct <- view xct as type X
+d42 1
+a42 1
+    const hasst <- type hasst function getST -> [SymbolTable] end hasST
+@
+
+
+1.3
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d47 2
+d56 2
+d59 6
+a64 4
+      const hasst <- type hasst function getST -> [SymbolTable] end hasST
+      const body <- view self$body as hasST
+      body$st.writeTemplate[templ, 'L']
+    end 
+@
+
+
+1.2
+log
+@Detect imported symbols referenced outside of the initially
+@
+text
+@d38 2
+a39 1
+  export operation generate[xct : Printable]
+d60 1
+a60 1
+    self$body.generate[mybc]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d32 6
+@

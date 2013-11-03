@@ -1,0 +1,100 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	97.01.22.00.05.57;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.28.23.08.38;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.15.21.18.19;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.4
+log
+@Fix to use <- instead of ==, better tests of vectors
+@
+text
+@const tstack <- object tstack
+  const myTest <- runtest.create[stdin, stdout, "tstack"]
+  const fact <- immutable object fact
+    export function orial [n : Integer] -> [r : Integer]
+      var x : Integer
+      if n <= 0 then
+	r <- 1
+      else
+	r <- n * self.orial[n - 1]
+      end if
+    end orial
+  end fact
+  
+  initially
+    var f1, f2 : Integer
+    f1 <- fact.orial[100]
+    f2 <- fact.orial[100]
+    myTest.check[f1 == f2, "f1 == f2"]
+    myTest.done
+  end initially
+end tstack
+@
+
+
+1.3
+log
+@Avoid mutable objects with no state
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "tstack"]
+@
+
+
+1.2
+log
+@Remove uses of a[b] as shorthand for self.a[b]
+@
+text
+@d3 1
+a3 1
+  const fact <- object fact
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+a9 1
+	r <- n * orial[n - 1]
+@

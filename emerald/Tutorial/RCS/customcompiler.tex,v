@@ -1,0 +1,97 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@% @;
+
+
+1.1
+date	93.03.22.17.01.58;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@\section{Creating a Custom Compiler}
+Two versions of the compiler are typically installed in the standard place,
+which is \mytilde{}emerald/EC.  These are named execCP for the version of the
+compiler that is used by default, and bestCP for an extended compiler that
+has had all of the builtin types loaded and more appropriate options set.
+The standard version of the compiler knows nothing about the builtin types.
+The extended one is created by feeding the following input to the standard
+one:
+
+\begin{quote}
+unset dogeneration\\
+set exporttree\\
+../Builtins/AType.m\\
+../Builtins/Bitchunk.m\\
+../Builtins/Boolean.m\\
+../Builtins/Character.m\\
+../Builtins/IVector.m\\
+../Builtins/IVectorOfAny.m\\
+../Builtins/Integer.m\\
+../Builtins/InStream.m\\
+../Builtins/Node.m\\
+../Builtins/OutStream.m\\
+../Builtins/Real.m\\
+../Builtins/Signature.m\\
+../Builtins/String.m\\
+../Builtins/Time.m\\
+../Builtins/Vector.m\\
+../Builtins/VectorOfChar.m\\
+../Builtins/CType.m\\
+../Builtins/Array.m\\
+set dogeneration\\
+unset exporttree\\
+set perfile\\
+set generateconcurrent\\
+checkpoint bestCP
+\end{quote}
+
+A minor variation of this procedure will cause the creation of a custom
+compiler set up to compile code for your particular project.  
+Add to this input lines that compile definitions that your project assumes
+(in particular superclasses), loads the name table for your project, etc.
+
+Assuming that your input script is in a file named ``input'', and the
+checkpoint command provides the file name ``myCP'', the command:
+\begin{quote}
+  echo source input $|$ emc
+\end{quote}
+will cause (after a little while) the creation of a file myCP which is
+probably about 2Mbytes big and contains your custom compiler.  You run it by
+typing:
+\begin{quote}
+  emx myCP
+\end{quote}
+
+You can optimize this process by starting with bestCP and using a script
+like:
+
+\begin{quote}
+load whatever\\
+unset dogeneration\\
+set exporttree\\
+unset doselfs\\
+baseclassfile.m\\
+set dogeneration\\
+unset exporttree\\
+checkpoint myCP
+\end{quote}
+@

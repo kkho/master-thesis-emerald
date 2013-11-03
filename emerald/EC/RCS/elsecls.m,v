@@ -1,0 +1,191 @@
+head	1.7;
+access;
+symbols
+	105alpha:1.7
+	104alpha:1.7
+	103alpha:1.7
+	102alpha:1.7
+	101alpha:1.7
+	100alpha:1.7
+	DIKU_0:1.5
+	carlton_start:1.4
+	immel_start:1.2;
+locks; strict;
+
+
+1.7
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.08.17.16.50.38;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.12.10.17.06.58;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.52.15;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.52.14;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.7
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@export Elseclause
+
+const elseclause <- class Elseclause (Tree) [xxstats : Tree]
+    field stats : Tree <- xxstats
+    field st  : SymbolTable
+
+    export function upperbound -> [r : Integer]
+      r <- 0
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- stats
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	stats <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nstats : Tree
+      if stats !== nil then nstats <- stats.copy[i] end if
+      r <- elseclause.create[ln, nstats]
+    end copy
+
+  export operation defineSymbols[pst : SymbolTable]
+    self$st <- SymbolTable.create[pst, CBlock]
+    self$st$myTree <- self
+    FTree.defineSymbols[self$st, self]
+  end defineSymbols
+
+  export operation resolveSymbols [pst : SymbolTable, nexp : Integer]
+    FTree.resolveSymbols[self$st, self, 0]
+  end resolveSymbols
+
+  export operation typeCheck 
+    FTree.typeCheck[self]
+  end typeCheck
+
+  export function asString -> [r : String]
+    r <- "elseclause"
+  end asString
+end Elseclause
+@
+
+
+1.6
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@a36 23
+    var lastLineNumber : Integer <- 0
+    for i : Integer <- 0 while i <= stats.upperbound by i <- i + 1
+      const it <- stats[i]
+      if it$ln != 0 then
+	lastLineNumber <- it$ln
+      else
+	lastLineNumber <- lastLineNumber + 1
+      end if
+      const itsname <- nameof it
+      if itsname = "aninvoc" or 
+	  itsname = "astarinvoc" or 
+	  itsname = "aquestinvoc" then
+	const junk <- it.getAT
+      elseif itsname = "anexp" or
+	  itsname = "anunaryexp" or
+	  itsname = "aliteral" or
+	  itsname = "anxview" or
+	  itsname = "anewexp" or
+	  itsname = "asym" then
+	Environment$env.SemanticError[lastLineNumber,
+	  "Found an expression where a statement was expected", nil]
+      end if
+    end for
+@
+
+
+1.5
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d36 27
+@
+
+
+1.4
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d28 1
+@
+
+
+1.3
+log
+@Removed all monitors
+@
+text
+@d27 1
+a27 1
+    self$st <- SymbolTable.create[pst, STContext.CBlock]
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a24 1
+  end monitor
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable, STContext from "Jekyll"
+export Elseclause to "Jekyll"
+@

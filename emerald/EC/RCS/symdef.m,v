@@ -1,0 +1,75 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3
+	carlton_start:1.3
+	immel_start:1.2;
+locks; strict;
+
+
+1.3
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.41;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.40;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.3
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@export Symdef
+
+const symdef <- immutable object Symdef
+  const x <- 1
+  export operation create [ln : Integer, id : Ident] -> [r : Sym]
+    r <- Sym.create[ln, id]
+  end create
+end Symdef
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a6 1
+    r.becomeDef
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 5
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Ident from "Jekyll"
+import Sym from "Jekyll"
+export Symdef to "Jekyll"
+@

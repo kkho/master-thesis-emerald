@@ -1,0 +1,40 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@% @;
+
+
+1.1
+date	94.08.22.10.26.12;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@x ./syntax.tex, 354 bytes, 1 tape blocks
+\section{Syntax of Emerald}
+
+This appendix summarizes the syntax of \emd{} discussed in this report. It
+should be borne in mind that \emd{} is an active research language and is
+constantly being modified.  The syntax uses EBNF (cf.~Section~\ref{lexical
+considerations}), and the non-terminals have been ordered alphabetically.
+
+Missing from this report.
+@

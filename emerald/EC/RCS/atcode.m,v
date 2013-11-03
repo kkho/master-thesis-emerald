@@ -1,0 +1,1055 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.14
+	103alpha:1.14
+	102alpha:1.14
+	101alpha:1.14
+	100alpha:1.14
+	DIKU_0:1.13
+	carlton_start:1.10
+	immel_start:1.4;
+locks; strict;
+
+
+1.14
+date	96.03.17.03.03.59;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.08.17.16.50.31;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.12.20.21.09.00;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.03.12.17.20.38;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.03.02.18.32.43;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.02.17.00.09.07;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.10.17.06.42;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.14.23.15.04;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.50.22;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.50.20;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.50.19;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.14
+log
+@Add isvector field to Signatures
+@
+text
+@const hasGenerateBuiltin <- typeobject hasGenerateBuiltin
+  operation generateBuiltin -> [Any]
+end hasGenerateBuiltin
+
+const ATCodeCT <- immutable object ATCodeCT
+  const obj <- "-OB-"
+  const ATCodeCTOID <- 0x1809
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export function fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[ATCodeCTOID, file]
+  end CPoint
+end ATCodeCT
+
+const ATCode <- class ATCode
+    % Real fields
+    field flags		: Integer <- 0
+    field ops		: ATOpVector <- ATOpVector.create
+    field name		: String
+    field filename	: String
+
+    % Checkpoint stuff
+    field id 		: Integer
+    const obj <- "+OB+"
+    var csname :    CString <- CString.create
+    var csfilename :    CString <- CString.create
+    var myind : Integer <- ~1
+
+    export function getIsTypeVariable -> [r : Boolean]
+      r <- flags.getBit[31]
+    end getIsTypeVariable
+    export operation setIsTypeVariable [r : Boolean]
+      flags <- flags.setBit[31, r]
+    end setIsTypeVariable
+
+    export function getIsImmutable -> [r : Boolean]
+      r <- flags.getBit[30]
+    end getIsImmutable
+    export operation setIsImmutable [r : Boolean]
+      flags <- flags.setBit[30, r]
+    end setIsImmutable
+
+    export function getIsVector -> [r : Boolean]
+      r <- flags.getBit[29]
+    end getIsVector
+    export operation setIsVector [r : Boolean]
+      flags <- flags.setBit[29, r]
+    end setIsVector
+
+    export function asString -> [s : String]
+      s <- "at"
+    end asString
+
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+	ATCodeCT.getIndex[start, q]
+	if ops !== nil then
+	  ops.getIndex[start, q]
+	end if
+	if name !== nil then
+	  csname$s <- name
+	  csname.getIndex[start, q]
+	end if
+	if filename !== nil then
+	  csfilename$s <- filename
+	  csfilename.getIndex[start, q]
+	end if
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeInt[16 + 4 + 4 + 4 + 4, 4]
+      OIDWriter.Out[id, file]
+      file.writeInt[0x40000000 + ATCodeCT.fetchIndex, 4]
+      file.writeInt[flags, 4]
+      if ops == nil then
+	x <- 0x80000000
+      else
+	x <- ops.fetchIndex
+      end if
+      file.writeInt[x, 4]
+      if name == nil then
+	x <- 0x80000000
+      else
+	x <- csname.fetchIndex
+      end if
+      file.writeInt[x, 4]
+      if filename == nil then
+	x <- 0x80000000
+      else
+	x <- csfilename.fetchIndex
+      end if
+      file.writeInt[x, 4]
+    end CPoint
+
+  function builtinOf[x : hasGenerateBuiltin] -> [r : Any]
+    if x !== nil then
+      r <- x.generateBuiltin
+    end if
+  end builtinOf
+
+  export operation generateBuiltin -> [r : Signature]
+    r <- Signature.create[
+      flags,
+      view self.builtinOf[ops] as AOpVector,
+      name,
+      filename]
+    primitive "INSTALLINOID" [] <- [id, r]
+  end generateBuiltin
+end ATCode
+
+const aoove <- Array.of[ATOpVectorE]
+
+const ATOpVectorCT <- immutable object ATOpVectorCT
+  const obj <- "-OB-"
+  const ATOpVectorCTOID <- 0x181b
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export function fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+  
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+  
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[ATOpVectorCTOID, file]
+  end CPoint
+end ATOpVectorCT
+
+const ATOpVector <- class ATOpVector
+  const obj <- "+OB-"
+
+  field d	     : aoove <- aoove.create[~10]
+  var myind : Integer <- ~1
+
+  export function asString -> [s : String]
+    s <- "atopvector"
+  end asString
+  export operation addUpper[e : ATOpVectorE]
+    d.addUpper[e]
+  end addUpper
+  
+  export operation setElement[i : Integer, e : ATOpVectorE]
+    d[i] <- e
+  end setElement
+
+  export function getElement[i : Integer] -> [r : ATOpVectorE]
+    r <- d[i]
+  end getElement
+
+  export function upperbound -> [r : Integer]
+    r <- d.upperbound
+  end upperbound
+
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind < 0 then
+      const limit <- d.upperbound
+      q.addUpper[self]
+      myind <- q.upperbound
+      ATOpVectorCT.getIndex[start, q]
+      for i : Integer <- 0 while i <= limit by i <- i + 1
+	begin
+	  const dd <- d[i]
+	  if dd !== nil then
+	    dd.getIndex[start, q]
+	  end if
+	end 
+      end for
+    end if
+  end getIndex
+
+  export function fetchIndex -> [r : Integer]
+    r <- myind
+  end fetchIndex
+  
+  export operation CPoint [file : OutStream]
+    var x : Integer
+    file.putString[obj]
+    file.writeint[4 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+    file.writeInt[0x00000000 + ATOpVectorCT.fetchIndex, 4]
+    x <- d.upperbound + 1
+    file.writeInt[x, 4]
+    for i : Integer <- 0 while i <= d.upperbound by i <- i + 1
+      begin
+	const dd <- d[i]
+	if dd == nil then
+	  x <- 0x80000000
+	else
+	  x <- dd.fetchIndex
+	end if
+      end 
+      file.writeInt[x, 4]
+    end for
+  end CPoint
+
+  export operation generateBuiltin -> [r : AOpVector]
+    const voove <- Vector.of[AOpVectorE]
+    var i : Integer <- 0
+    const limit : Integer <- d.upperbound
+    const myv <- voove.create[limit + 1]
+    var dd : ATOpVectorE
+
+    loop
+      exit when i > limit
+      dd <- d[i]
+      if dd !== nil then
+	myv[i] <- dd.generateBuiltin
+      end if
+      i <- i + 1
+    end loop
+    r <- AOpVector.literal[myv]
+  end generateBuiltin
+end ATOpVector
+
+const ATTypeVectorCT <- immutable object ATTypeVectorCT
+  const obj <- "-OB-"
+  const ATTypeVectorCTOID <- 0x181d
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export function fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+  
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+  
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[ATTypeVectorCTOID, file]
+  end CPoint
+end ATTypeVectorCT
+
+const aoRefByID <- Array.of[RefByID]
+
+const ATTypeVector <- class ATTypeVector
+    const obj <- "+OB-"
+
+    field d	     : aoRefByID <- aoRefByID.create[~10]
+    var myind : Integer <- ~1
+
+    export function asString -> [s : String]
+      s <- "attypevector"
+    end asString
+
+    export operation addUpper[e : RefByID]
+      d.addUpper[e]
+    end addUpper
+    
+    export operation setElement[i : Integer, e : RefByID]
+      d[i] <- e
+    end setElement
+
+    export function getElement[i : Integer] -> [r : RefByID]
+      r <- d[i]
+    end getElement
+
+    export function upperbound -> [r : Integer]
+      r <- d.upperbound
+    end upperbound
+
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+	ATTypeVectorCT.getIndex[start, q]
+	for i : Integer <- 0 while i <= d.upperbound by i <- i + 1
+	  begin
+	    const dd <- d[i]
+	    if dd !== nil then
+	      dd.getIndex[start, q]
+	    end if
+	  end 
+	end for
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+    
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeint[4 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+      file.writeInt[0x00000000 + ATTypeVectorCT.fetchIndex, 4]
+      x <- d.upperbound - d.lowerbound + 1
+      file.writeInt[x, 4]
+      for i : Integer <- 0 while i <= d.upperbound by i <- i + 1
+	begin
+	  const dd <- d[i]
+	  if dd == nil then
+	    x <- 0x80000000
+	  else
+	    x <- dd.fetchIndex
+	  end if
+	end 
+	file.writeInt[x, 4]
+      end for
+    end CPoint
+
+  export operation generateBuiltin -> [r : AParamList]
+    const voove <- Vector.of[Signature]
+    var i : Integer <- 0
+    const limit : Integer <- d.upperbound
+    const myv <- voove.create[limit + 1]
+    var dd : RefByID
+
+    % Create the ParamList, which will have nils at every point, because the
+    % signature objects are not findable from here.
+
+    r <- AParamList.literal[myv]
+    loop
+      exit when i > limit
+
+      % I have to get a pointer to each Signature object,
+      % but they may not exist yet.  
+      %
+      % In fact, we can guarantee by the way that we generate these things
+      % that each d[i] is going to be a RefById.  We need to somehow create
+      % the relocation information for the resulting Signatures.
+      %
+      % A primitive is used to relocate each element of the resulting vector.
+      dd <- d[i]
+      if dd !== nil then
+	const id <- dd$id
+	primitive "RELOCATEVECTOR" [] <- [r, i, id]
+      end if
+      i <- i + 1
+    end loop
+  end generateBuiltin
+end ATTypeVector
+
+const ATOpVectorECT <- immutable object ATOpVectorECT
+  const obj <- "-OB-"
+  const ATOpVectorECTOID <- 0x181c
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export function fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+  
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+  
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[ATOpVectorECTOID, file]
+  end CPoint
+end ATOpVectorECT
+
+const ATOpVectorE <- class ATOpVectorE [xxname : String]
+    % Real fields, compare ../Tree/atype.m
+    field name  : String <- xxname
+    field id : Integer
+    field isFunction : Boolean <- false
+    field Arguments : ATTypeVector
+    field Results   : ATTypeVector
+
+    % Stuff for checkpointing
+    const obj <- "+OB-"
+    const csname :    CString <- CString.create
+    var myind : Integer <- ~1
+
+    export function asString -> [s : String]
+      s <- "atopvectore"
+    end asString
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+	ATOpVectorECT.getIndex[start, q]
+	csname$s <- name
+	csname.getIndex[start, q]
+	if Arguments !== nil then
+	  Arguments.getIndex[start, q]
+	end if
+	if Results !== nil then
+	  Results.getIndex[start, q]
+	end if
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+    
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeInt[4 + 4 + 4 + 4 + 4 + 4, 4]
+      file.writeInt[0x00000000 + ATOpVectorECT.fetchIndex, 4]
+
+      file.writeInt[id, 4]
+      if isFunction then
+	x <- 1
+      else
+	x <- 0
+      end if
+      file.writeInt[x, 4]
+
+      x <- csname.fetchIndex
+      file.writeInt[x, 4]
+      if Arguments == nil then
+	x <- 0x80000000
+      else
+	x <- Arguments.fetchIndex
+      end if
+      file.writeInt[x, 4]
+      if Results == nil then
+	x <- 0x80000000
+      else
+	x <- Results.fetchIndex
+      end if
+      file.writeInt[x, 4]
+    end CPoint
+
+  function builtinOf[x : hasGenerateBuiltin] -> [r : Any]
+    if x !== nil then
+      r <- x.generateBuiltin
+    end if
+  end builtinOf
+
+  export operation generateBuiltin -> [r : AOpVectorE]
+    r <- AOpVectorE.create[id, isFunction, name, 
+	     view self.builtinOf[Arguments] as AParamList,
+	     view self.builtinOf[Results] as AParamList]
+  end generateBuiltin
+end ATOpVectorE
+
+const RefByID <- class RefByID [xid : Integer]
+    % Stuff for checkpointing
+    const obj <- "-OB-"
+    var myind : Integer <- ~1
+    const field id : Integer <- xid
+
+    export function asString -> [s : String]
+      s <- "refByID"
+    end asString
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+    
+    export operation CPoint [file : OutStream]
+      file.putString[obj]
+      OIDWriter.Out[id, file]
+    end CPoint
+
+end RefByID
+
+
+export ATCode, ATOpVector, ATOpVectorE, ATTypeVector, RefByID
+@
+
+
+1.13
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d32 1
+a32 3
+    field isImmutable   : Boolean <- false
+    field isTypeVariable: Boolean <- false
+    field value		: ATCode
+d44 21
+a76 3
+	if value !== nil then
+	  value.getIndex[start, q]
+	end if
+d95 1
+a95 1
+      file.writeInt[16 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+d98 1
+a98 18
+      if isImmutable then
+	x <- 1
+      else 
+	x <- 0
+      end if
+      file.writeInt[x, 4]
+      if isTypeVariable then
+	x <- 1
+      else 
+	x <- 0
+      end if
+      file.writeInt[x, 4]
+      if value == nil then
+	x <- 0x80000000
+      else
+	x <- value.fetchIndex
+      end if
+      file.writeInt[x, 4]
+d127 1
+a127 3
+      isImmutable,
+      isTypeVariable,
+      view self.builtinOf[value] as Signature,
+@
+
+
+1.12
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@d275 1
+a275 1
+const aot <- Array.of[RefByID]
+d280 1
+a280 1
+    field d	     : aot <- aot.create[~10]
+d474 2
+a475 1
+	     self.builtinOf[Arguments], self.builtinOf[Results]]
+@
+
+
+1.11
+log
+@Finalized merge with Mark Immels version
+@
+text
+@a0 10
+const OIDWriter <- immutable object OIDWriter
+  export operation Out [Seq : Integer, File : OutStream]
+    file.writeInt[0, 4]   % IPAddress
+    file.writeInt[0, 1]   % Emerald Instance
+    file.writeInt[0, 1]   % Unused
+    file.writeInt[0, 2]   % Epoch
+    file.writeInt[Seq, 4] % Sequence
+  end Out
+end OIDWriter
+
+@
+
+
+1.10
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d1 10
+a16 1
+  const stars <- "****"
+d36 1
+a36 2
+    file.putString[stars]
+    file.writeInt[ATCodeCTOID, 4]
+a50 1
+    const stars <- "****"
+d89 3
+a91 5
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+      file.putString[stars]
+      file.writeInt[id, 4]
+      x <- 0x40000000 + ATCodeCT.fetchIndex
+      file.writeInt[x, 4]
+a151 1
+  const stars <- "****"
+d171 1
+a171 2
+    file.putString[stars]
+    file.writeInt[ATOpVectorCTOID, 4]
+a175 1
+  const stars <- "****"
+d225 1
+a225 2
+    x <- 0x00000000 + ATOpVectorCT.fetchIndex
+    file.writeInt[x, 4]
+a261 1
+  const stars <- "****"
+d281 1
+a281 2
+    file.putString[stars]
+    file.writeInt[ATTypeVectorCTOID, 4]
+a287 1
+    const stars <- "****"
+d337 1
+a337 2
+      x <- 0x00000000 + ATTypeVectorCT.fetchIndex
+      file.writeInt[x, 4]
+a386 1
+  const stars <- "****"
+d406 1
+a406 2
+    file.putString[stars]
+    file.writeInt[ATOpVectorECTOID, 4]
+a418 1
+    const stars <- "****"
+d450 1
+a450 2
+      x <- 0x00000000 + ATOpVectorECT.fetchIndex
+      file.writeInt[x, 4]
+a489 1
+    const stars <- "****"
+d510 1
+a510 2
+      file.putString[stars]
+      file.writeInt[id, 4]
+@
+
+
+1.9
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d187 1
+a187 1
+    d(i) <- e
+d191 1
+a191 1
+    r <- d(i)
+d206 1
+a206 1
+	  const dd <- d(i)
+d229 1
+a229 1
+	const dd <- d(i)
+d249 1
+a249 1
+      dd <- d(i)
+d251 1
+a251 1
+	myv(i) <- dd.generateBuiltin
+d304 1
+a304 1
+      d(i) <- e
+d308 1
+a308 1
+      r <- d(i)
+d322 1
+a322 1
+	    const dd <- d(i)
+d345 1
+a345 1
+	  const dd <- d(i)
+d374 1
+a374 1
+      % that each d(i) is going to be a RefById.  We need to somehow create
+d378 1
+a378 1
+      dd <- d(i)
+@
+
+
+1.8
+log
+@Create AT objects under the control of executenow
+@
+text
+@d135 2
+a136 2
+      view builtinOf[value] as Signature,
+      view builtinOf[ops] as AOpVector,
+d491 1
+a491 1
+	     builtinOf[Arguments], builtinOf[Results]]
+@
+
+
+1.7
+log
+@Optimized checkpoint file format for objects without ids
+@
+text
+@d1 3
+d124 17
+d173 2
+a174 2
+    const stars <- "****"
+    const obj <- "+OB-"
+d176 2
+a177 2
+    field d	     : aoove <- aoove.create[~10]
+    var myind : Integer <- ~1
+d179 10
+a188 10
+    export function asString -> [s : String]
+      s <- "atopvector"
+    end asString
+    export operation addUpper[e : ATOpVectorE]
+      d.addUpper[e]
+    end addUpper
+    
+    export operation setElement[i : Integer, e : ATOpVectorE]
+      d(i) <- e
+    end setElement
+d190 3
+a192 3
+    export function getElement[i : Integer] -> [r : ATOpVectorE]
+      r <- d(i)
+    end getElement
+d194 3
+a196 3
+    export function upperbound -> [r : Integer]
+      r <- d.upperbound
+    end upperbound
+d198 7
+a204 30
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	const limit <- d.upperbound
+	q.addUpper[self]
+	myind <- q.upperbound
+	ATOpVectorCT.getIndex[start, q]
+	for i : Integer <- 0 while i <= limit by i <- i + 1
+	  begin
+	    const dd <- d(i)
+	    if dd !== nil then
+	      dd.getIndex[start, q]
+	    end if
+	  end 
+	end for
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+    
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeint[4 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+      x <- 0x00000000 + ATOpVectorCT.fetchIndex
+      file.writeInt[x, 4]
+      x <- d.upperbound + 1
+      file.writeInt[x, 4]
+      for i : Integer <- 0 while i <= d.upperbound by i <- i + 1
+d207 2
+a208 4
+	  if dd == nil then
+	    x <- 0x80000000
+	  else
+	    x <- dd.fetchIndex
+a210 1
+	file.writeInt[x, 4]
+d212 45
+a256 1
+    end CPoint
+d286 1
+a286 1
+const aot <- Array.of[CPAble]
+d299 1
+a299 1
+    export operation addUpper[e : CPAble]
+d303 1
+a303 1
+    export operation setElement[i : Integer, e : CPAble]
+d307 1
+a307 1
+    export function getElement[i : Integer] -> [r : CPAble]
+d355 31
+d483 10
+d495 1
+a495 1
+const RefByID <- class RefByID [id : Integer]
+d500 1
+@
+
+
+1.6
+log
+@Generate type objects for concretetypes
+@
+text
+@d154 1
+a154 1
+    const obj <- "+OB+"
+d202 1
+a202 3
+      file.writeint[12 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+      file.putString[stars]
+      file.putString[stars]
+d252 1
+a252 1
+    const obj <- "+OB+"
+d300 1
+a300 3
+      file.writeint[12 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+      file.putString[stars]
+      file.putString[stars]
+d356 1
+a356 1
+    const obj <- "+OB+"
+d386 1
+a386 3
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4, 4]
+      file.putString[stars]
+      file.putString[stars]
+@
+
+
+1.5
+log
+@Removed all monitors
+@
+text
+@d250 1
+a250 1
+const aot <- Array.of[ATCode]
+d263 1
+a263 1
+    export operation addUpper[e : ATCode]
+d267 1
+a267 1
+    export operation setElement[i : Integer, e : ATCode]
+d271 1
+a271 1
+    export function getElement[i : Integer] -> [r : ATCode]
+a353 2
+    field nargs : Integer <- 0
+    field nress : Integer <- 0
+d390 1
+a390 1
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+a396 2
+      file.writeInt[nargs, 4]
+      file.writeInt[nress, 4]
+d422 30
+a451 1
+export ATCode, ATOpVector, ATOpVectorE, ATTypeVector
+@
+
+
+1.4
+log
+@Do not set HASOID for objects without interesting ids
+@
+text
+@a6 1
+    monitor
+a8 1
+    end monitor
+a29 1
+  monitor
+a120 1
+  end monitor
+a129 1
+    monitor
+a131 1
+    end monitor
+a152 1
+  monitor
+a220 1
+  end monitor
+a227 1
+    monitor
+a229 1
+    end monitor
+a252 1
+  monitor
+a320 1
+  end monitor
+a327 1
+    monitor
+a329 1
+    end monitor
+a350 1
+  monitor
+a422 1
+  end monitor
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d212 1
+a212 1
+      x <- 0x40000000 + ATOpVectorCT.fetchIndex
+d316 1
+a316 1
+      x <- 0x40000000 + ATTypeVectorCT.fetchIndex
+d410 1
+a410 1
+      x <- 0x40000000 + ATOpVectorECT.fetchIndex
+@
+
+
+1.2
+log
+@Fixed the OID of Signatures
+@
+text
+@a0 2
+import CString from "Jekyll"
+import CPQueue from "Jekyll"
+d442 1
+a442 1
+export ATCode, ATOpVector, ATOpVectorE, ATTypeVector to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 1
+a7 1
+  const ATCodeCTOID <- 0x1800
+@

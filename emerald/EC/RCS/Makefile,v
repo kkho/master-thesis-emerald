@@ -1,0 +1,801 @@
+head	1.21;
+access;
+symbols
+	105alpha:1.20
+	104alpha:1.20
+	103alpha:1.20
+	102alpha:1.20
+	101alpha:1.20
+	100alpha:1.20
+	DIKU_0:1.7
+	carlton_start:1.4;
+locks; strict;
+comment	@# @;
+
+
+1.21
+date	2007.06.11.01.33.46;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	98.02.23.16.21.33;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	98.02.09.17.55.34;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	96.03.30.02.26.56;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	95.11.23.17.14.17;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	95.06.23.22.13.00;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.04.04.05.08.43;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.03.23.23.00.17;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.03.16.19.15.08;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.03.03.05.44.23;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.02.07.01.48.31;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.10.01.07.55.40;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.08.25.16.26.51;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.08.17.16.50.29;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.06.20.08.15.24;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.07.15.20.30.32;	author mueller;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.10.15.51.27;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.04.00.09.07;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.03.19.08.02;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Makefile for EC
+@
+
+
+1.21
+log
+@Add some new rules
+@
+text
+@#
+# EC Makefile
+#
+
+EMX = emx
+EMC = emc
+
+# To generate youtput for checking yacc's actions
+# YACCVERBOSE = -v
+
+all CP:	ident.m symbol.m \
+	buffer.m iibtable.m envtype.m ids.m glblref.m sym.m opname.m \
+	builtinl.m cpqueue.m nextoid.m cstring.m \
+	scan.m newid.m ctcode.m sitable.m  \
+	bytecode.m seq.m ontooid.m fielddcl.m param.m symdef.m atcode.m \
+	opsig.m opdef.m assignst.m block.m symref.m setq.m constdcl.m \
+	vardecl.m sugar.m atlit.m oblit.m wherewgt.m foutput.m \
+	siiiatbl.m invcache.m primstat.m invoc.m comp.m xexport.m arg.m \
+	assertst.m elsecls.m xclass.m selflit.m ifclause.m \
+	ifstat.m enumlit.m exitstat.m exp.m fieldsel.m initdef.m loopstat.m \
+	movestat.m newexp.m select.m procdef.m reclit.m \
+	recovdef.m  retfail.m retstat.m \
+	veclit.m subscrpt.m unaryexp.m \
+	xfailure.m onearg.m \
+	xunavail.m xview.m parse.m cp.m pt.m jc.m
+
+emall:	scan.m parse.m
+
+scan.m:	scanhead.m parsedef.m tokNames.m scantail.m
+	rm -f scan.m
+	cat scanhead.m parsedef.m tokNames.m scantail.m > scan.m
+	chmod a-w scan.m
+
+tokNames.m parsedef.m parse.m:	em_ecomp.y
+	@@echo "Expect no conflicts"
+	emyacc -e ${YACCVERBOSE} em_ecomp.y
+	mv -f ytab.h parsedef.m
+	rm -f parse.m tokNames.m
+	mv -f ytab.m parse.m
+	MAKETN
+	chmod -w parse.m parsedef.m tokNames.m
+
+reset:
+	rm -f CP CPIndex *.x
+	rm -f name.idb name name.ats name.oid name.opd
+
+dolinks:
+	rm -f /tmp/CP /tmp/CPIndex /tmp/name /tmp/name.ats /tmp/name.oid /tmp/name.opd /tmp/name.idb
+	ln -s /tmp/CPIndex CPIndex
+	ln -s /tmp/CP CP
+	ln -s /tmp/name name
+	ln -s /tmp/name.ats name.ats
+	ln -s /tmp/name.oid name.oid
+	ln -s /tmp/name.opd name.opd
+	ln -s /tmp/name.idb name.idb
+
+src:
+	@@egrep '^[a-z]*\.m$$' input.? t | sed -e 's/^.*://' | sort
+
+install:
+	$(EMX) -C bestCP
+	rm -f $(EMLIBDIR)/Compiler
+	cp bestCP $(EMLIBDIR)/Compiler
+	chmod -w $(EMLIBDIR)/Compiler
+
+bestCP:	execCP
+	echo >  xxinput  unset dogeneration
+	echo >> xxinput  set dotypecheck
+	echo >> xxinput  unset exporttree
+	echo >> xxinput  set compilingbuiltins
+	for x in Integer.m AOpVec.m AParamL.m AOpVecE.m AType.m Any.m Bitchunk.m Boolean.m COpVec.m COpVecE.m CType.m Char.m Cond.m Handler.m IState.m IVOfAny.m IVOfInt.m RISC.m String.m InStr.m Literal.m NLElem.m Nil.m Node.m NodeL.m OutStr.m RISA.m Real.m Signat.m Stub.m Time.m VOfChar.m VOfInt.m VOfAny.m VOfStr.m IVOfStr.m Direct.m ; do \
+	    echo >> xxinput ../Builtins/$$x ; \
+	done
+	echo >> xxinput  set exporttree
+	for x in IVec.m Vec.m Array.m Sequence.m ; do \
+	    echo >> xxinput ../Builtins/$$x ; \
+	done
+	echo >> xxinput  unset compilingbuiltins
+	echo >> xxinput  set dogeneration
+	echo >> xxinput  set perfile
+	echo >> xxinput  set generateconcurrent
+	echo >> xxinput  checkpoint bestCP
+	echo source xxinput | $(EMX) -O4m -v execCP
+	rm xxinput
+
+XCP:	
+	echo >  xxinput  unset perfile
+	echo >> xxinput  unset exporttree
+	echo >> xxinput  set dotypecheck
+	echo >> xxinput  unset docompilation
+	echo >> xxinput  load name
+	echo >> xxinput  source bt
+	echo >> xxinput  checkpoint XCP
+	echo source xxinput | $(EMC) -O8M
+	rm xxinput
+
+ffs_0:	reset
+	@@hostname
+	@@echo EMERALDROOT is $(EMERALDROOT)
+	@@echo EMERALDARCH is $(EMERALDARCH)
+	@@date
+	echo >  xxinput  set compilingcompiler
+	echo >> xxinput  unset dieonerror
+	echo >> xxinput  unset perfile
+	echo >> xxinput  unset exporttree
+	echo >> xxinput  unset generateats
+	echo >> xxinput  unset generateconcurrent
+	echo >> xxinput  unset generateviewchecking
+	echo >> xxinput  load name
+	echo >> xxinput  unset docompilation
+
+ffs_1standard:
+	echo >> xxinput  unset dotypecheck
+
+ffs_2standard:
+	echo >> xxinput  source b
+
+ffs_2special:
+	echo >> xxinput	 source all_b
+
+ffs_2fast:
+
+ffs_3:
+	echo >> xxinput  source input.0
+	echo >> xxinput  source t
+	echo >> xxinput  source input.1
+	echo >> xxinput  source input.2
+	echo >> xxinput  source input.3
+	echo >> xxinput  source input.4
+	echo >> xxinput  source input.5
+
+ffs_4:
+	csh -f -c "time $(EMC) -g1M -G2 -O8M -v" < xxinput
+
+ffs_4big:
+	csh -f -c "time $(EMC) -g1M -G2 -O20M -v" < xxinput
+
+ffs_5:
+	@@date
+	@@rm xxinput
+
+ffs:	ffs_0 ffs_1standard ffs_2standard ffs_3 ffs_4 ffs_5
+
+# This one assumes that the installed compiler has the builtins already
+# loaded, and so doesn't bother to do that again
+fffs:	ffs_0 ffs_1standard ffs_2fast ffs_3 ffs_4 ffs_5
+
+# This one uses the experimental compiler in this directory, and performs
+# type checking as well
+
+ffs_1typecheck:
+	echo >> xxinput  set dotypecheck
+	echo >> xxinput  set generateviewchecking
+
+ffs_1typechecknoviews:
+	echo >> xxinput  set dotypecheck
+
+ffs_1abcon:
+	echo >> xxinput  set useabcons
+
+tffs:	ffs_0 ffs_1typecheck ffs_2fast ffs_3 ffs_4big ffs_5
+
+ffs_1nodebug:
+	echo >> xxinput  unset generatedebuginfo
+
+
+# This one doesn't generate debug info
+sfffs:	ffs_0 ffs_1nodebug ffs_2fast ffs_3 ffs_4 ffs_5
+
+# This one sets useabcons, just for fun
+affs:	ffs_0 ffs_1abcon ffs_2fast ffs_3 ffs_4big ffs_5
+
+ftffs:	ffs_0 ffs_1typechecknoviews ffs_2fast ffs_3 ffs_4big ffs_5
+
+stffs:	ffs_0 ffs_1typechecknoviews ffs_1nodebug ffs_2fast ffs_3 ffs_4big ffs_5
+@
+
+
+1.20
+log
+@'./EC'
+@
+text
+@d118 3
+d174 2
+@
+
+
+1.19
+log
+@Checkpoint
+@
+text
+@d97 1
+a97 1
+ffs_0:	reset dolinks
+d162 1
+a162 1
+	echo >> xxinput  unset dotypecheck
+@
+
+
+1.18
+log
+@Many changes
+@
+text
+@d83 1
+a83 1
+	echo source xxinput | $(EMX) -v execCP
+d103 1
+a103 1
+	echo >> xxinput  set dieonerror
+@
+
+
+1.17
+log
+@Statement sequences
+@
+text
+@d39 1
+a39 3
+	sed -e 's/private operation/operation/' \
+	    -e '/monitor/d' < ytab.m > parse.m
+	rm -f ytab.m
+d71 1
+a71 1
+	for x in AOpVec.m AOpVecE.m AParamL.m AType.m Any.m Bitchunk.m Boolean.m COpVec.m COpVecE.m CType.m Char.m Cond.m Decoder.m Handler.m IState.m IVOfAny.m IVOfInt.m InStr.m Integer.m Literal.m NLElem.m Nil.m Node.m NodeL.m OutStr.m RISA.m RISC.m Real.m Signat.m String.m Stub.m Time.m VOfChar.m VOfInt.m VOfAny.m VOfStr.m IVOfStr.m Direct.m ; do \
+d75 1
+a75 1
+	for x in IVec.m Vec.m Array.m ; do \
+@
+
+
+1.16
+log
+@New builtins
+@
+text
+@d88 1
+a88 1
+XCP:	execCP
+d96 1
+a96 1
+	echo source xxinput | $(EMX) -O8M -v execCP
+@
+
+
+1.15
+log
+@Make type stuff work
+@
+text
+@d73 1
+a73 1
+	for x in AOpVec.m AOpVecE.m AParamL.m AType.m Any.m Bitchunk.m Boolean.m COpVec.m COpVecE.m CType.m Char.m Cond.m Decoder.m Direct.m Handler.m IState.m IVOfAny.m IVOfInt.m InStr.m Integer.m Literal.m NLElem.m Nil.m Node.m NodeL.m OutStr.m RISA.m RISC.m Real.m Signat.m String.m Stub.m Time.m VOfChar.m VOfInt.m ; do \
+@
+
+
+1.14
+log
+@Updated rules for XCP
+@
+text
+@d132 1
+a132 1
+	csh -f -c "time $(EMC) -g1M -G2 -O4M -v" < xxinput
+@
+
+
+1.13
+log
+@Fix serious GC bugs, add a new builtin
+@
+text
+@a93 1
+	echo >> xxinput  source b
+d96 1
+a96 1
+	echo source xxinput | $(EMX) -v execCP
+@
+
+
+1.12
+log
+@Re-implement the mobility primitives
+@
+text
+@d73 1
+a73 1
+	for x in AOpVec.m AOpVecE.m AParamL.m AType.m Any.m Bitchunk.m Boolean.m COpVec.m COpVecE.m CType.m Char.m Cond.m Decoder.m Direct.m Handler.m IState.m IVOfAny.m IVOfInt.m InStr.m Integer.m NLElem.m Nil.m Node.m NodeL.m OutStr.m RISA.m RISC.m Real.m Signat.m String.m Stub.m Time.m VOfChar.m VOfInt.m ; do \
+d105 2
+a106 1
+	echo >  xxinput  set dieonerror
+@
+
+
+1.11
+log
+@New emmake needs "all" defined
+@
+text
+@d13 2
+a14 2
+	builtinl.m charlit.m intlit.m cpqueue.m nextoid.m cstring.m \
+	reallit.m strlit.m scan.m newid.m ctcode.m sitable.m  \
+d19 1
+a19 1
+	assertst.m boollit.m elsecls.m xclass.m selflit.m ifclause.m \
+d24 1
+a24 1
+	nillit.m  xfailure.m onearg.m \
+@
+
+
+1.10
+log
+@Use new streams code
+@
+text
+@d11 1
+a11 1
+CP:	ident.m symbol.m \
+@
+
+
+1.9
+log
+@Even better semantics checks, avoid invoking nil, fix class
+@
+text
+@a81 1
+	echo >> xxinput  unset exporttree
+a155 1
+	echo >> xxinput  unset generateviewchecking
+@
+
+
+1.8
+log
+@Improved constant type assignment
+@
+text
+@d91 1
+d106 3
+a108 1
+	echo >  xxinput  unset perfile
+@
+
+
+1.7
+log
+@Cleaned up Makefile targets
+@
+text
+@d152 4
+d170 2
+@
+
+
+1.6
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@a69 11
+	echo >> xxinput  set exporttree
+	echo >> xxinput  unset dotypecheck
+	echo >> xxinput  set compilingbuiltins
+	for x in Any.m AType.m Bitchunk.m Boolean.m Char.m IVec.m IVOfAny.m Integer.m InStr.m Node.m OutStr.m Real.m Signat.m String.m Time.m Vec.m VOfChar.m IVOfInt.m CType.m RISC.m RISA.m Array.m ; do \
+	    echo >> xxinput ../Builtins/$$x ; \
+	done
+	echo >> xxinput  unset compilingbuiltins
+	echo >> xxinput  set dogeneration
+	echo >> xxinput  unset exporttree
+	echo >> xxinput  set perfile
+	echo >> xxinput  set generateconcurrent
+a70 7
+	echo >> xxinput  checkpoint bestCP
+	echo source xxinput | $(EMX) -v execCP
+	rm xxinput
+
+xbestCP:	execCP
+	echo >  xxinput  unset dogeneration
+	echo >> xxinput  set dotypecheck
+d85 1
+a85 1
+	echo >> xxinput  checkpoint xbestCP
+d91 3
+a93 1
+	echo >> xxinput  unset dotypecheck
+d108 3
+a111 1
+
+a118 7
+	echo >> xxinput  load name
+	echo >> xxinput  unset dogeneration
+	echo >> xxinput  set exporttree
+	echo >> xxinput  ../Builtins/InStr.m
+	echo >> xxinput  unset exporttree
+	echo >> xxinput  set dogeneration
+	echo >> xxinput  unset docompilation
+d132 1
+a132 1
+ffs_4_typecheck:
+d150 1
+d152 2
+a153 1
+tffs:	ffs_0 ffs_1typecheck ffs_2fast ffs_3 ffs_4_typecheck ffs_5
+d155 2
+d163 3
+@
+
+
+1.5
+log
+@8.3 file names
+@
+text
+@d34 1
+a34 1
+tokNames.m parsedef.m parse.m:	em_ecomp.y 
+d47 1
+a47 2
+	rm -f name.idb
+	cp /dev/null name
+d49 10
+d72 2
+a73 1
+	for x in AType.m Bitchunk.m Boolean.m Char.m IVec.m IVOfAny.m Integer.m InStr.m Node.m OutStr.m Real.m Signat.m String.m Time.m Vec.m VOfChar.m IVOfInt.m CType.m Array.m ; do \
+d76 1
+d78 1
+a78 1
+	echo >> xxinput  unset exporttree 
+d86 21
+d116 1
+a116 2
+# to experiment with ffs, duplicate this entry and modify the copy
+ffs:	reset
+a120 1
+	(cd $(EMLIBDIR) ; $(EMMAKE) reset)
+a121 1
+	echo >> xxinput  unset dotypecheck
+d124 6
+a129 1
+	echo >> xxinput  set generatedebuginfo
+a130 11
+	echo >> xxinput  source input.0
+	echo >> xxinput  source t
+	echo >> xxinput  source input.1
+	echo >> xxinput  source input.2
+	echo >> xxinput  source input.3
+	echo >> xxinput  source input.4
+	echo >> xxinput  source input.5
+	csh -f -c "time $(EMERALDROOT)/bin/$(EMERALDARCH)/emx \
+	      -g1M -G2 -O4M -v $(EMERALDROOT)/lib/Compiler" < xxinput
+	@@date
+	@@rm xxinput
+d132 1
+a132 13
+# This one assumes that the installed compiler has the builtins already 
+# loaded, and so doesn't bother to do that again
+fffs:	reset
+	@@hostname
+	@@echo EMERALDROOT is $(EMERALDROOT)
+	@@echo EMERALDARCH is $(EMERALDARCH)
+	@@date
+	(cd $(EMLIBDIR) ; $(EMMAKE) reset)
+	echo >  xxinput  unset perfile
+	echo >> xxinput  unset dotypecheck
+	echo >> xxinput  unset generateats
+	echo >> xxinput  unset generateconcurrent
+	echo >> xxinput  set generatedebuginfo
+d134 5
+d140 2
+a148 4
+	csh -f -c "time $(EMERALDROOT)/bin/$(EMERALDARCH)/emx \
+	      -g1M -G2 -O4M -v $(EMERALDROOT)/lib/Compiler" < xxinput
+	@@date
+	@@rm xxinput
+d150 2
+a151 1
+# This one uses the experimental compiler in this directory
+d153 4
+a156 4
+xffs:	reset
+	@@hostname
+	@@echo EMERALDROOT is $(EMERALDROOT)
+	@@echo EMERALDARCH is $(EMERALDARCH)
+a157 17
+	(cd $(EMLIBDIR) ; $(EMMAKE) reset)
+	echo >  xxinput  unset perfile
+	echo >> xxinput  unset generateats
+	echo >> xxinput  unset generateconcurrent
+	echo >> xxinput  unset dotypecheck
+	echo >> xxinput  set generatedebuginfo
+	echo >> xxinput  source b
+	echo >> xxinput  source input.0
+	echo >> xxinput  source t
+	echo >> xxinput  source input.1
+	echo >> xxinput  source input.2
+	echo >> xxinput  source input.3
+	echo >> xxinput  source input.4
+	echo >> xxinput  source input.5
+	csh -f -c "time $(EMERALDROOT)/bin/$(EMERALDARCH)/emx \
+	      -g1M -G2 -O4M -v -G$(GENERATIONSIZE) $(EMERALDROOT)/EC/execCP" < xxinput
+	@@date
+d160 7
+a166 1
+# This one uses the experimental compiler in this directory, and performs 
+d169 1
+a169 9
+xtffs:	reset
+	@@hostname
+	@@echo EMERALDROOT is $(EMERALDROOT)
+	@@echo EMERALDARCH is $(EMERALDARCH)
+	@@date
+	(cd $(EMLIBDIR) ; $(EMMAKE) reset)
+	echo >  xxinput  unset perfile
+	echo >> xxinput  unset generateats
+	echo >> xxinput  unset generateconcurrent
+a170 13
+	echo >> xxinput  set generatedebuginfo
+	echo >> xxinput  source b
+	echo >> xxinput  source input.0
+	echo >> xxinput  source t
+	echo >> xxinput  source input.1
+	echo >> xxinput  source input.2
+	echo >> xxinput  source input.3
+	echo >> xxinput  source input.4
+	echo >> xxinput  source input.5
+	csh -f -c "time $(EMERALDROOT)/bin/$(EMERALDARCH)/emx \
+	      -g1M -G2 -O20M -Tmemory -v $(EMERALDROOT)/EC/execCP" < xxinput
+	@@date
+	@@rm xxinput
+d172 8
+@
+
+
+1.4
+log
+@added some variants on ffs target, and new install target
+@
+text
+@d12 8
+a19 8
+	buffer.m iibtable.m envtype.m ids.m globalref.m sym.m opname.m \
+	builtinlit.m charlit.m intlit.m cpqueue.m nextoid.m cstring.m \
+	reallit.m stringlit.m scan.m newid.m ctcode.m sitable.m  \
+	bytecode.m seq.m opnametooid.m fielddecl.m param.m symdef.m atcode.m \
+	opsig.m opdef.m assignstat.m block.m symref.m setq.m constdecl.m \
+	vardecl.m sugar.m atlit.m oblit.m wherewidgit.m foutput.m \
+	siiiatable.m invoccache.m primstat.m invoc.m comp.m xexport.m arg.m \
+	assertstat.m boollit.m elseclause.m xclass.m selflit.m ifclause.m \
+d21 3
+a23 3
+	movestat.m newexp.m selection.m processdef.m recordlit.m \
+	recoverydef.m  returnfail.m returnstat.m \
+	vectorlit.m subscript.m unaryexp.m \
+d29 1
+a29 1
+scan.m:	scanhead.m parsedef.m tokenNames.m scantail.m
+d31 1
+a31 1
+	cat scanhead.m parsedef.m tokenNames.m scantail.m > scan.m
+d34 3
+a36 4
+tokenNames.m parsedef.m parse.m:	em.ecompiler.y 
+	@@echo "Expect conflicts: 17 shift/reduce, 3 reduce/reduce"
+	@@echo "Or maybe: 8 shift/reduce, 1 reduce/reduce"
+	emyacc -e ${YACCVERBOSE} em.ecompiler.y
+d38 1
+a38 1
+	rm -f parse.m tokenNames.m
+d42 2
+a43 2
+	MAKETOKENNAMES
+	chmod -w parse.m parsedef.m tokenNames.m
+d63 1
+a63 1
+	for x in AType.m Bitchunk.m Boolean.m Character.m IVector.m IVectorOfAny.m Integer.m InStream.m Node.m OutStream.m Real.m Signature.m String.m Time.m Vector.m VectorOfChar.m IVectorOfInt.m CType.m Array.m ; do \
+d105 1
+a105 1
+	      -M12 -v $(EMERALDROOT)/lib/Compiler" < xxinput
+d132 1
+a132 1
+	      -M12 -v $(EMERALDROOT)/lib/Compiler" < xxinput
+d158 1
+a158 1
+	      -M12 -v -G$(GENERATIONSIZE) $(EMERALDROOT)/EC/execCP" < xxinput
+d185 1
+a185 1
+	      -M12 -v $(EMERALDROOT)/EC/execCP" < xxinput
+@
+
+
+1.3
+log
+@Implement external dictionary for symbol lookups
+@
+text
+@d9 1
+a9 1
+YACCVERBOSE =
+d36 1
+d54 6
+d106 1
+a106 1
+	      -M8 -v $(EMERALDROOT)/lib/Compiler" < xxinput
+d110 3
+a112 1
+tffs:	reset
+d119 1
+d122 26
+d159 28
+a186 1
+	      -M12 -v $(EMERALDROOT)/NEC/execCP" < xxinput
+@
+
+
+1.2
+log
+@ffs mechanism moved to a target in Makefile from csh script
+@
+text
+@d36 1
+a36 1
+	../emyacc/emyacc -e ${YACCVERBOSE} em.ecompiler.y
+d57 1
+a57 1
+	for x in AType.m Bitchunk.m Boolean.m Character.m IVector.m IVectorOfAny.m Integer.m InStream.m Node.m OutStream.m Real.m Signature.m String.m Time.m Vector.m VectorOfChar.m CType.m Array.m ; do \
+d112 1
+d123 1
+a123 1
+	      -M8 -v $(EMERALDROOT)/lib/Compiler" < xxinput
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+d54 3
+a56 3
+	echo unset dogeneration > xxinput
+	echo set exporttree >> xxinput
+	echo unset dotypecheck >> xxinput
+d58 1
+a58 1
+	    echo ../Builtins/$$x >> xxinput ; \
+d60 6
+a65 6
+	echo set dogeneration >> xxinput
+	echo unset exporttree >> xxinput
+	echo set perfile >> xxinput
+	echo set generateconcurrent >> xxinput
+	echo set dotypecheck >> xxinput
+	echo checkpoint bestCP >> xxinput
+d70 5
+a74 5
+	echo unset perfile > xxinput
+	echo unset dotypecheck >> xxinput
+	echo source b >> xxinput
+	echo source bt >> xxinput
+	echo checkpoint XCP >> xxinput
+d77 49
+@

@@ -1,0 +1,75 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	94.10.01.07.55.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.09.15.18.49.20;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Improved constant type assignment
+@
+text
+@export ObjectTable
+
+const ObjectTable <- immutable object ObjectTable
+  const table : ITTable <- ITTable.create[517]
+  export operation Lookup [id : Integer] -> [r : Tree]
+    r <- table.Lookup[id]
+  end Lookup
+  export operation Define [id : Integer, r : Tree]
+    table.Insert[id, r]
+  end Define
+  export operation okForNextOID [id : Integer]
+    table.okForNextOID[id]
+  end okForNextOID
+end ObjectTable
+@
+
+
+1.2
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d4 1
+a4 1
+  const table : ITTable <- ITTable.create[256]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+a4 1
+  const table <- ITTable.create[256]
+@

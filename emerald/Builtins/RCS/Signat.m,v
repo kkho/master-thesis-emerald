@@ -1,0 +1,182 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.2
+	immel_start:1.2;
+locks; strict;
+
+
+1.5
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.09.03.04.15.29;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.17.03.10.01;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.45.15;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.45.12;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.5
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)Signature.m	1.2  3/6/91
+%
+const Signature <- immutable object signature builtin 0x1009
+    const PAT <- immutable typeobject PAT builtin 0x1609
+      function getSignature -> [Signature]
+      function getFlags -> [Integer]
+      function getOps -> [AOpVector]
+      function getName -> [String]
+      function getFileName -> [String]
+      function getIsImmutable -> [Boolean]
+      function getIsTypeVariable -> [Boolean]
+    end PAT
+    export function getSignature -> [result : Signature]
+      result <- PAT
+    end getSignature
+    export operation create [
+      pFlags : Integer,
+      pops : AOpVector,
+      pname : String,
+      pfilename : String] -> [r : PAT]
+      r <- immutable object aSignature builtin 0x1409
+	const flags <- pFlags
+	attached const ops <- pops
+	attached const name <- pname
+	attached const filename <- pfilename
+	
+	export function getSignature -> [ r : Signature ]
+	  primitive self [r] <- []
+	end getSignature
+
+	export function getFlags -> [r : Integer]
+	  r <- flags
+	end getFlags
+	export function getOps -> [r : AOpVector]
+	  r <- ops
+	end getOps
+	export function getName -> [r : String]
+	  r <- name
+	end getName
+	export function getFileName -> [r : String]
+	  r <- fileName
+	end getFileName
+	export function getIsTypeVariable -> [r : Boolean]
+	  r <- flags.getBit[31]
+	end getIsTypeVariable
+	export function getIsImmutable -> [r : Boolean]
+	  r <- flags.getBit[30]
+	end getIsImmutable
+      end aSignature
+    end create
+  end signature
+
+export Signature to "Builtins"
+@
+
+
+1.4
+log
+@Fix attached for builtins
+@
+text
+@d4 2
+a5 2
+const Signature == immutable object signature builtin 0x1009
+    const PAT == immutable typeobject PAT builtin 0x1609
+d11 2
+d44 6
+a49 1
+
+@
+
+
+1.3
+log
+@Add isvector field to Signatures
+@
+text
+@d22 3
+a24 3
+	const ops <- pops
+	const name <- pname
+	const filename <- pfilename
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d7 1
+a7 3
+      function getIsImmutable -> [Boolean]
+      function getIsTypeVariable -> [Boolean]
+      function getValue -> [PAT]
+d16 1
+a16 3
+      pisImmutable : Boolean,
+      pisTypeVariable : Boolean,
+      pvalue : PAT,
+d21 1
+a21 3
+	const isImmutable <- pisImmutable
+	const isTypeVariable <- pisTypeVariable
+	const value <- pvalue
+d30 3
+a32 9
+	export function getIsImmutable -> [r : Boolean]
+	  r <- isImmutable
+	end getIsImmutable
+	export function getIsTypeVariable -> [r : Boolean]
+	  r <- isTypeVariable
+	end getIsTypeVariable
+	export function getValue -> [r : PAT]
+	  r <- value
+	end getValue
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Signature.m	1.1  3/6/91
+d5 1
+a5 1
+    const PAT == immutable type PAT builtin 0x1609
+@

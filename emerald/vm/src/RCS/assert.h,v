@@ -1,0 +1,118 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@#ifndef _EMERALD_ASSERT_H
+#define _EMERALD_ASSERT_H
+
+#ifdef linux
+extern void myabort(void);
+#define abort() myabort()
+#endif
+
+extern void FatalError(char *ErrorMessage);
+
+# ifdef lint
+#  define assert(ex) {int assert__x_; assert__x_ = (ex); assert__x_ = assert__x_;}
+#  define _assert(ex) {int assert__x_; assert__x_ = (ex); assert__x_ = assert__x_;}
+# else
+#  ifndef NDEBUG
+#   define assertMessage "Assertion failed: file %s, line %d"
+#   define _assert(ex) {if (!(ex)){printf(assertMessage, __FILE__, __LINE__); abort();}}
+#   define assert(ex) {if (!(ex)){printf(assertMessage, __FILE__, __LINE__);abort();}}
+#  else
+#   define _assert(ex) ;
+#   define assert(ex) ;
+#  endif
+# endif
+#endif
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@a0 3
+/* comment me!
+ */
+
+d16 3
+a18 5
+#   define assertMessage "Assertion failed: file %s, line %d\n"
+#   define _assert(ex) {if (!(ex)){fprintf(stderr,\
+     assertMessage, __FILE__, __LINE__); abort();}}
+#   define assert(ex) {if (!(ex)){fprintf(stderr,\
+     assertMessage, __FILE__, __LINE__);abort();}}
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@a5 7
+#ifndef FILE
+#pragma warning(disable: 4068)
+#pragma pointer_size save
+#pragma pointer_size long
+#include <stdio.h>
+#pragma pointer_size restore
+#endif
+d11 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 2
+#ifndef _ASSERT_H
+#define _ASSERT_H
+d7 1
+d12 5
+@

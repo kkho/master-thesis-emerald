@@ -1,0 +1,100 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	2007.06.11.01.25.07;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.01.22.00.05.57;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.03.01.23.30.12;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.4
+log
+@Update the constant for the sanity check on dates
+@
+text
+@const tnode <- object tnode
+  const myTest <- runtest.create[stdin, stdout, "tnode"]
+  initially
+    const mynode : Node <- locate self
+    var now, other : Time
+    var lnn : Integer
+    now <- mynode.getTimeOfDay
+    other <- Time.create[0,0]
+    myTest.check[now >= other, "now >= other"]
+    % This test will start failing again in about 2010
+    myTest.check[now <= Time.create[60*60*24*366*40, 0], "now <= Time.create[60*60*24*366*40, 0]"]
+    myTest.done
+  end initially
+end tnode
+@
+
+
+1.3
+log
+@Fix to use <- instead of ==, better tests of vectors
+@
+text
+@d10 2
+a11 1
+    myTest.check[now <= Time.create[60*60*24*366*30, 0], "now <= Time.create[60*60*24*366*30, 0]"]
+@
+
+
+1.2
+log
+@Fix the type of node
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "tnode"]
+d4 1
+a4 1
+    const mynode : Node == locate self
+a10 3
+    lnn <- mynode$lnn
+    myTest.check[lnn >= 0, "lnn >= 0"]
+    myTest.check[lnn < 256, "lnn < 256"]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+a4 1
+    const mynode == locate self
+@

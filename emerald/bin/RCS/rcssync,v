@@ -1,0 +1,74 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	93.06.18.18.34.53;	author mueller;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.15.01.52.43;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.51.10;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@rcs support tool
+@
+
+
+1.3
+log
+@fix for sun4.  sun4 make treats command line macro definition
+as a target when Makefile '-' is specified with -f
+@
+text
+@#! /bin/csh
+foreach i (RCS/*)
+    set j = `echo $i:t | sed -e 's/,v//'`
+    make -f - $j REAL=$j RCS=$i <<\E\O\F
+$(REAL) : $(RCS)
+	co $(REAL)
+\E\O\F
+end
+
+@
+
+
+1.2
+log
+@no longer needs coMakefile in lib directory
+@
+text
+@d4 1
+a4 1
+    make -f - REAL=$j RCS=$i <<\E\O\F
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+    make -f $EMERALDROOT/lib/coMakefile REAL=$j RCS=$i
+d9 1
+@

@@ -1,0 +1,468 @@
+head	1.11;
+access;
+symbols
+	105alpha:1.11
+	104alpha:1.10
+	103alpha:1.10
+	102alpha:1.10
+	101alpha:1.10
+	100alpha:1.10
+	DIKU_0:1.8
+	immel_start:1.4;
+locks; strict;
+
+
+1.11
+date	99.02.22.22.25.47;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.03.03.05.46.25;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.08.17.17.02.24;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.06.16.05.25.31;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.02.22.45.03;	author mueller;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.31.01.54.30;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.06.01.18.19.10;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.05.25.19.44.21;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.44.34;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.44.33;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.11
+log
+@Added a rawRead to facilitate binary I/O
+@
+text
+@% InStr.m - modified from stock version to use CCALLS
+%		by Brian Edmonds <edmonds@@cs.ubc.ca> 94Nov05
+
+export InStream to "Builtins"
+
+const InStream <- immutable object InStream builtin 0x1010
+
+  const InStreamType <- typeobject InStreamType builtin 0x1610
+    operation getChar -> [Character]
+    operation unGetChar [ Character ]
+    operation getString -> [ String ]
+    function eos -> [Boolean]
+    operation close
+    function isATty -> [Boolean]
+    operation fillVector [VectorOfChar] -> [Integer]
+    operation rawRead [VectorOfChar] -> [Integer]
+  end InStreamType
+
+  export function getSignature -> [ r : Signature ]
+    r <- InStreamType
+  end getSignature
+
+  export operation fromUnix[ fn: String, mode: String ] -> [ r: InStreamType ]
+    var fd: Integer <- -1
+    var url: String <- fn
+
+    if mode[0] != 'r' then return
+    elseif mode = "r+" or mode = "rb+" then url <- "+<" || url
+    else url <- "<" || url
+    end if
+    primitive "NCCALL" "EMSTREAM" "EMS_OPEN" [fd] <- [url]
+    if fd >= 0 then r <- self.create[fd] end if
+  end fromUnix
+
+  export operation create [ fd: Integer ] -> [ r: InStreamType ]
+    r <- object aUnixInStream builtin 0x1410
+      export operation unGetChar[ c: Character ]
+	primitive "NCCALL" "EMSTREAM" "EMS_UNGETC" [] <- [fd,c]
+      end unGetChar
+
+      export operation getChar -> [ c: Character ]
+	primitive "NCCALL" "EMSTREAM" "EMS_GETC" [c] <- [fd]
+      end getChar
+
+      export operation getString -> [ s: String ]
+	primitive "NCCALL" "EMSTREAM" "EMS_GETS" [s] <- [fd]
+      end getString
+
+      export function eos -> [ r: Boolean ]
+	primitive "NCCALL" "EMSTREAM" "EMS_EOS" [r] <- [fd]
+      end eos
+
+      export operation close 
+	primitive "NCCALL" "EMSTREAM" "EMS_CLOSE" [] <- [fd]
+      end close
+
+      export function isATty -> [ r: Boolean ]
+	primitive "NCCALL" "EMSTREAM" "EMS_ISATTY" [r] <- [fd]
+      end isATty
+
+      export operation fillVector[ v: VectorOfChar ] -> [ len: Integer ]
+	primitive "NCCALL" "EMSTREAM" "EMS_FILLV" [len] <- [fd,v]
+      end fillVector
+
+      export operation rawRead[ v: VectorOfChar ] -> [ len: Integer ]
+	primitive "NCCALL" "EMSTREAM" "EMS_RAWREAD" [len] <- [fd,v]
+      end rawRead
+
+    end aUnixInStream
+  end create
+end InStream
+
+% EOF
+@
+
+
+1.10
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@d16 1
+d64 4
+@
+
+
+1.9
+log
+@Use new streams code
+@
+text
+@d30 1
+a30 1
+    primitive "CCALL" "EMSTR_OPEN" [fd] <- [url]
+d37 1
+a37 1
+	primitive "CCALL" "EMSTR_UNGETC" [] <- [fd,c]
+d41 1
+a41 1
+	primitive "CCALL" "EMSTR_GETC" [c] <- [fd]
+d45 1
+a45 1
+	primitive "CCALL" "EMSTR_GETS" [s] <- [fd]
+d49 1
+a49 1
+	primitive "CCALL" "EMSTR_EOS" [r] <- [fd]
+d53 1
+a53 1
+	primitive "CCALL" "EMSTR_CLOSE" [] <- [fd]
+d57 1
+a57 1
+	primitive "CCALL" "EMSTR_ISATTY" [r] <- [fd]
+d61 1
+a61 1
+	primitive "CCALL" "EMSTR_FILLV" [len] <- [fd,v]
+@
+
+
+1.8
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d1 3
+a3 3
+% 
+% @@(#)InStream.m	1.2  3/6/91
+%
+d22 7
+a28 4
+  export operation fromUnix [fn : String, mode : String] -> [r : InStreamType]
+    var f : Integer <- ~1
+    if mode[0] != 'r' then
+      return
+d30 2
+a31 4
+    primitive "SYS" "JFOPEN" 2 [f] <- [fn, mode]
+    if f != 0 then
+      r <- self.create[f]
+    end if
+d34 1
+a34 1
+  export operation create [ f : Integer ] -> [r : InStreamType]
+d36 2
+a37 3
+      const myf : Integer <- f
+      export operation unGetChar [r : Character]
+	primitive "SYS" "FUNGETCHAR" 2 [] <- [myf, r]
+d40 2
+a41 2
+      export operation getChar -> [r : Character]
+	primitive "SYS" "FGETCHAR" 1 [r] <- [myf]	
+d44 2
+a45 2
+      export operation getString -> [r : String]
+	primitive "SYS" "FGETSTRING" 1 [r] <- [myf]
+d48 2
+a49 2
+      export function eos -> [r : Boolean]
+	primitive "SYS" "FEOS" 1 [r] <- [myf]
+d53 1
+a53 1
+	primitive "SYS" "FCLOSE" 1 [] <- [myf]
+d56 2
+a57 2
+      export function isATty -> [r : Boolean]
+	primitive "SYS" "FISATTY" 1 [r] <- [myf]
+d60 2
+a61 2
+      export operation fillVector [v : VectorOfChar] -> [r : Integer]
+	primitive "SYS" "FGETSTRINGV" 2 [r] <- [myf, v]
+d63 1
+d67 2
+@
+
+
+1.7
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d15 1
+d59 4
+@
+
+
+1.6
+log
+@fromUnix now takes an fopen style mode string
+@
+text
+@d23 1
+a23 1
+    if mode(0) != 'r' then
+@
+
+
+1.5
+log
+@Rename FOPEN to JFOPEN to avoid system definition
+@
+text
+@d6 3
+a8 2
+const InStream == immutable object InStream builtin 0x1010
+  const InStreamType == typeobject InStreamType builtin 0x1610
+d21 1
+a21 1
+  export operation fromUnix [fn : String, flags : Integer, mode : Integer] -> [r : InStreamType]
+d23 5
+a27 2
+    primitive "SYS" "JFOPEN" 3 [f] <- [fn, flags, mode]
+    if f >= 0 then
+@
+
+
+1.4
+log
+@New faster unix streams
+@
+text
+@d22 1
+a22 1
+    primitive "SYS" "FOPEN" 3 [f] <- [fn, flags, mode]
+@
+
+
+1.3
+log
+@Use smaller buffers that fit in garbage collector pages
+@
+text
+@d21 4
+a24 4
+    var fd : Integer <- ~1
+    primitive "SYS" "JOPEN" 3 [fd] <- [fn, flags, mode]
+    if fd >= 0 then
+      r <- self.create[fd]
+d28 1
+a28 1
+  export operation create [ fd : Integer ] -> [r : InStreamType]
+d30 4
+a33 8
+      const myfd : Integer == fd
+      monitor
+	var isBroken :    Boolean <- false
+	const BUFSIZE == 2048
+	var maxValidIndex : Integer <- ~1
+	var minValidIndex : Integer <- 0
+	var isClosed :    Boolean <- myfd < 0
+	const buffer == VectorOfChar.create[BUFSIZE]
+d35 3
+a37 14
+	export operation unGetChar [r : Character]
+	  if isBroken or isClosed then returnAndFail end if
+	  if minValidIndex > 0 then
+	    minValidIndex <- minValidIndex - 1
+	    buffer(minValidIndex) := r
+	  elseif maxValidIndex < minValidIndex then
+	    % the buffer is empty
+	    minValidIndex <- 0
+	    maxValidIndex <- 0
+	    buffer(minValidIndex) := r
+	  else
+	    returnAndFail
+	  end if
+	end unGetChar
+d39 3
+a41 19
+	export operation getChar -> [r : Character]
+	  if isClosed or isBroken then returnAndFail end if
+	  if maxValidIndex < minValidIndex then
+	    % there is nothing in the buffer
+	    if isBroken then
+	      maxValidIndex <- ~1
+	    else
+	      primitive "SYS" "JREAD" 2 [maxValidIndex] <- [myfd, buffer]
+	    end if
+	    minValidIndex <- 0
+	  end if
+	  if maxValidIndex < minValidIndex then
+	    isClosed <- true
+	    returnAndFail
+	  else
+	    r <- buffer(minValidIndex)
+	    minValidIndex <- minValidIndex + 1
+	  end if
+	end getChar
+d43 3
+a45 37
+	export operation getString -> [r : String]
+	  var c : Character
+	  var start : Integer
+	  var s : String
+	  r <- nil
+	  if isClosed or isBroken then returnAndFail end if
+	  loop
+	    exit when isClosed
+	    if maxValidIndex < minValidIndex then
+	      % there is nothing in the buffer
+	      if isBroken then
+		maxValidIndex <- ~1
+	      else
+		primitive "SYS" "JREAD" 2 [maxValidIndex] <- [myfd, buffer]
+	      end if
+	      minValidIndex <- 0
+	    end if
+	    if maxValidIndex < minValidIndex then
+	      isClosed <- true
+	      exit
+	    end if
+	    start <- minValidIndex
+	    loop
+	      exit when maxValidIndex < minValidIndex
+	      c <- buffer(minValidIndex)
+	      minValidIndex <- minValidIndex + 1
+	      exit when c = '\n'
+	    end loop
+	    s <- String.FLiteral[buffer, start, minValidIndex - start]
+	    if r == nil then
+	      r <- s
+	    else
+	      r <- r || s
+	    end if
+	    exit when c = '\^J'
+	  end loop
+	end getString
+d47 3
+a49 17
+	export function eos -> [r : Boolean]
+	  if isClosed or isBroken then
+	    r <- true
+	  else
+	    if maxValidIndex < minValidIndex then
+	      % there is nothing in the buffer
+	      if isBroken then
+		maxValidIndex <- ~1
+	      else
+		primitive "SYS" "JREAD" 2 [maxValidIndex] <- [myfd, buffer]
+	      end if
+	      minValidIndex <- 0
+	    end if
+	    isClosed <- maxValidIndex < minValidIndex
+	    r <- isClosed
+	  end if
+	end eos
+d51 3
+a53 14
+	export operation close 
+	  if isBroken then returnAndFail end if
+	  if myfd > 0 then
+	    isClosed <- true
+	    maxValidIndex <- ~1
+	    primitive "SYS" "JCLOSE" 1 [] <- [myfd]
+	    myfd <- ~1
+	  end if
+	end close
+
+	export function isATty -> [r : Boolean]
+	  primitive "SYS" "JISATTY" 1 [r] <- [myfd]
+	end isATty
+      end monitor
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d33 1
+a33 1
+	const BUFSIZE == 8192
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)InStream.m	1.1  3/6/91
+d7 1
+a7 1
+  const InStreamType == type InStreamType builtin 0x1610
+@

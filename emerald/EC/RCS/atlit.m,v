@@ -1,0 +1,2048 @@
+head	1.37;
+access;
+symbols
+	105alpha:1.37
+	104alpha:1.37
+	103alpha:1.37
+	102alpha:1.37
+	101alpha:1.37
+	100alpha:1.37
+	DIKU_0:1.27
+	carlton_start:1.21
+	immel_start:1.9;
+locks; strict;
+
+
+1.37
+date	98.03.02.16.38.38;	author norm;	state Exp;
+branches;
+next	1.36;
+
+1.36
+date	98.02.09.17.55.34;	author norm;	state Exp;
+branches;
+next	1.35;
+
+1.35
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.34;
+
+1.34
+date	96.03.24.23.03.43;	author norm;	state Exp;
+branches;
+next	1.33;
+
+1.33
+date	96.03.17.03.03.59;	author norm;	state Exp;
+branches;
+next	1.32;
+
+1.32
+date	95.06.23.22.13.28;	author norm;	state Exp;
+branches;
+next	1.31;
+
+1.31
+date	95.04.04.05.08.43;	author norm;	state Exp;
+branches;
+next	1.30;
+
+1.30
+date	94.12.06.20.12.48;	author norm;	state Exp;
+branches;
+next	1.29;
+
+1.29
+date	94.10.01.07.55.40;	author norm;	state Exp;
+branches;
+next	1.28;
+
+1.28
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	94.08.22.23.43.41;	author norm;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	94.08.17.16.50.31;	author norm;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	93.12.20.21.09.00;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.06.03.21.07.46;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.03.27.15.27.32;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.03.11.20.46.16;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.03.01.03.13.29;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.10.17.06.43;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.27.21.15.08;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.08.03.09.26.41;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.06.01.18.02.31;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.05.25.09.56.50;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.05.19.12.08.43;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.05.18.12.04.55;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.50.30;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.50.29;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.50.26;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.50.25;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.37
+log
+@'./EC'
+@
+text
+@
+export Atlit
+
+const hasNeedAT <- typeobject hasNeedAT
+  operation needAT[Integer, Tree]
+end hasNeedAT
+
+const atlit <- class Atlit (OTree) [xxsfname : Tree, xxname : Tree, xxops : Tree]
+  class export operation build[v : Signature] -> [r : ATLit]
+    const it <- Environment.getEnv.getITable
+    const name <- sym.create[0, it.Lookup[v$name, 999]]
+    var id_seq : Integer
+    var ops : Seq <- Seq.create[0]
+    
+    for i : Integer <- 0 while i <= v$ops.upperbound by i <- i + 1
+      const theop <- v$ops[i]
+      var params, results, sig : Tree
+      
+      params <- seq.create[0]
+      results <- seq.create[0]
+      sig <- nil
+      ops.rcons[sig]
+    end for
+    r <- ATLit.create[0, Literal.StringL[0, "No source file"], name, nil]
+    r$isImmutable <- v$flags.getbit[30]
+    primitive "GETIDSEQ" [id_seq] <- [v]
+    r$id <- id_seq
+    r$alreadyGenerated <- true
+  end build
+  class operation scan[s : String, si : Integer, delim1 : Character, delim2 : Character]
+    -> [r : String, ni : Integer]
+    const limit <- s.upperbound
+    var c : Character
+
+    ni <- si
+    loop
+      exit when ni > limit
+      c <- s[ni]
+      exit when c = delim1 or c = delim2
+      ni <- ni + 1
+    end loop
+    r <- s[si, ni - si]
+  end scan
+
+  class operation getlist [s : String, psi : Integer] -> [r : Tree, ni : Integer]
+    var si : Integer <- psi
+    var n : String
+    var c : Character
+    c <- s[si] si <- si + 1
+    assert c = '['
+    if s[si] != ']' then
+      const theseq <- seq.create[0]
+      loop
+	exit when s[si] == ']'
+	n, ni <- atlit.scan[s, si, ',', ']']
+	const thetype <- globalref.create[0, Integer.Literal[n], 0x1609, nil, nil, nil]
+	theseq.rcons[thetype]
+	if s[ni] = ',' then
+	  si <- ni + 1
+	else
+	  si <- ni
+	end if
+      end loop
+      r <- theseq
+    end if
+    c <- s[si] si <- si + 1
+    assert c = ']'
+    ni <- si
+  end getlist
+
+  class export operation fromText [s : String] -> [r : Tree]
+    const realr <- atlit.create[0, Literal.StringL[0, "unknown"], nil, nil]
+    var index : Integer <- 0
+    var limit : Integer <- s.upperbound
+    var term  : Integer
+    var c : Character
+    var name : String
+
+    c <- s[index] index <- index + 1
+    realr$isImmutable <- c = 'T'
+    realr$typesAreAssigned <- true
+    realr$typesHaveBeenChecked <- true
+    realr$alreadyGenerated <- true
+    realr$isNotManifest <- false
+    realr$isPruned <- true
+
+    c <- s[index] index <- index + 1
+    assert c = ':'
+    name, index <- atlit.scan[s, index, ':', ':']
+    realr$name <- Sym.literal[name]
+
+    c <- s[index] index <- index + 1
+    assert c = ':'
+    name, index <- atlit.scan[s, index, '{', '{']
+    realr$id <- Integer.Literal[name]
+
+    if index <= limit then
+      const ops <- seq.create[0]
+      c <- s[index] index <- index + 1
+      assert c = '{'
+      c <- s[index] index <- index + 1
+      loop
+	exit when c = '}'
+	const isfunction <- c = 'f'
+	var theseq : Tree
+	c <- s[index] index <- index + 1
+	assert c = ':'
+	name, index <- atlit.scan[s, index, '[', '[']
+	const theop <- opsig.create[0, OpName.literal[name], nil, nil, nil]
+	theseq, index <- atlit.getlist[s, index]
+	theop$params <- theseq
+	c <- s[index] index <- index + 1
+	assert c = '-'
+	c <- s[index] index <- index + 1
+	assert c = '>'
+	theseq, index <- atlit.getlist[s, index]
+	theop$results <- theseq
+	c <- s[index] index <- index + 1
+	
+	ops.rcons[theop]
+      end loop
+      realr$ops <- ops
+    end if
+    r <- realr
+  end fromText
+
+    field codeOID : Integer
+    field id : Integer
+    var instct : Tree
+    field sfname : Tree <- xxsfname
+    field xsetq : Tree
+    field name : Tree <- xxname
+    field ops : Tree <- xxops
+    field st  : SymbolTable
+
+    export operation setBuiltinID [t : Tree]
+      const ts <- view t as hasStr
+      const thestr <- ts.getStr
+      id <- Integer.Literal[thestr]
+      ObjectTable.Define[id, self]
+      if id = 0x160c or
+	 id = 0x1612 or
+	 id = 0x1616 or
+	 id = 0x160b or
+	 id = 0x160f or
+	 id = 0x1613 or
+	 id = 0x1619 or
+	 id = 0x161b or
+	 id = 0x161d or
+	 id = 0x161e or
+	 id = 0x1621 or
+	 id = 0x1623 or
+	 id = 0x1627 then
+	f <- f.setBit[xisVector, true]
+      end if
+    end setBuiltinID
+
+    export function upperbound -> [r : Integer]
+      r <- 3
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- sfname
+      elseif i = 1 then
+	r <- xsetq
+      elseif i = 2 then
+	r <- name
+      elseif i = 3 then
+	r <- ops
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	sfname <- r
+      elseif i = 1 then
+	xsetq <- r
+      elseif i = 2 then
+	name <- r
+      elseif i = 3 then
+	ops <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : AtLit]
+      var nsfname, nname, nops : Tree
+      if sfname !== nil then nsfname <- sfname.copy[i] end if
+      if name !== nil then nname <- name.copy[i] end if
+      if ops !== nil then nops <- ops.copy[i] end if
+      r <- atlit.create[ln, nsfname, nname, nops]
+      r$isVector <- self$isVector
+      r$isImmutable <- self$isImmutable
+    end copy
+
+    export operation doAllocation
+      var a, b, c : Integer
+      a, b, c <- st.Allocate[0, 0, 0, nil]
+    end doAllocation
+
+    export operation findOp [itsname : Ident, nargs : Integer, nress : Integer] -> [r : OpSig, index : Integer]
+      const ystring : String <- itsname$name
+
+      if ops !== nil then
+	for i : Integer <- 0 while i <= ops.upperbound by i <- i + 1
+	  const xsig <- view ops[i] as OpSig
+	  const xname <- xsig$name
+	  const xstring : String <- xname$name
+	  var xnargs : Integer
+	  if xsig$params == nil then
+	    xnargs <- 0
+	  else
+	    xnargs <- xsig$params.upperbound + 1
+	  end if
+	  if xstring = ystring and (nargs == nil or xnargs = nargs) then
+	    r <- xsig
+	    index <- i
+	    return
+	  end if
+	end for
+      end if
+    end findOp
+
+    export operation setInstCT [a : Tree]
+      instct <- a
+      self$knowinstct <- a !== nil
+    end setInstCT
+
+    export operation getInstCT -> [r : Tree]
+      if self$knowInstCT then
+	r <- instct
+      else
+	if id == nil or IDS.IDToSize[id] = 8 then return end if
+	const me <- BuiltinLit.findTree[id, self]
+	if nameof me = "anoblit" then
+	  const foo <- view me as hasInstCT
+	  instCT <- foo.getInstCT
+	else
+	  const itsid : Integer <- IDS.IDToInstCTID[id]
+	  if itsid !== nil then
+	    instCT <- globalref.create[ln, nil, nil, itsid, nil, nil]
+	  end if
+	end if
+	self$knowInstCT <- true
+	r <- instCT
+      end if
+    end getInstCT
+
+    export function getinstCTOID -> [r : Integer]
+      const x <- self$instCT
+      if x !== nil and nameof x = "anoblit" then
+	const y <- view x as hasIDs
+	r <- y$codeOID
+      end if
+    end getinstCTOID
+
+    export function getAT -> [r : Tree]
+      r <- (view BuiltinLit.findTree[0x1009, nil] as hasInstAT).getInstAT
+    end getAT
+
+  export operation buildSetq [s : Symbol] -> [r : Symbol]
+    r <- setq.build[s, self]
+  end buildSetq
+
+  export operation defineSymbols[pst : SymbolTable]
+    const nst <- SymbolTable.create[pst, CATLit]
+    const s <- nst.Define[ln, (view self$name as hasIdent)$id, SConst, false]
+    nst$mytree <- self
+    s$isSelf <- true
+    s$value  <- self
+    self$st <- nst
+    for i : Integer <- 0 while i <= ops.upperbound by i <- i + 1
+      const isig <- view ops[i] as OpSig
+      const opisname : String <- isig$name$name
+      const opisnargs : Integer <- isig$nargs
+      const opisnress : Integer <- isig$nress
+      for j : Integer <- i + 1 while j <= ops.upperbound by j <- j + 1
+	const jsig <- view ops[j] as OpSig
+	const opjsname : String <- jsig$name$name
+	const opjsnargs : Integer <- jsig$nargs
+	const opjsnress : Integer <- jsig$nress
+	% TODO:  This should also check number of results when we properly
+	% overload on them
+	%
+	% i.e. and opisnress = opjsnress
+	if opisname = opjsname and opisnargs = opjsnargs then
+	  Environment$env.SemanticError[jsig$ln, "Operation %s is multiply defined", { opisname }]
+	end if
+      end for
+    end for
+    FTree.defineSymbols[nst, self]
+  end defineSymbols
+
+  export operation resolveSymbols [pst : SymbolTable, nexp : Integer]
+    FTree.resolveSymbols[self$st, self, 0]
+  end resolveSymbols
+
+  export operation assignTypes
+    if ! self$typesAreAssigned then
+      self$typesAreAssigned <- true
+      %
+      % Go through the imports, and set dependsOnTypeVariable for all of us
+      FTree.assignTypes[self]
+    end if
+  end assignTypes
+
+  export operation findThingsToGenerate[q : Any]
+    if ! self$isNotManifest and !self$queuedForGeneration then
+      const qt <- view q as aot
+      qt.addUpper[self]
+      if self$id == nil then
+	self$id <- nextOID.nextOID
+      end if
+      self$queuedForGeneration <- true
+      FTree.findThingsToGenerate[q, self]
+    end if
+  end findThingsToGenerate
+
+  export operation findManifests -> [changed : Boolean]
+    changed <- false
+    if self$isNotManifest then
+      % I'm already decided
+    else
+      if self$xsetq !== nil then
+	for i : Integer <- 0 while i <= self$xsetq.upperbound by i <- i + 1
+	  begin
+	    const t <- self$xsetq[i]
+	    const s <- view t as Setq
+	    if s$isNotManifest then
+	      self$isNotManifest <- true
+	      self$name$isNotManifest <- true
+	      changed <- true
+	      exit
+	    end if
+	  end
+	end for
+      end if
+    end if
+    changed <- FTree.findManifests[self] | changed
+  end findManifests
+
+  export operation execute -> [r : Tree]
+    if !self$isNotManifest then
+      self.makeMeManifest
+      r <- self
+    end if
+  end execute
+
+  export operation makeMeManifest
+    if self$id == nil then
+      self$id <- nextOID.nextOID
+      if Environment$env$dotypecheck then
+	ObjectTable.Define[self$id, self]
+      end if
+    end if
+  end makeMeManifest
+
+  export operation evaluateManifests
+    if self$isNotManifest then
+      % Do nothing because I'm not manifest
+    elseif id == nil then
+      % I am in fact manifest, and need to be given an ID
+      % We check whether id == nil to prevent redoing manifests on things
+      % that have already been done and pruned!
+      const t <- view self$name as Sym
+      if t$mysym$value == nil then
+	t$mysym$value <- self
+      end if
+      self.makeMeManifest
+    end if
+    FTree.evaluateManifests[self]
+  end evaluateManifests
+
+  export operation generate [ct : Printable]
+    const sfnameashasStr <- view self$sfname as hasStr
+    const nameashasId <- view self$name as hasIdent
+    if nameof ct = "anatcode" then
+      const ctasat <- view ct as ATCode
+      ctasat$filename <- sfnameashasStr.getStr
+      ctasat$name <- nameashasId$id$name
+      ctasat$isImmutable <- self$isImmutable
+      ctasat$isTypeVariable <- self$isTypeVariable
+      ctasat$isVector <- self$isVector
+      ctasat$id <- self$id
+      if self$ops !== nil then self$ops.generate[ct] end if
+    else
+      const bc <- view ct as ByteCode
+      % We need to treat this as an expression, and return ourself
+      bc.fetchLiteral[self$id]
+      bc.finishExpr[4, 0x1809, 0x1609]
+    end if
+  end generate
+
+  export function variableSize -> [r : Integer]
+    if self$isVector then
+%      Environment$env.pass["AT.elementsize (%s) == 4 because isvector\n",
+%	{self$name.asString}]
+      r <- 4
+    else
+      r <- IDS.IDToSize[self$id]
+%      Environment$env.pass["AT.elementsize (%s %#x) = %d by ids\n",
+%        {self$name.asString, self$id, r}]
+    end if
+  end variableSize
+
+  export function getBrand -> [r : Character]
+    if self$isVector then
+      r <- 'x'
+    else
+      r <- IDS.IDToBrand[self$id]
+    end if
+  end getBrand
+
+  export function asType -> [r : Tree]
+    if ! self$isNotManifest then
+      r <- self
+    end if
+  end asType
+
+  export operation conformsTo [theln : Integer, other : Tree] -> [r : Boolean]
+    const conformtable <- Environment$env$conformtable
+    const otherashasid <- view other as hasid
+    const otherid : Integer <- otherashasid$id
+    r <- conformtable.Lookup[self$id, otherid]
+    if r == nil then
+      if nameof other = "anatlit" then
+	const otherat <- view other as atlit
+	r <- Conformer.Conforms[theln, self, otherat]
+      else
+	if Environment$env$tracetypecheck then
+	  Environment$env.printf["Conforms: other is an %s on line %d\n",
+	    { other.asString, theln}]
+	end if
+	r <- IDS.ConformsById[theln, self$id, otherid]
+      end if
+      conformtable.Insert[self$id, otherid, r]
+    end if
+  end conformsTo
+
+  export operation print [s : OutStream, indent : Integer]
+    s.putstring["atlit @@"]
+    s.putint[ln, 0]
+    s.putchar[' ']
+    if self$id !== nil then
+      s.putstring["id = "]
+      s.putstring[self$id.asString]
+      s.putchar[' ']
+    end if
+    self.printFlags[s]
+    FTree.print[s, indent, self]
+  end print
+
+  export function asString -> [r : String]
+    r <- "atlit " || (view name as hasid)$id.asString
+  end asString
+
+  operation addList [rep : AoC, list : Tree, result : Boolean, who : hasNeedAT]
+    if result then
+      rep.addupper['-'] rep.addupper['>']
+    end if
+    rep.addupper['[']
+    if list !== nil then
+      for i : Integer <- 0 while i <= list.upperbound by i <- i + 1
+	const p <- list[i]
+	const stype <- p.asType
+	const ttype <- view stype as hasID
+	const typeid : Integer <- ttype$id
+	const idstr : String <- typeid.asString
+
+	if nameof stype = "anatlit" then
+	  who.needAT[typeid, stype]
+	end if
+	if i > 0 then rep.addupper[','] end if
+	for j : Integer <- 0 while j <= idstr.upperbound by j <- j + 1
+	  rep.addupper[idstr[j]]
+	end for
+      end for
+    end if
+    rep.addupper[']']
+  end addList
+
+  % The asText operation is invoked after an AT has been generated and when
+  % it is going to be placed in the global symbol table.  It is only needed
+  % for type checking.
+
+  export operation asText[who : hasNeedAT] -> [r : String]
+    const rep : AoC <- AoC.create[-256]
+
+    if self$isImmutable then
+      rep.addupper['T']
+    else
+      rep.addupper['t']
+    end if
+    rep.addupper[':']
+    const namesym <- view name as Sym
+    const namestring : String <- namesym$id$name
+
+    for j : Integer <- 0 while j <= namestring.upperbound by j <- j + 1
+      rep.addupper[namestring[j]]
+    end for
+
+    rep.addupper[':']
+    const idstring <- id.asString
+    for j : Integer <- 0 while j <= idstring.upperbound by j <- j + 1
+      rep.addupper[idstring[j]]
+    end for
+
+    if ops !== nil and ops.upperbound >= 0 then
+      rep.addupper['{']
+      for i : Integer <- 0 while i <= ops.upperbound by i <- i + 1
+	const xsig <- view ops[i] as OpSig
+	const xname <- xsig$name
+	const xstring : String <- xname$name
+	if xsig$isFunction then
+	  rep.addupper['f']
+	else
+	  rep.addupper['o']
+	end if
+	rep.addupper[':']
+
+	for j : Integer <- 0 while j <= xstring.upperbound by j <- j + 1
+	  rep.addupper[xstring[j]]
+	end for
+
+	self.addlist[rep, xsig$params, false, who]
+	self.addlist[rep, xsig$results, true, who]
+      end for
+      rep.addupper['}']
+    end if
+    r <- String.Literal[rep, 0, rep.upperbound + 1]
+  end asText
+
+  % The prune operation is invoked after an AT has been generated and when
+  % it is going to be placed in the global symbol table.  It is only needed
+  % for type checking, so we remove from the tree everything that we can
+  % safely remove.
+
+  operation pruneList[list : Tree]
+    if list !== nil then
+      for i : Integer <- 0 while i <= list.upperbound by i <- i + 1
+	const p <- list[i]
+	const stype <- p.asType
+	const ttype <- view stype as hasID
+	const typeid : Integer <- ttype$id
+
+	list[i] <- globalref.create[p$ln, typeid, 0x1609, nil, nil, nil]
+      end for
+    end if
+  end pruneList
+
+  export operation prune
+    if self$isPruned then return end if
+    self$isPruned <- true
+
+    const namesym <- view name as Sym
+    namesym.prune
+    xsetq <- nil
+
+    if ops !== nil and ops.upperbound >= 0 then
+      for i : Integer <- 0 while i <= ops.upperbound by i <- i + 1
+	const xsig <- view ops[i] as OpSig
+	self.prunelist[xsig$params]
+	self.prunelist[xsig$results]
+      end for
+    end if
+  end prune
+
+end Atlit
+
+export Conformer
+
+const Conformer <- immutable object Conformer
+  const voi <- Vector.of[Integer]
+  export operation Conforms[ln : Integer, A : Any, B : Any]
+			-> [answer : Boolean]
+    %
+    % Part of me worries about having to remove entries from the cache when
+    % one returns from this operation.  I'm going to do it, although I don't
+    % understand whether I really should.
+    %
+    const cache <- object cache
+      const red <- aabtable.create[20]
+      const indigo <- aatable.create[20]
+
+      export operation assume [A : Atlit, B : Atlit]
+	const env <- Environment$env
+	const ttc <- env$tracetypecheck
+	red.insert[A, B]
+	if ttc then env.printf["Assuming %S -> %S in red\n", { A, B}] end if
+	if B$isTypeVariable and indigo.Lookup[B] == nil then
+	  indigo.Insert[B, A]
+	  red.insert[B, A]
+	  if ttc then env.printf["Assuming %S -> %S in red (and indigo)\n", { B, A}] end if
+	end if
+      end assume
+
+      export operation forget [A : Atlit, B : Atlit]
+	red.Forget[A, B]
+	if indigo.Lookup[B] !== nil then
+	  indigo.Forget[B]
+	  red.Forget[B, A]
+	end if
+      end forget
+
+      function getString[A : Tree] -> [r : String]
+	if A == nil then
+	  r <- "NIL"
+	elseif nameof A = "anatlit" then
+	  r <- (view (view A as ATLit)$name as hasIdent)$id$name
+	else
+	  r <- "Type with id " || (view A as hasIds)$id.asString
+	end if
+      end getString
+
+      operation Pad [pdepth : Integer, out : OutStream]
+	var depth : Integer <- pdepth
+	loop
+	  exit when depth <= 0
+	  out.putchar[' ']
+	  out.putchar[' ']
+	  depth <- depth - 1
+	end loop
+      end Pad
+
+      operation reportWhy [depth : Integer, reason : String, args : RISA,
+	A : Tree, B : Tree]
+	const env <- Environment$env
+	const why <- env$why
+	if why then
+	  const out <- env$stdout
+	  self.pad[depth, out]
+	  env.printf[reason, args]
+	  out.putchar['\n']
+	  self.pad[depth, out]
+	  env.printf["Type %s doesn't conform to type %s\n",
+	    { self.getString[A], self.getString[B] }]
+	end if
+      end reportWhy
+
+      export operation Conforms[ln : Integer, A : ATLit, B : ATLit, depth : Integer] -> [answer : Boolean]
+	var aa, ba : Tree
+	var ta, tb : Tree
+	var opa, opb : OpSig
+	var bOps : Tree
+
+	const env <- Environment$env
+	const ttc <- env$tracetypecheck
+	var abconindex : Integer
+	var removeOnReturn : Boolean <- false
+
+	if A == nil then
+	  if ttc then env.printf["Conforms: A is nil on line %d\n", {ln}] end if
+	  self.reportWhy[depth, "A is nil", nil, A, B]
+	  answer <- false
+	  return
+	elseif B == nil then
+	  if ttc then env.printf["Conforms: B is nil on line %d\n", {ln}] end if
+	  self.reportWhy[depth, "B is nil", nil, A, B]
+	  answer <- false
+	  return
+	end if
+	if ttc then
+	  env.printf["Conforms: %S to %S on line %d\n", {A, B, ln}]
+	  env.printf["Conforms(tv?):  %S, %S\n", { A$isTypeVariable, B$isTypeVariable }]
+	  env.printf["Conforms(im?):  %S, %S\n", { A$isImmutable, B$isImmutable }]
+	  env.printf["Conforms(id?):  %S, %S\n", { A$id, B$id }]
+	end if
+	answer <- A$id == B$id
+	if answer then
+	  if ttc then env.printf["  same id -> %s\n", {answer.asString}] end if
+	  return
+	end if
+	answer <- red.lookup[A, B]
+	if answer then
+	  if ttc then env.printf["  cache says %s\n", {answer.asString}] end if
+	  return
+	end if
+	if A$id == 0x1607 then
+	  if ttc then env.printf["  none conforms to everything\n", nil] end if
+	  answer <- true
+	  return
+	end if
+	if B$id == 0x1601 then
+	  if ttc then env.printf["  everything conforms to any\n", nil] end if
+	  answer <- true
+	  return
+	end if
+	if B$id == 0x1607 then
+	  if ttc then env.printf["  nothing conforms to none\n", nil] end if
+	  answer <- false
+	  return
+	end if
+	if B$isImmutable and !A$isImmutable then
+	  if ttc then env.printf["  immutable mismatch -> false\n", nil] end if
+	  self.reportWhy[depth, "Immutable mismatch", nil, A, B]
+	  return
+	end if
+
+	if B$isVector then
+	  if !A$isVector then
+	    if ttc then env.printf["  B is a vector (A isn't) -> false\n", nil] end if
+	    self.reportWhy[depth, "Vector mismatch", nil, A, B]
+	    return
+	  end if
+	else
+	  % Check for builtin types that are not conformable to
+	  const bID <- b$id
+	  if 0x1600 <= bID and bID <= 0x1640 then
+	    const itssize : Integer <- ids.IDToSize[bID]
+	    if itssize < 8 then
+	      if ttc then env.printf["  B cannotbeconformedto -> false\n", nil] end if
+	      self.reportWhy[depth, "%S is a primitive type which cannot be conformed to", {self.getString[B]}, A, B]
+	      answer <- false
+	      return
+	    end if
+	  end if
+	end if
+
+	red.insert[A, B]
+	if ttc then env.printf["Inserting %S -> %S in red\n", { A, B}] end if
+	if B$isTypeVariable and indigo.Lookup[B] == nil then
+	  removeOnReturn <- true
+	  indigo.Insert[B, A]
+	  red.insert[B, A]
+	  if ttc then env.printf["Inserting %S -> %S in red (and indigo)\n", { B, A}] end if
+	end if
+	bOps <- B$ops
+
+	const limit <- bOps.upperbound
+	for i : Integer <- 0 while i <= limit by i <- i + 1
+	  var jlimit : Integer
+	  opb <- view bOps[i] as OpSig
+	  opa, abconindex <- A.findOp[opb$name, opb$nargs, 0]
+	  if opa == nil then
+	    if ttc then env.printf["  Can't find operation %s\n", {opb$name.asString}] end if
+	    self.reportWhy[depth, "Can't find operation %S", { opb$name}, A, B]
+	    return
+	  end if
+	  if ttc then env.printf[" Checking operation %s[%d]\n",
+	    {opb$name.asString, opb$nargs}]
+	  end if
+	  aa <- opa$params
+	  ba <- opb$params
+	  jlimit <- opb$nargs
+	  for j : Integer <- 0 while j < jlimit by j <- j + 1
+	    ta <- aa[j].asType
+	    tb <- ba[j].asType
+	    if ta == nil or tb == nil then
+	      if ttc then env.printf["  Missing types for param %d\n", {j+1}] end if
+	      self.reportWhy[depth, "Missing types for param %d", {j+1}, A, B]
+	      return
+	    end if
+	    if nameof ta = "anatlit" and nameof tb = "anatlit" then
+	      if !self.Conforms[ln, view tb as ATLit, view ta as ATLit, depth+1] then
+		if ttc then env.printf["  param %d doesn't conform\n", {j+1}] end if
+		self.reportWhy[depth, "param %d to operation %S doesn't conform", {j+1, opb$name}, A, B]
+		return
+	      end if
+	    else
+	      if ttc then env.printf["  param %d: %s to %s\n",
+		{ j+1, tb.asString, ta.asString} ]
+	      end if
+	      if !IDS.ConformsByID[ln, (view tb as hasID)$id, (view ta as hasID)$id] then
+		if ttc then env.printf["  param %d doesn't conform\n", {j+1}] end if
+		self.reportWhy[depth+1, "Conforms by ID fails", nil, tb, ta]
+		self.reportWhy[depth, "param %d to operation %S doesn't conform", {j+1, opb$name}, A, B]
+		return
+	      end if
+	    end if
+	  end for
+	  aa <- opa.getResults
+	  ba <- opb.getResults
+	  jlimit <- opb$nress
+	  for j : Integer <- 0 while j < jlimit by j <- j + 1
+	    if aa !== nil then ta <- aa[j].asType else ta <- nil end if
+	    if ba !== nil then tb <- ba[j].asType else tb <- nil end if
+	    if ta == nil or tb == nil then
+	      if ttc then env.printf["  Missing types for result %d\n", {j+1}] end if
+	      self.reportWhy[depth, "Missing types for result %d", {j+1}, A, B]
+	      return
+	    end if
+	    if nameof ta = "anatlit" and nameof tb = "anatlit" then
+	      if !self.Conforms[ln, view ta as ATLit, view tb as ATLit, depth + 1] then
+		if ttc then env.printf["  result %d doesn't conform\n", {j+1}] end if
+		self.reportWhy[depth, "result %d of operation %S doesn't conform", {j+1, opb$name}, A, B]
+		return
+	      end if
+	    else
+	      if ttc then env.printf["  param %d: %s to %s\n",
+		{ j+1, ta.asString, tb.asString} ]
+	      end if
+	      if !IDS.ConformsByID[ln, (view ta as hasID)$id, (view tb as hasID)$id] then
+		if ttc then env.printf["  result %d doesn't conform\n", {j+1}] end if
+		self.reportWhy[depth, "result %d of operation %S doesn't conform", {j+1, opb$name}, A, B]
+		return
+	      end if
+	    end if
+	  end for
+	end for
+	answer <- true
+	if ttc then env.printf[" Answer is yes\n", nil] end if
+
+	if removeOnReturn then
+	  red.Forget[B, A]
+	  indigo.Forget[B]
+	end if
+      end Conforms
+
+    end cache
+    if nameof A = "anatlit" then
+      answer <- cache.Conforms[ln, view A as atlit, view B as atlit, 1]
+    else
+      const alist <- view A as RISA
+      const blist <- view B as RISA
+      assert Alist.upperbound = Blist.upperbound
+      for i : Integer <- 0 while i <= Alist.upperbound by i <- i + 1
+	for j : Integer <- 0 while j <= Alist.upperbound by j <- j + 1
+	  if i != j then
+	    cache.assume[view Alist[j] as ATLit, view Blist[j] as ATLit]
+	  end if
+	end for
+	answer <- cache.conforms[ln, view alist[i]as ATLit, view blist[i] as ATLit, 1]
+	if !answer then return end if
+	for j : Integer <- 0 while j <= Alist.upperbound by j <- j + 1
+	  if i != j then
+	    cache.forget[view Alist[j] as ATLit, view Blist[j] as ATLit]
+	  end if
+	end for
+      end for
+    end if
+  end Conforms
+end Conformer
+@
+
+
+1.36
+log
+@Checkpoint
+@
+text
+@d571 1
+a571 1
+  export operation Conforms[ln : Integer, A : ATLit, B : ATLit]
+d582 20
+d659 6
+a664 1
+	if ttc then env.printf["Conforms: %S to %S on line %d\n", {A, B, ln}] end if
+d717 1
+d722 1
+d807 21
+a827 1
+    answer <- cache.Conforms[ln, A, B, 1]
+@
+
+
+1.35
+log
+@Many changes
+@
+text
+@d230 1
+a230 1
+	if id == nil then return end if
+@
+
+
+1.34
+log
+@Get conforms against None right
+@
+text
+@d745 2
+a746 2
+	    ta <- aa[j].asType
+	    tb <- ba[j].asType
+@
+
+
+1.33
+log
+@Add isvector field to Signatures
+@
+text
+@d660 5
+@
+
+
+1.32
+log
+@Make an atlit impersonate an oblit well enough
+@
+text
+@d25 1
+a25 1
+    r$isImmutable <- v$isImmutable
+d380 1
+@
+
+
+1.31
+log
+@Fix serious GC bugs, add a new builtin
+@
+text
+@d246 8
+@
+
+
+1.30
+log
+@Clean up generating the second things in references
+@
+text
+@d152 2
+a153 1
+	 id = 0x1623 then
+@
+
+
+1.29
+log
+@Improved constant type assignment
+@
+text
+@d377 1
+a377 1
+      if bc$size == 8 then bc.fetchVariableSecondThing[0x1809, 0x1609] end if
+@
+
+
+1.28
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@a83 1
+    realr$isManifest <- true
+@
+
+
+1.27
+log
+@August 94 Checkpoint II
+@
+text
+@d24 1
+a24 1
+    r <- ATLit.create[0, Literal.StringL["No source file"], name, nil]
+d45 2
+a46 1
+  class operation getlist [s : String, si : Integer] -> [r : Tree, ni : Integer]
+d57 1
+a57 8
+	if false then
+	  const theid <- newid.newid
+	  const thesym <- sym.create[0, theid]
+	  const theparam <- param.create[0, thesym, thetype]
+	  theseq.rcons[theparam]
+	else
+	  theseq.rcons[thetype]
+	end if
+d72 1
+a72 1
+    const realr <- atlit.create[0, Literal.StringL["unknown"], nil, nil]
+d199 1
+a199 1
+      const ystring <- itsname$name
+d205 1
+a205 1
+	  const xstring <- xname$name
+d236 1
+a236 1
+	  const itsid <- IDS.IDToInstCTID[id]
+d263 3
+a265 3
+      const opisname <- isig$name$name
+      const opisnargs <- isig$nargs
+      const opisnress <- isig$nress
+d268 3
+a270 3
+	const opjsname <- jsig$name$name
+	const opjsnargs <- jsig$nargs
+	const opjsnress <- jsig$nress
+d411 1
+a411 1
+    const otherid <- otherashasid$id
+d455 2
+a456 2
+	const typeid <- ttype$id
+	const idstr <- typeid.asString
+d475 1
+a475 1
+    const rep <- AoC.create[-256]
+d484 1
+a484 1
+    const namestring <- namesym$id$name
+d501 1
+a501 1
+	const xstring <- xname$name
+d532 1
+a532 1
+	const typeid <- ttype$id
+d583 2
+a584 1
+      operation Pad [depth : Integer, out : OutStream]
+d667 1
+a667 1
+	    const itssize <- ids.IDToSize[bID]
+@
+
+
+1.26
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d42 1
+a42 1
+    r <- s.getslice[si, ni - si]
+d148 12
+a159 1
+      if id = 0x160c or id = 0x1612 then
+d199 1
+a199 1
+    export operation doAllocation 
+d213 1
+a213 1
+	  if xsig$params == nil then 
+d267 19
+d293 1
+a293 1
+  export operation assignTypes 
+d336 1
+a336 1
+  
+d344 1
+a344 1
+  export operation makeMeManifest 
+d353 1
+a353 1
+  export operation evaluateManifests 
+d358 1
+a358 1
+      % We check whether id == nil to prevent redoing manifests on things 
+d390 1
+a390 1
+%      Environment$env.pass["AT.elementsize (%s) == 4 because isvector\n", 
+d425 1
+a425 1
+	  Environment$env.printf["Conforms: other is an %s on line %d\n", 
+d458 1
+a458 1
+	const p <- list[i] 
+d483 1
+a483 1
+    if self$isImmutable then 
+d491 1
+a491 1
+    
+d501 1
+a501 1
+    
+d514 1
+a514 1
+	
+d529 1
+a529 1
+  % for type checking, so we remove from the tree everything that we can 
+d535 1
+a535 1
+	const p <- list[i] 
+d568 1
+a568 1
+  export operation Conforms[ln : Integer, A : ATLit, B : ATLit] 
+d570 1
+a570 1
+    % 
+d608 1
+a608 1
+	  env.printf["Type %s doesn't conform to type %s\n", 
+d631 1
+a631 1
+	  self.reportWhy[depth, "B is nil", nil, A, B] 
+d642 1
+a642 1
+	if answer then 
+d656 1
+a656 1
+	if B$isImmutable and !A$isImmutable then 
+d662 20
+d695 1
+a695 1
+	  if opa == nil then 
+d700 2
+a701 2
+	  if ttc then env.printf[" Checking operation %s[%d]\n",  
+	    {opb$name.asString, opb$nargs}] 
+d715 1
+a715 1
+	      if !self.Conforms[ln, view tb as ATLit, view ta as ATLit, depth+1] then 
+d718 2
+a719 2
+		return 
+	      end if 
+d721 1
+a721 1
+	      if ttc then env.printf["  param %d: %s to %s\n", 
+d724 1
+a724 1
+	      if !IDS.ConformsByID[ln, (view tb as hasID)$id, (view ta as hasID)$id] then 
+d728 1
+a728 1
+		return 
+d744 1
+a744 1
+	      if !self.Conforms[ln, view ta as ATLit, view tb as ATLit, depth + 1] then 
+d747 2
+a748 2
+		return 
+	      end if 
+d750 1
+a750 1
+	      if ttc then env.printf["  param %d: %s to %s\n", 
+d753 1
+a753 1
+	      if !IDS.ConformsByID[ln, (view ta as hasID)$id, (view tb as hasID)$id] then 
+d756 1
+a756 1
+		return 
+d769 1
+a769 1
+  
+@
+
+
+1.25
+log
+@First attempt at abcons
+@
+text
+@d4 4
+d21 1
+a21 1
+      sig <- nil % OpSig.build[OpName.literal[theop$name], params, results, nil]
+d24 1
+a24 1
+    r <- ATLit.create[0, stringlit.create[0, "No source file"], name, nil]
+d30 4
+d35 99
+d147 1
+d193 2
+a194 2
+    export operation findOp [name : Tree, nargs : Integer, nress : Integer] -> [r : OpSig, index : Integer]
+      const ystring <- (view name as OpName)$id$name
+d199 2
+a200 2
+	  const xname <- view xsig$name as OpName
+	  const xstring <- xname$id$name
+d218 1
+d222 2
+a223 9
+      r <- instct
+      if r !== nil then return end if
+%     Environment$env.pass["at.getInstCT my id is %x\n", {id}]
+
+      if id == nil then return end if
+      r <- BuiltinLit.findTree[id, self]
+      if nameof r = "anoblit" then
+	const foo <- view r as hasInstCT
+	r <- foo.getInstCT
+d225 13
+a237 1
+	r <- globalref.create[ln, nil, IDS.IDToInstCTID[id], nil, nil]
+d240 1
+d251 1
+a251 1
+    const s <- nst.Define[(view self$name as hasIdent)$id, SConst, false]
+d266 2
+d274 1
+a274 1
+      const qt <- view q as Array.of[Tree]
+d317 3
+d324 6
+a329 2
+    if ! self$isNotManifest then
+      % I am in fact manifest, and need to be created now
+d347 1
+d384 1
+a384 1
+  export operation conformsTo [ln : Integer, other : Tree] -> [r : Boolean]
+d392 1
+a392 1
+	r <- Conformer.Conforms[ln, self, otherat]
+d394 5
+a398 3
+        Environment$env.ttypecheck["Conforms: other is an %s on line %d\n", 
+	  { other.asString, ln}]
+	r <- IDS.ConformsById[ln, self$id, otherid]
+d418 1
+a418 1
+    r <- "atlit"
+d420 112
+d539 6
+a544 1
+    -> [answer : Boolean]
+d546 2
+a547 22
+	var size : Integer <- 20
+	var full : Integer <- 0
+	var redl : voi <- voi.create[size]
+	var redr : voi <- voi.create[size]
+  
+	operation grow 
+	  if full >= size then
+	    const newsize <- size * 2
+	    const newl <- voi.create[newsize]
+	    const newr <- voi.create[newsize]
+	    var i : Integer <- 0
+	    loop
+	      exit when i >= size
+	      newl[i] <- redl[i]
+	      newr[i] <- redr[i]
+	      i <- i + 1
+	    end loop
+	    size <- newsize
+	    redl <- newl
+	    redr <- newr
+	  end if
+	end grow
+d549 35
+a583 22
+	operation Lookup[A : ATLit, B : ATLit] -> [found : Boolean]
+	  const aid <- A$id
+	  const bid <- B$id
+	  const limit <- full
+	  found <- false
+	  
+	  for i : Integer <- 0 while i < limit by i <- i + 1
+	    if redl[i] == aid and redr[i] == bid then
+	      found <- true
+	      return
+	    end if
+	  end for
+	end Lookup
+  
+	operation Assume[A : ATLit, B : ATLit]
+	  self.grow
+	  redl[full] <- A$id
+	  redr[full] <- B$id
+	  full <- full + 1
+	end Assume
+  
+      export operation Conforms[ln : Integer, A : ATLit, B : ATLit] -> [answer : Boolean]
+d588 1
+a588 1
+	var limit : Integer
+d590 1
+d592 1
+d595 2
+a596 1
+	  env.ttypecheck["Conforms: A is nil on line %d\n", {ln}]
+d600 2
+a601 1
+	  env.ttypecheck["Conforms: B is nil on line %d\n", {ln}]
+d605 1
+a605 1
+	env.ttypecheck["Conforms: %#x to %#x on line %d\n", {A$id, B$id, ln}]
+d608 1
+a608 1
+	  env.ttypecheck["  same id -> %s\n", {answer.asString}]
+d611 1
+a611 1
+	answer <- cache.lookup[A, B]
+d613 1
+a613 1
+	  env.ttypecheck["  cache says %s\n", {answer.asString}]
+d616 10
+d627 2
+a628 1
+	  env.ttypecheck["  immutable mismatch -> false\n", nil]
+d631 7
+a637 2
+	cache.assume[A, B]
+  
+d639 2
+a640 1
+	limit <- bOps.upperbound
+d646 2
+a647 1
+	    env.ttypecheck["  Can't find operation %s\n", {opb$name.asString}]
+d650 3
+a652 2
+	  env.ttypecheck[" Checking operation %s[%d]\n", 
+	    {opb$name.asString, opb$nargs}]
+d660 2
+a661 1
+	      env.ttypecheck["  Missing types for param %d\n", {j+1}]
+d665 3
+a667 2
+	      if !self.Conforms[ln, view tb as ATLit, view ta as ATLit] then 
+		env.ttypecheck["  param %d doesn't conform\n", {j+1}]
+d671 1
+a671 1
+	      Environment$env.ttypecheck["  param %d: %s to %s\n", 
+d673 1
+d675 3
+a677 1
+		env.ttypecheck["  param %d doesn't conform\n", {j+1}]
+d689 2
+a690 1
+	      env.ttypecheck["  Missing types for result %d\n", {j+1}]
+d694 3
+a696 2
+	      if !self.Conforms[ln, view ta as ATLit, view tb as ATLit] then 
+		env.ttypecheck["  result %d doesn't conform\n", {j+1}]
+d700 1
+a700 1
+	      Environment$env.ttypecheck["  param %d: %s to %s\n", 
+d702 1
+d704 2
+a705 1
+		env.ttypecheck["  result %d doesn't conform\n", {j+1}]
+d712 6
+a717 1
+	env.ttypecheck[" Answer is yes\n", nil]
+d721 1
+a721 1
+    answer <- cache.Conforms[ln, A, B]
+@
+
+
+1.24
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@d37 1
+a37 3
+      const ts <- view t as typeobject X
+	function getStr -> [String]
+      end X
+d120 1
+a120 1
+	const foo <- view r as typeobject t function getInstCT -> [Tree] end t
+d127 1
+a127 2
+      const hiat <- typeobject t operation getInstAt -> [Tree] end t
+      r <- (view BuiltinLit.findTree[0x1009, nil] as hiat).getInstAT
+d136 1
+a136 1
+    const s <- nst.Define[(view self$name as hasId)$id, SConst, false]
+a215 3
+    const hasStr <- typeobject X
+      function getStr -> [String]
+    end X
+d217 1
+a217 16
+    const nameashasId <- view self$name as hasId
+    const ATType <- typeobject X
+      operation setID [Integer]
+      operation setName [String]
+      operation setIsImmutable [Boolean]
+      function  getName -> [String]
+      operation setFileName [String]
+      operation getOps -> [ATOpVector]
+    end X
+    const BCType <- typeobject X
+      operation addCode [String]
+      operation addValue [Integer, Integer]
+      operation fetchLiteral [Integer]
+      operation fetchVariableSecondThing[Integer, Integer]
+      function  getSize -> [Integer]
+    end X
+d219 1
+a219 1
+      const ctasat <- view ct as ATType
+d226 1
+a226 1
+      const bc <- view ct as BCType
+a260 1
+    const hasid <- typeobject t operation getID -> [Integer] end t
+a408 1
+	      const x <- typeobject t op getID -> [Integer] end t
+d411 1
+a411 1
+	      if !IDS.ConformsByID[ln, (view tb as x)$id, (view ta as x)$id] then 
+a432 1
+	      const x <- typeobject t op getID -> [Integer] end t
+d435 1
+a435 1
+	      if !IDS.ConformsByID[ln, (view ta as x)$id, (view tb as x)$id] then 
+@
+
+
+1.23
+log
+@Preparatory work for Ab/Cons
+@
+text
+@d87 1
+a87 1
+    export operation findOp [name : Tree, nargs : Integer, nress : Integer] -> [r : OpSig]
+d103 1
+d375 1
+d408 1
+a408 1
+	  opa <- A.findOp[opb$name, opb$nargs, 0]
+@
+
+
+1.22
+log
+@Finalized merge with Mark Immels version
+@
+text
+@d235 1
+d249 1
+a249 1
+      if bc$size == 8 then bc.fetchLiteral[0x1809] end if
+@
+
+
+1.21
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d8 1
+a8 1
+    var id_node, id_seq : Integer
+d22 1
+a22 1
+    primitive "GETID" [id_node, id_seq] <- [v]
+@
+
+
+1.20
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d12 1
+a12 1
+      const theop <- v$ops(i)
+d92 1
+a92 1
+	  const xsig <- view ops(i) as OpSig
+d177 1
+a177 1
+	    const t <- self$xsetq(i)
+d335 2
+a336 2
+	      newl(i) <- redl(i)
+	      newr(i) <- redr(i)
+d352 1
+a352 1
+	    if redl(i) == aid and redr(i) == bid then
+d361 2
+a362 2
+	  redl(full) <- A$id
+	  redr(full) <- B$id
+d404 1
+a404 1
+	  opb <- view bOps(i) as OpSig
+d416 2
+a417 2
+	    ta <- aa(j).asType
+	    tb <- ba(j).asType
+d441 2
+a442 2
+	    ta <- aa(j).asType
+	    tb <- ba(j).asType
+@
+
+
+1.19
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d423 1
+a423 1
+	      if !Conforms[ln, view tb as ATLit, view ta as ATLit] then 
+d448 1
+a448 1
+	      if !Conforms[ln, view ta as ATLit, view tb as ATLit] then 
+@
+
+
+1.18
+log
+@Check ids first when conforming
+@
+text
+@d17 1
+a17 1
+      sig <- OpSig.build[OpName.literal[theop$name], params, results, nil]
+@
+
+
+1.17
+log
+@Start at buiding atlits from actual objects
+@
+text
+@d384 5
+@
+
+
+1.16
+log
+@Remove vestigial generateAT
+@
+text
+@d5 22
+@
+
+
+1.15
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@a194 4
+  export operation generateAT -> [r : ATCode]
+    
+  end generateAT
+
+@
+
+
+1.14
+log
+@Fixed the generation of atlits
+@
+text
+@d115 2
+a116 2
+    const nst <- SymbolTable.create[pst, STContext.CATLit]
+    const s <- nst.Define[(view self$name as hasId)$id, STKind.SConst, false]
+@
+
+
+1.13
+log
+@Use nameof rather than asString
+@
+text
+@d56 2
+a57 1
+      r$isVector <- f.getBit[xisVector]
+d136 1
+a136 1
+    if ! self$isNotManifest then
+d138 3
+a140 11
+      var found : Boolean <- false
+      for i : Integer <- qt.lowerbound while !found and i <= qt.upperbound by i <- i + 1
+	const qe <- qt(i)
+	found <- qe == self
+      end for
+      if !found then
+	qt.addUpper[self]
+
+	if self$id == nil then
+	  self$id <- nextOID.nextOID
+	end if
+d142 2
+a144 1
+    FTree.findThingsToGenerate[q, self]
+a187 1
+	self.makeMeManifest
+d190 1
+d279 13
+d387 2
+@
+
+
+1.12
+log
+@Get rid of return on generate
+@
+text
+@d97 1
+a97 1
+      if r.asString = "oblit" then
+d225 1
+a225 1
+    if ct.asString = "at" then
+d273 1
+a273 1
+      if other.asString = "atlit" then
+d390 1
+a390 1
+	    if ta.asString = "atlit" and tb.asString = "atlit" then
+d415 1
+a415 1
+	    if ta.asString = "atlit" and tb.asString = "atlit" then
+@
+
+
+1.11
+log
+@Removed all monitors
+@
+text
+@d205 1
+a205 2
+  export operation generate [ct : Printable] -> [rct : None]
+    var junk : Any
+d231 1
+a231 1
+      if self$ops !== nil then junk <- self$ops.generate[ct] end if
+@
+
+
+1.10
+log
+@Fix an off by one in finding manifests
+@
+text
+@a4 1
+  monitor
+d9 1
+a9 1
+    field setq : Tree
+d32 1
+a32 1
+	r <- setq
+d43 1
+a43 1
+	setq <- r
+a107 1
+  end monitor
+d158 2
+a159 2
+      if self$setq !== nil then
+	for i : Integer <- 0 while i <= self$setq.upperbound by i <- i + 1
+d161 1
+a161 1
+	    const t <- self$setq(i)
+a297 1
+      monitor
+d303 1
+a303 1
+	private operation grow 
+a340 1
+      end monitor
+@
+
+
+1.9
+log
+@DIKU changes to support TS.of[Integer, String]
+@
+text
+@d161 1
+a161 1
+	for i : Integer <- 0 while i < self$setq.upperbound by i <- i + 1
+@
+
+
+1.8
+log
+@Fixed the limits of searching the cache
+@
+text
+@d280 2
+d402 2
+d427 2
+@
+
+
+1.7
+log
+@Set the isImmutable bit in generated Signatures
+@
+text
+@d325 1
+a325 1
+	  const limit <- redl.upperbound
+d328 2
+a329 2
+	  for i : Integer <- 0 while i <= limit by i <- i + 1
+	    if redl(i) = aid and redr(i) = bid then
+@
+
+
+1.6
+log
+@Typo
+@
+text
+@d217 1
+d232 1
+@
+
+
+1.5
+log
+@Get rid of objectflags, use otree
+@
+text
+@d22 1
+a22 1
+	f.setBit[xisVector, true]
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@d4 1
+a4 1
+const atlit <- class Atlit (Tree) [xxsfname : Tree, xxname : Tree, xxops : Tree]
+a5 1
+    field f : ObjectFlags <- ObjectFlags.create
+d22 1
+a22 1
+	f$isVector <- true
+d57 1
+a57 1
+      r$f$isVector <- f$isVector
+a59 7
+    export operation getIsNotManifest -> [r : Boolean]
+      r <- f$isNotManifest
+    end getIsNotManifest
+    export operation setIsNotManifest [r : Boolean]
+      f$isNotManifest <- r
+    end setIsNotManifest
+
+d130 2
+a131 2
+    if ! self$f$typesAreAssigned then
+      self$f$typesAreAssigned <- true
+d157 1
+a157 1
+    if self$f$isNotManifest then
+d166 1
+a166 1
+	      self$f$isNotManifest <- true
+d179 1
+a179 1
+    if !self$f$isNotManifest then
+d192 1
+a192 1
+    if ! self$f$isNotManifest then
+d242 1
+a242 1
+    if self$f$isVector then
+d254 1
+a254 1
+    if self$f$isVector then
+d365 1
+a365 1
+	if B$f$isImmutable and !A$f$isImmutable then 
+@
+
+
+1.3
+log
+@Fixed an OID in generate
+@
+text
+@a0 14
+import Tree, FTree, Printable from "Jekyll"
+import hasId, Printable from "Jekyll"
+import Objectflags from "Jekyll"
+import Symbol, SymbolTable, STContext, STKind from "Jekyll"
+import Sym from "Jekyll"
+import Setq from "Jekyll"
+import nextOID from "Jekyll"
+import ATCode, ATOpVector from "Jekyll"
+import IDS from "Jekyll"
+import Environment from "Jekyll"
+import GlobalRef from "Jekyll"
+import OpSig from "Jekyll"
+import OpName from "Jekyll"
+import BuiltinLit from "Jekyll"
+d2 1
+a2 1
+export Atlit to "Jekyll"
+d17 1
+a17 1
+      const ts <- view t as type X
+d107 1
+a107 1
+	const foo <- view r as type t function getInstCT -> [Tree] end t
+d114 1
+a114 1
+      const hiat <- type t operation getInstAt -> [Tree] end t
+d217 1
+a217 1
+    const hasStr <- type X
+d222 1
+a222 1
+    const ATType <- type X
+d229 1
+a229 1
+    const BCType <- type X
+d277 1
+a277 1
+    const hasid <- type t operation getID -> [Integer] end t
+d297 1
+a297 1
+export Conformer to "Jekyll"
+d405 1
+a405 1
+	      const x <- type t op getID -> [Integer] end t
+d428 1
+a428 1
+	      const x <- type t op getID -> [Integer] end t
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d259 1
+a259 1
+      if bc$size == 8 then bc.fetchLiteral[0x1800] end if
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d229 2
+a230 1
+  export operation generate [ct : Printable]
+d254 1
+a254 1
+      if self$ops !== nil then self$ops.generate[ct] end if
+@

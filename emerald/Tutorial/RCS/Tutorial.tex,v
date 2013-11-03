@@ -1,0 +1,44 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@% @;
+
+
+1.1
+date	93.03.22.17.01.58;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@\documentstyle[fcanon,titlepage]{article}
+\input epsf
+\input{emcmd}
+\begin{document}
+\input{ubctitle}
+%\newpage{}
+%\pagenumbering{roman}
+%\tableofcontents{}
+\newpage{}
+\pagenumbering{arabic}
+\include{compiling}
+\include{customcompiler}
+\include{debugging}
+\end{document}
+@

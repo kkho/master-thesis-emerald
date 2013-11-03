@@ -1,0 +1,158 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.02.09.18.18.27;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.15.06.33.02;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Interface to the ctype.h and strings(3) functions
+@
+
+
+1.2
+log
+@Cleaned up
+@
+text
+@/* string.h - Norm Hutchinson <norm@@cs.ubc.ca> 95Mar14 */
+#include "types.h"
+
+#ifndef CCALL
+#define CCALL( func, subcode, argstring )
+#endif /* CCALL */
+
+int charIsAlpha( int ch );
+CCALL( charIsAlpha, EMCH_ISALPHA, "bi" )
+
+int charIsUpper( int ch );
+CCALL( charIsUpper, EMCH_ISUPPER, "bi" )
+
+int charIsLower( int ch );
+CCALL( charIsLower, EMCH_ISLOWER, "bi" )
+
+int charIsDigit( int ch );
+CCALL( charIsDigit, EMCH_ISDIGIT, "bi" )
+
+int charIsXdigit( int ch );
+CCALL( charIsXdigit, EMCH_ISXDIGIT, "bi" )
+
+int charIsAlnum( int ch );
+CCALL( charIsAlnum, EMCH_ISALNUM, "bi" )
+
+int charIsSpace( int ch );
+CCALL( charIsSpace, EMCH_ISSPACE, "bi" )
+
+int charIsPunct( int ch );
+CCALL( charIsPunct, EMCH_ISPUNCT, "bi" )
+
+int charIsPrint( int ch );
+CCALL( charIsPrint, EMCH_ISPRINT, "bi" )
+
+int charIsGraph( int ch );
+CCALL( charIsGraph, EMCH_ISGRAPH, "bi" )
+
+int charIsCntrl( int ch );
+CCALL( charIsCntrl, EMCH_ISCNTRL, "bi" )
+
+int charToUpper( int ch );
+CCALL( charToUpper, EMCH_TOUPPER, "ii" )
+
+int charToLower( int ch );
+CCALL( charToLower, EMCH_TOLOWER, "ii" )
+
+int stringIndex( String s, int ch );
+CCALL(stringIndex, EMST_INDEX, "ipi")
+
+int stringRIndex( String s, int ch );
+CCALL(stringRIndex, EMST_RINDEX, "ipi")
+
+int stringSpan( String s, String t);
+CCALL(stringSpan, EMST_SPAN, "ipp")
+
+int stringCSpan( String s, String t);
+CCALL(stringCSpan, EMST_CSPAN, "ipp")
+
+int stringStr(String s, String t);
+CCALL(stringStr, EMST_STR, "ipp")
+/* EOF */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+a9 1
+CCALL( charIsAlpha, EMCHAR_ISALPHA, "bi" )
+d12 1
+a12 1
+CCALL( charIsUpper, EMCHAR_ISUPPER, "bi" )
+d15 1
+a15 1
+CCALL( charIsLower, EMCHAR_ISLOWER, "bi" )
+d18 1
+a18 1
+CCALL( charIsDigit, EMCHAR_ISDIGIT, "bi" )
+d21 1
+a21 1
+CCALL( charIsXdigit, EMCHAR_ISXDIGIT, "bi" )
+d24 1
+a24 1
+CCALL( charIsAlnum, EMCHAR_ISALNUM, "bi" )
+d27 1
+a27 1
+CCALL( charIsSpace, EMCHAR_ISSPACE, "bi" )
+d30 1
+a30 1
+CCALL( charIsPunct, EMCHAR_ISPUNCT, "bi" )
+d33 1
+a33 1
+CCALL( charIsPrint, EMCHAR_ISPRINT, "bi" )
+d36 1
+a36 1
+CCALL( charIsGraph, EMCHAR_ISGRAPH, "bi" )
+d39 1
+a39 1
+CCALL( charIsCntrl, EMCHAR_ISCNTRL, "bi" )
+d42 1
+a42 1
+CCALL( charToUpper, EMCHAR_TOUPPER, "ii" )
+d45 1
+a45 1
+CCALL( charToLower, EMCHAR_TOLOWER, "ii" )
+d48 1
+a48 1
+CCALL(stringIndex, EMSTRING_INDEX, "ipi")
+d51 1
+a51 1
+CCALL(stringRIndex, EMSTRING_RINDEX, "ipi")
+d54 1
+a54 1
+CCALL(stringSpan, EMSTRING_SPAN, "ipp")
+d57 1
+a57 1
+CCALL(stringCSpan, EMSTRING_CSPAN, "ipp")
+d60 1
+a60 1
+CCALL(stringStr, EMSTRING_STR, "ipp");
+@

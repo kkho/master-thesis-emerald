@@ -1,0 +1,45 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	96.09.03.04.25.15;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Yacc modified to generate emerald
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*
+ * this file has the location of the parser, and the size of the progam desired
+ * It may also contain definitions to override various defaults: for example,
+ * WORD32 tells yacc that there are at least 32 bits per int
+ * on some systems, notably IBM, the names for the output files and tempfiles must
+ * also be changed.
+ */
+
+#undef WORD32   /* ints are 16 bits!!, IBM PC */
+
+/* location of the parser text file */
+#define PARSER "./yaccpar"
+
+/* basic size of the Yacc implementation */
+#define HUGE
+@

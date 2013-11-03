@@ -1,0 +1,100 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3
+	carlton_start:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	94.08.17.16.51.47;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.04.00.24.11;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@string stream object
+@
+
+
+1.3
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@export StringStream
+
+const StringStream <- class StringStream [xs : String]
+  const x : String <- xs
+  const limit : Integer <- x.upperbound
+  var nextChar : Integer <- 0
+  
+  export function eos -> [r : Boolean]
+    r <- nextChar > limit
+  end eos
+  
+  export operation getChar -> [r : Character]
+    if nextChar <= limit then
+      r <- x[nextChar]
+      nextChar <- nextChar + 1
+    end if
+  end getChar
+  export operation fillVector[v : VectorofChar] -> [length : Integer]
+    const offset <- nextChar
+    loop
+      exit when nextChar > limit
+      exit when nextChar - offset > v.upperbound
+      const c <- x[nextChar]
+      v[nextChar - offset] <- c
+      nextChar <- nextChar + 1
+      exit when c = '\n'
+    end loop
+    length <- nextChar - offset
+  end fillVector
+end StringStream
+@
+
+
+1.2
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d5 1
+d9 1
+a9 1
+    r <- nextChar > xs.upperbound
+d13 4
+a16 2
+    r <- x[nextChar]
+    nextChar <- nextChar + 1
+d18 12
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 1
+a12 1
+    r <- x(nextChar)
+@

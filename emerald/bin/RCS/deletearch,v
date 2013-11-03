@@ -1,0 +1,137 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.02.23.16.20.26;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.20.23.44.32;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Delete a no longer interesting emerald architecture.
+@
+
+
+1.2
+log
+@'./bin'
+@
+text
+@#!/bin/csh -f
+#
+# deletearch
+#
+# Delete all the stuff related to a no longer interesting emerald
+# architecture.  This is really easy, just
+#   rm -rf $EMERALDROOT/{bin,lib,vm}/$arch
+# Except that if you are deleting a parent architecture we should be careful.
+
+# usage: deletearch [-n] arch
+#   -n means just print the commands, don't actually do them
+#
+
+unset justprint
+
+# if an architecture is supplied, use it.  Otherwise, whine
+if ($#argv >= 1) then
+  set arch = $argv[1]
+  shift argv
+else
+  echo "Must supply an architecture to delete
+  exit (1)
+endif
+
+# Check for -n switch
+while ($#argv >= 1)
+  switch ($argv[1])
+    case "-n":
+      set justprint
+      breaksw
+    default:
+      echo "Unknown flag $argv[1]"
+      breaksw
+  endsw
+  shift argv
+end
+
+# inform about intentions
+echo "EMERALDROOT is $EMERALDROOT"
+echo "Architecture to delete is $arch"
+
+@@ haschildren = 0
+cd $EMERALDROOT/lib
+set nonomatch
+set children = (${arch}*)
+if ("$children" == "${arch}*") then
+  echo "This architecture doesn't exist in $EMERALDROOT/lib"
+else
+  foreach child ($children)
+    if ($child == $arch) then
+      continue
+    else
+      @@ haschildren ++
+    endif
+  end
+endif
+if ($haschildren != 0) then
+  echo "Can't delete parent architectures unless there are no children"
+  exit (1)
+endif
+
+if ($?justprint) then
+  echo You need to:
+  echo rm $EMERALDROOT/{bin,lib,vm}/$arch/* ; rmdir $EMERALDROOT/{bin,lib,vm}/$arch
+else
+  rm $EMERALDROOT/{bin,lib,vm}/$arch/* ; rmdir $EMERALDROOT/{bin,lib,vm}/$arch
+endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a13 1
+unset isparent
+d42 7
+a48 5
+if ($arch == `arch`) then
+  set isparent
+  @@ haschildren = 0
+  cd $EMERALDROOT/lib
+  set children = (${arch}*)
+a55 8
+  if ($haschildren == 0) then
+    echo "This is a parent architecture with no children"
+    echo "Interrupt in 5 seconds if you don't really mean it."
+    sleep 5
+  else
+    echo "Can't delete parent architectures unless there are no others"
+    exit (1)
+  end if
+d57 4
+a60 1
+
+d63 2
+a64 1
+  echo rm -rf $EMERALDROOT/{bin,lib,vm}/$arch
+d66 1
+a66 1
+  echo rm -rf $EMERALDROOT/{bin,lib,vm}/$arch
+@

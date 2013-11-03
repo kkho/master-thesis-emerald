@@ -1,0 +1,1205 @@
+head	1.16;
+access;
+symbols
+	105alpha:1.15
+	104alpha:1.14
+	103alpha:1.12
+	102alpha:1.11
+	101alpha:1.10
+	100alpha:1.8;
+locks; strict;
+comment	@ * @;
+
+
+1.16
+date	2007.06.11.02.28.44;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	98.06.24.16.12.10;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	98.05.04.19.19.45;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	98.04.30.20.46.11;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	98.04.09.15.09.12;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.04.04.20.08.38;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.03.26.22.28.29;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.13.19.53.20;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.16
+log
+@Check in current version
+@
+text
+@/*
+ * The stuff you need to handle complicated invocations.
+ */
+
+
+#define E_NEEDS_IOV
+#define E_NEEDS_STRING
+#include "system.h"
+
+#include "types.h"
+#include "iset.h"
+#include "iisc.h"
+#include "vm_exp.h"
+#include "assert.h"
+#include "call.h"
+#include "bufstr.h"
+#include "streams.h"
+#include "rinvoke.h"
+#include "move.h"
+#include "oidtoobj.h"
+#include "remote.h"
+#include "gc.h"
+#include "trace.h"
+
+IISc fixqueue;
+IISc allfrozen;
+extern int debugInteractively;
+
+inline int isReason(int why, Reason r)
+{
+  return (why & (int) r) == (int) r;
+}
+
+inline int reasonToIndex(int why)
+{
+  return why == RInitially ? OVE_INITIALLY : OVE_RECOVERY;
+}
+
+void CallInit(void)
+{
+  allfrozen = IIScCreate();
+  fixqueue = IIScCreate();
+}
+
+void pushAR(State *state, Object obj, ConcreteType ct, int opindex)
+{
+  PROFILEBUMP(state->pc, ct->d.opVector->d.data[opindex], ct);
+
+#define sp state->sp
+  /* stack the old environment */
+  PUSH(ConcreteType, state->cp);
+  PUSH(Object, state->op);
+  PUSH(u32, state->fp);
+  PUSH(u32, state->pc);
+
+  /* switch to the called environment */
+  state->opp = ct->d.opVector->d.data[opindex];
+  state->pc = (u32)state->opp->d.code->d.data;
+  state->cp = ct;
+  state->op = obj;
+  state->fp = sp;
+#undef sp
+}
+
+void pushBottomAR(State *state)
+{
+  extern Object upcallStub;
+  ConcreteType stubCT = BuiltinInstCT(STUBI);
+  u32 sp = state->sp;
+
+  PUSH(ConcreteType, stubCT);
+  PUSH(Object, upcallStub);
+  PUSH(u32, 0 /* frame pointer */);
+  PUSH(u32, (u32) stubCT->d.opVector->d.data[OVE_PROCESS]->d.code->d.data);
+  state->sp = sp;
+  state->fp = sp;
+}
+  
+void freeze(Object obj, Reason why)
+{
+  int r = IIScLookup(allfrozen, (int)obj);
+  SETBROKEN(obj->flags);
+
+  if (why == RRemote) return;
+  if (IIScIsNIL(r)) r = 0;
+  r = r | (int)why;
+  IIScInsert(allfrozen, (int)obj, r);
+}
+
+void addToFixQueue(Object obj, State *state)
+{
+  SQueue fixq = (SQueue) IIScLookup(fixqueue, (int)obj);
+
+  assert((int)state != -1);
+  if (IIScIsNIL(fixq)) {
+    IIScInsert(fixqueue, (int)obj, (int)(fixq = SQueueCreate()));
+    TRACE(call, 2, ("State %#x waiting for object %#x to init", state, obj));
+  }
+  SQueueInsert(fixq, state);
+}
+    
+void finishedFixing(Object obj)
+{
+  SQueue fixq = (SQueue) IIScLookup(fixqueue, (int)obj);
+  State *waiter;
+
+  if (IIScIsNIL(fixq)) {
+    TRACE(call, 2, ("No waiters"));
+  } else {
+    while ((waiter = SQueueRemove(fixq))) {
+      TRACE(call, 2, ("Thaw resuming state %#x", waiter));
+      makeReady(waiter);
+    }
+    SQueueDestroy(fixq);
+    IIScDelete(fixqueue, (int)obj);
+  }
+}
+    
+char *ReasonString(int r)
+{
+  static char buf[5][60];
+  static int i = 0;
+  char *rval;
+
+  rval = buf[i]; i = (i+1) % 5;
+  sprintf(rval, "%s%s%s", 
+    r & (int) RInitially ? "Initially " : "",
+    r & (int) RRemote ? "Remote " : "",
+    r & (int) RDead ? "Dead " : "");
+  return rval;
+}
+
+extern int invoke(Object obj, ConcreteType ct, int opindex, State *state);
+
+void thaw(Object obj, Reason why)
+{
+  int r = IIScLookup(allfrozen, (int)obj);
+  if (IIScIsNIL(r)) r = 0;
+  if (!RESDNT(obj->flags)) r = r | RRemote;
+
+  r = r & ~(int)why;
+  TRACE(call, 2, ("Thawing Object %#x a %.*s", obj, 
+		     CODEPTR(obj->flags)->d.name->d.items,
+		     CODEPTR(obj->flags)->d.name->d.data));
+  if (r) {
+    /* The object is still broken, but for some other reason */
+    TRACE(call, 2, ("Object %#x still broken for %s", ReasonString(r)));
+    if (r == RRemote) {
+      IIScDelete(allfrozen, (int)obj);
+      finishedFixing(obj);
+    } else {
+      IIScInsert(allfrozen, (int)obj, r);
+    }
+  } else {
+    TRACE(call, 2, ("Object %#x no longer broken"));
+    CLEARBROKEN(obj->flags);
+    IIScDelete(allfrozen, (int)obj);
+    finishedFixing(obj);
+  }
+}
+
+int duringInitialization(Object obj)
+{
+  int why = IIScLookup(allfrozen, (int)obj);
+  return !IIScIsNIL(why) && ((why & (int)RInitially) == (int)RInitially);
+}
+  
+int isBroken(Object obj)
+{
+  int why = IIScLookup(allfrozen, (int)obj);
+  return !IIScIsNIL(why) && ((why & (int)RDead) == (int)RDead);
+}
+  
+int selfDuringInitialization(Object obj, State *state)
+{
+  int why = IIScLookup(allfrozen, (int)obj);
+  return (Reason)why == RInitially && obj == state->op;
+}
+
+void tryToInit(Object obj)
+{
+  extern IISc fixqueue;
+  ISet fixq;
+  int why = IIScLookup(allfrozen, (int)obj);
+
+  if ((Reason)why != RInitially) return;
+  fixq = (ISet) IIScLookup(fixqueue, (int)obj);
+  if (!IIScIsNIL(fixq)) return;
+
+  IIScInsert(fixqueue, (int)obj, (int)SQueueCreate());
+  TRACE(initiallies, 1,
+	("actively invoking initially/recovery of %#x (%.*s)",
+	 obj, CODEPTR(obj->flags)->d.name->d.items,
+	 CODEPTR(obj->flags)->d.name->d.data));
+  run(obj, reasonToIndex(why), 0);
+}
+
+/*
+ * Return 0 (success) if interpretation is to continue, 1 if interpretation
+ * of the state needs to be defered.
+ */
+int invokefrozen(Object obj, ConcreteType ct, int opindex, State *state)
+{
+  int why = IIScLookup(allfrozen, (int)obj);
+  if (IIScIsNIL(why)) why = 0;
+  if (!RESDNT(obj->flags)) why = why | RRemote;
+
+  if (TRACING(call, 2) || 
+      (isReason(why, RInitially) && TRACING(initiallies, 2))) {
+    TRACE(call, 0,
+	  ("invoking frozen (%s) object %#x (%.*s)",
+	   ReasonString(why), obj, ct->d.name->d.items, ct->d.name->d.data));
+  }
+  if (isReason(why, RDead)) {
+    /* It cannot come back */
+    return debug(state, "Invocation of failed object");
+#ifdef DISTRIBUTED
+  } else if (isReason(why, RRemote)) {
+    return rinvoke(state, obj, opindex);
+#endif
+  } else if ((Reason)why == RInitially) {
+    extern IISc fixqueue;
+    ISet fixq;
+
+    assert(obj != state->op);
+
+    /*
+     * First, push the activation record for the actual operation that we 
+     * are attempting to invoke so we can return to it when we are resumed,
+     * and then run the initially (or just wait for it to finish).
+     */
+    pushAR(state, obj, ct, opindex);
+    
+    fixq = (ISet) IIScLookup(fixqueue, (int)obj);
+    if (IIScIsNIL(fixq)) {
+      IIScInsert(fixqueue, (int)obj, (int)SQueueCreate());
+      TRACE(initiallies, 1,
+	    ("call invoking initially/recovery of %#x (%.*s)",
+	     obj, ct->d.name->d.items, ct->d.name->d.data));
+      pushAR(state, obj, ct, reasonToIndex(why));
+      return 0;
+    } else {
+      addToFixQueue(obj, state);
+      return 1;
+    }
+  } else {
+    /*
+     * There is no reason, probably a remote object that came back.
+     */
+    CLEARBROKEN(obj->flags);
+    return invoke(obj, ct, opindex, state);
+  }
+}
+
+/*
+ * Return 0 (success) if interpretation is to continue, 1 if interpretation
+ * of the state needs to be suspended.
+ */
+int invoke(Object obj, ConcreteType ct, int opindex, State *state)
+{
+  char buf[64];
+  if (ISNIL(obj)) {
+    sprintf(buf, "Invoked nil, opindex = %d", opindex);
+    return debug(state, buf);
+  }
+  IFTRACE(call, 1) {
+    docallct(ct->d.opVector->d.data[opindex], state->sp, state->fp, ct, obj, state->sb);
+  }
+  if (HASODP(ct->d.instanceFlags) && BROKEN(obj->flags) &&
+      !selfDuringInitialization(obj, state)) {
+    return invokefrozen(obj, ct, opindex, state);
+  } else {
+    pushAR(state, obj, ct, opindex);
+    return 0;
+  }
+}
+
+/*
+ * A stack segment (process) has terminated its execution, and now we must
+ * figure out what to do next.  The integer argument fail is 1 if a failure
+ * is to be propagated to the next stack segment, 2 if an unavailable is to
+ * be propagated, and 0 if a normal return is to take place.
+ */
+State *processDone(State *state, int fail)
+{
+  State *previousState = 0;
+
+  regRoot(state);
+  anticipateGC(64 * 1024);
+  unregRoot();
+
+  if (isNoOID(state->psoid)) {
+    TRACE(process, 3, ("Nothing to do next"));
+    previousState = 0;
+  } else {
+    TRACE(process, 3, ("Returning to state %s", OIDString(state->psoid)));
+    previousState = stateFetch(state->psoid, limbo);
+    if (RESDNT(previousState->firstThing)) {
+      /*
+       * We need to run that state. The results are at the bottom of our
+       * stack.
+       */
+      int i, *ressplace, *ress;
+      ress = (int *)state->sp - state->psnres * 2;
+
+      TRACE(process, 3, ("Returning to a local state"));
+      assert(sameOID(previousState->nsoid, OIDOf(state)));
+      TRACE(process, 5, ("Resetting nsoid in state %#x", previousState));
+      previousState->nsoid = nooid;
+      previousState->nstoid = nooid;
+
+      /* Simulate a return on that state */
+      ressplace = (int *)previousState->sp - state->psnres * 2;
+      for (i = 0; i < state->psnres * 2; i++) ressplace[i] = ress[i];
+      if (fail) {
+	if (!findHandler(previousState, fail - 1, (Object)JNIL)) {
+	  previousState = processDone(previousState, fail);
+	}
+      }
+#ifdef DISTRIBUTED
+    } else {
+      Stream str;
+      RemoteOpHeader h;
+      h.kind = InvokeReply;
+      h.option1 = fail;
+      h.status = 0;
+      h.ss = state->psoid;
+      h.sslocation = getLocFromObj((Object)previousState);
+      h.target = OIDOf(state->op);
+      h.targetct = OIDOf(state->cp);
+
+      if (fail) {
+	TRACE(rinvoke, 2, ("Signalling %s to remote invocation",
+			   fail == 1 ? "failure" :
+			   fail == 2 ? "unavailable" :
+			   "unknown"));
+      }
+      TRACE(rinvoke, 3, ("Returning %d vars to remote activation %s on %s",
+			 state->psnres, OIDString(h.ss),
+			 NodeString(h.sslocation)));
+      str = StartMsg(&h);
+      sendNVars(str, state->psnres, (int *)(state->sp - state->psnres * 2 * 4),
+		state->ep, state->et);
+      sendMsgTo(h.sslocation, str, h.ss);
+      previousState = 0;
+#endif
+    }
+  }
+  deleteState(state);
+  inhibit_gc--;
+  return previousState;
+}
+
+/*
+ * We have just entered a new invocation, and we need a new stack chunk
+ */
+State *newStackChunk(State *oldstate)
+{
+  State *state;
+  int *args;
+  int sp;
+  ConcreteType ct = oldstate->cp;
+  OpVectorElement ove = findOpVectorElement(ct, oldstate->pc);
+  int nargs = ove->d.nargs, nress = ove->d.nress, i;
+  u32 junk;
+
+  state = newState(oldstate->op, ct);
+  state->ep = oldstate->ep;
+  state->et = oldstate->et;
+  state->pc = oldstate->pc;
+
+  sp = state->sb;
+
+  args = (int *)oldstate->sp - 4 - 2 * (nargs + nress);
+  /* build the stack */
+  for (i = 0; i < 2 * (nargs + nress); i++) { PUSH(int, args[i]); }
+  state->sp = sp;
+  
+  pushBottomAR(state);
+
+#if !defined(OLD_STACK_OVERFLOW_CODE)
+#define sp oldstate->sp
+  POP(u32, oldstate->pc);
+  POP(u32, oldstate->fp);
+  POP(Object, oldstate->op);
+  POP(ConcreteType, oldstate->cp);
+  /* Pop the arguments */
+  for (i = 0; i < nargs; i++) {
+    POP(u32, junk);
+    POP(u32, junk);
+  }
+#undef sp
+#endif
+
+  dependsOn(state, oldstate, nress);
+  return state;
+}
+
+#ifdef DISTRIBUTED
+/*
+ * The indicated state has moved elsewhere, so can be deleted.  It is not 
+ * finished, so we can't do what the callback is.
+ */
+void processMovedOut(State *state)
+{
+  deleteState(state);
+}
+
+/*
+ * We are returning from an invocation on an object that has died.  Raise
+ * failure.  Return true (1) if the entire stack segment has been consumed,
+ * false (0) if it should be run.
+ */
+int returnToBrokenObject(State *state)
+{
+  State lstate = *state;
+  if (findHandler(&lstate, 0, (Object)JNIL)) {
+    TRACE(call, 1, ("Return to broken object which is handled"));
+    TRACE(process, 1, ("Return to broken object which is handled"));
+    *state = lstate;
+    return 0;
+  } else {
+    TRACE(call, 1, ("Unhandled failure in returning to broken object"));
+    if (debugInteractively) {
+      return debug(state, "Unhandled failure in returning to broken object");
+    } else {
+      state = processDone(state, 1);
+      if (state) makeReady(state);
+      return 1;
+    }
+  }
+}
+
+/*
+ * Some process has returned, only to find the object owning the previous
+ * activation record to be gone.  Send the activation record to the new home
+ * of the object.
+ */
+void returnToForeignObject(State *state, int value)
+{
+  Object obj;
+  Node srv;
+  Stream str;
+  RemoteOpHeader h;
+  
+  regRoot(state);
+  anticipateGC(64 * 1024);
+  unregRoot();
+
+  obj = state->op;
+  srv = getLocFromObj(obj);
+  h.kind = InvokeForwardRequest;
+  h.target = OIDOf(state->op);
+  h.targetct = OIDOf(state->cp);
+  h.ss = OIDOf((Object)state);
+  h.sslocation = myid;
+
+  TRACE(rinvoke, 3, ("Forwarding activation on %#x %s a %.*s", obj, 
+		     OIDString(h.target),
+		     state->cp->d.name->d.items,
+		     state->cp->d.name->d.data));
+  TRACE(rinvoke, 4, ("It is on node %s", NodeString(srv)));
+
+  str = StartMsg(&h);
+  WriteInt(value, str);
+  
+  SQueueYank(ready, state);
+  if (addActivations(state, str, 1)) {
+    processMovedOut(state);
+  }
+
+  sendMsgTo(srv, str, h.ss);
+  inhibit_gc--;
+}
+
+#endif
+
+struct State *stateFetch(OID oid, Node loc)
+{
+  State *state = (State *)OIDFetch(oid);
+#ifdef DISTRIBUTED
+  int isnew = 0;
+  if (ISNIL(state)) {
+    ConcreteType stateCT = BuiltinInstCT(INTERPRETERSTATEI);
+
+    state = (State *)vmMalloc(sizeof(State));
+    memset(state, 0, sizeof(*state));
+    SETCODEPTR(state->firstThing, stateCT);
+    if (inDistGC()) SETDISTGC(state->firstThing);
+    OIDInsert(oid, (Object)state);
+    TRACE(distgc, 5, ("StateFetch making a %s state %#x with oid %s",
+		      RESDNT(state->firstThing) ? "resident" : "nonresident",
+		      (unsigned int)state, OIDString(oid)));
+    TRACE(process, 5, ("StateFetch making a %s state %#x with oid %s",
+		      RESDNT(state->firstThing) ? "resident" : "nonresident",
+		      (unsigned int)state, OIDString(oid)));
+    isnew = 1;
+  }
+  if (!RESDNT(state->firstThing) && (isnew || !isNoNode(loc)))
+    updateLocation((Object)state, loc);
+#else
+  assert(!ISNIL(state));
+#endif
+  return state;
+}
+
+void dependsOn(struct State *s, struct State *t, int nress)
+{
+  assert(!wasGCMalloced(s));
+  assert(!wasGCMalloced(t));
+  t->nstoid = nooid;
+  TRACE(process, 5, ("Setting nsoid in state %#x to %s", t, OIDString(OIDOf(s))));
+  if (RESDNT(t->firstThing)) t->nsoid = OIDOf(s);
+  s->psoid = OIDOf(t);
+  s->psnres = nress;
+}
+
+@
+
+
+1.15
+log
+@Clean up an unnecessary reference to updateLocation when not DISTRIBUTED
+@
+text
+@d57 2
+a58 1
+  state->pc = (u32)ct->d.opVector->d.data[opindex]->d.code->d.data;
+a184 1
+  ConcreteType ct = CODEPTR(obj->flags);
+d193 2
+a194 1
+	 obj, ct->d.name->d.items, ct->d.name->d.data));
+d481 1
+a482 1
+#ifdef DISTRIBUTED
+@
+
+
+1.14
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@d481 1
+d500 3
+@
+
+
+1.13
+log
+@Removed OutstandingMoves table, and resend msgs when forwardMsg fails
+@
+text
+@a28 9
+inline Reason why(int r)
+{
+  return
+    r & (int) RInitially ? RInitially :
+    r & (int) RRemote ? RRemote :
+    r & (int) RDead ? RDead :
+    0;
+}
+
+a60 11
+#undef sp
+}
+
+void popAR(State *state)
+{
+#define sp state->sp
+  /* restore the old environment */
+  POP(u32, state->pc);
+  POP(u32, state->fp);
+  POP(Object, state->op);
+  POP(ConcreteType, state->cp);
+@
+
+
+1.12
+log
+@Improved distgc tracing and fixed over-aggressive nature
+@
+text
+@a51 1
+  outstandingMoves = ISetCreate();
+d509 1
+a509 1
+    TRACE(distgc, 15, ("StateFetch making a %s state %#x with oid %s",
+@
+
+
+1.11
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@d510 1
+a510 1
+    TRACE(distgc, 5, ("StateFetch making a %s state %#x with oid %s",
+@
+
+
+1.10
+log
+@Fixed a non-DISTRIBUTED problem
+@
+text
+@d7 1
+d27 1
+a27 1
+IISc outstandingInvokes;
+a51 1
+  outstandingInvokes = IIScCreate();
+d312 1
+a312 1
+  if (isNoOID(state->nsoid)) {
+d316 2
+a317 2
+    TRACE(process, 3, ("Returning to state %s", OIDString(state->nsoid)));
+    previousState = stateFetch(state->nsoid, limbo);
+d324 1
+a324 1
+      ress = (int *)state->sp - state->nsnres * 2;
+d327 4
+d333 2
+a334 2
+      ressplace = (int *)previousState->sp - state->nsnres * 2;
+      for (i = 0; i < state->nsnres * 2; i++) ressplace[i] = ress[i];
+d347 1
+a347 1
+      h.ss = state->nsoid;
+d359 1
+a359 1
+			 state->nsnres, OIDString(h.ss),
+d362 1
+a362 1
+      sendNVars(str, state->nsnres, (int *)(state->sp - state->nsnres * 2 * 4),
+d444 7
+a450 3
+    state = processDone(state, 1);
+    if (state) makeReady(state);
+    return 1;
+d501 1
+d506 1
+a506 4
+    state->firstThing = 0;
+    state->sb = 0;
+    state->nsnres = 0;
+    state->nsoid = nooid;
+d513 4
+d518 2
+a519 1
+  if (!RESDNT(state->firstThing)) updateLocation((Object)state, loc);
+d527 5
+a531 2
+  s->nsoid = OIDOf(t);
+  s->nsnres = nress;
+@
+
+
+1.9
+log
+@More reliable process management, got xforms working
+@
+text
+@d488 2
+a510 2
+
+#endif
+@
+
+
+1.8
+log
+@Small fixes to locate and move
+@
+text
+@a25 1
+IISc whattodonext;
+a50 1
+  whattodonext = IIScCreate();
+d241 1
+a241 1
+  } else {
+a244 1
+    assert((Reason)why == RInitially);
+d266 6
+a306 1
+  whatnext *wn;
+d312 1
+a312 2
+  wn = (whatnext *)IIScLookup(whattodonext, (int)state);
+  if (IIScIsNIL(wn)) {
+d316 3
+a318 3
+    IIScDelete(whattodonext, (int)state);
+    TRACE(process, 3, ("Returning to state %s", OIDString(OIDOf(wn->state))));
+    if (RESDNT(wn->state->firstThing)) {
+d324 1
+a324 2
+      Object o;
+      ress = (int *)state->sp - wn->nress * 2;
+d329 2
+a330 16
+      previousState = wn->state;
+#if defined(OLD_STACK_OVERFLOW_CODE)
+#define sp previousState->sp
+      POP(u32, previousState->pc);
+      POP(u32, previousState->fp);
+      POP(Object, previousState->op);
+      POP(ConcreteType, previousState->cp);
+      /* Pop the arguments */
+      for (i = 0; i < wn->nargs; i++) {
+	POP(Object, o);
+	POP(Object, o);
+      }
+#undef sp
+#endif
+      ressplace = (int *)previousState->sp - wn->nress * 2;
+      for (i = 0; i < wn->nress * 2; i++) ressplace[i] = ress[i];
+a339 1
+      assert(!RESDNT(wn->state->firstThing));
+d343 2
+a344 2
+      h.ss = OIDOf((Object)wn->state);
+      h.sslocation = getLocFromObj((Object)wn->state);
+d355 1
+a355 1
+			 wn->nress, OIDString(h.ss),
+d358 1
+a358 1
+      sendNVars(str, wn->nress, (int *)(state->sp - wn->nress * 2 * 4),
+a363 1
+    vmFree(wn);
+d411 1
+a411 1
+  dependsOn(state, oldstate, DoAnotherState, args, nargs, nress);
+d497 2
+d512 1
+a512 1
+void dependsOn(struct State *s, struct State *t, ThingToDo action, int *ress, int nargs, int nress)
+d514 4
+a517 10
+  whatnext *wn = (whatnext *)vmMalloc(sizeof(whatnext));
+  wn->action = action;
+  wn->ress = ress;
+  wn->nargs = nargs;
+  wn->nress = nress;
+  wn->state = t;
+#ifdef DISTRIBUTED
+  if (action == DoRemoteReturn) wn->loc = getLocFromObj((Object)t);
+#endif
+  IIScInsert(whattodonext, (int)s, (int)wn);
+@
+
+
+1.7
+log
+@Implement broken objects better
+@
+text
+@d312 1
+d316 1
+d326 2
+d330 1
+d341 2
+a342 1
+#undef sp	
+d396 2
+a397 3
+  int nargs = ove->d.nargs;
+  int nress = ove->d.nress;
+  int i;
+d412 14
+@
+
+
+1.6
+log
+@'.'
+@
+text
+@d423 21
+@
+
+
+1.5
+log
+@'./vm/src'
+@
+text
+@a33 1
+    r & (int) RMoving ? RMoving :
+d54 1
+d148 1
+a148 1
+  sprintf(rval, "%s%s%s%s", 
+a150 1
+    r & (int) RMoving ? "Moving " : "",
+d190 6
+d238 1
+a238 2
+    debug(state, "Invocation of failed object");
+    return 0;
+a239 4
+  } else if (isReason(why, RMoving)) {
+    pushAR(state, obj, ct, opindex);
+    addToFixQueue(obj, state);
+    return 1;
+d295 7
+a301 1
+State *processDone(State *state)
+a303 1
+  u32 sp;
+d306 1
+d308 1
+a310 1
+  if (!IIScIsNIL(wn)) IIScDelete(whattodonext, (int)state);
+d313 31
+a343 19
+  } else if ((wn->action == DoAnotherState || wn->action == DoRemoteReturn) &&
+	     RESDNT(wn->state->firstThing)) {
+    /* We need to run that state. The results are at the bottom of our stack.  
+     */
+    int i;
+    int *ressplace, *ress;
+    ress = (int *)state->sp - wn->nress * 2;
+
+    /* Simulate a return on that state */
+    previousState = wn->state;
+    sp = previousState->sp;
+    POP(u32, previousState->pc);
+    POP(u32, previousState->fp);
+    POP(Object, previousState->op);
+    POP(ConcreteType, previousState->cp);
+    ressplace = (int *)previousState->sp - wn->nress * 2;
+    for (i = 0; i < wn->nress * 2; i++) ressplace[i] = ress[i];
+    previousState->sp = sp;
+    vmFree(wn);
+d345 27
+a371 20
+  } else if ((wn->action == DoAnotherState || wn->action == DoRemoteReturn) &&
+	     !RESDNT(wn->state->firstThing)) {
+    Stream str;
+    RemoteOpHeader h;
+    h.kind = InvokeReply;
+    h.status = 0;
+    h.ss = OIDOf((Object)wn->state);
+    h.sslocation = getLocFromObj((Object)wn->state);
+    h.target = OIDOf(state->op);
+    h.targetct = OIDOf(state->cp);
+
+    TRACE(rinvoke, 3, ("Returning %d vars to remote activation %s on %s",
+		       wn->nress, OIDString(h.ss),
+		       NodeString(h.sslocation)));
+    str = StartMsg(&h);
+    sendNVars(str, wn->nress, (int *)(state->sp - wn->nress * 2 * 4),
+	      state->ep, state->et);
+    if (sendMsg(h.sslocation, str) < 0) {
+      TRACE(rinvoke, 1, ("remote return: sendMsg failed"));
+      /* TODO: do what ? */
+a372 1
+    previousState = 0;
+a373 8
+#endif
+  } else if (wn->action == DoResumeThread) {
+    assert(state->sp - state->sb == (unsigned)wn->nress * 8);
+    memcpy(wn->ress, (void *)state->sb, wn->nress * 8);
+    abort();
+    previousState = 0;
+  } else {
+    assert(0);
+d375 1
+a375 6
+
+  ISetDelete(allProcesses, (int)state);
+
+  OIDRemoveAny((Object)state);
+  vmFree((void *)state->sb);
+  vmFree(state);
+d408 1
+a408 1
+  dependsOn(state, oldstate, DoAnotherState, args, nress);
+d419 1
+a419 4
+  ISetDelete(allProcesses, (int)state);
+  OIDRemoveAny((Object)state);
+  vmFree((void *)state->sb);
+  vmFree(state);
+d427 1
+a427 1
+void returnToForeignObject(State *state)
+d434 1
+d436 2
+d453 1
+a453 1
+
+d460 1
+a460 4
+  if (sendMsg(srv, str) < 0) {
+    TRACE(rinvoke, 1, ("forward activation: sendMsg failed"));
+    /* TODO: now what ? */
+  }
+d468 2
+d472 3
+a474 1
+    SETBROKEN(state->firstThing);
+d476 3
+d486 1
+a486 1
+void dependsOn(struct State *s, struct State *t, ThingToDo action, int *ress, int nress)
+d491 1
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d5 4
+a8 4
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdlib.h>
+#pragma pointer_size short
+d235 1
+a235 1
+#ifdef USETHREADS
+d297 1
+a297 1
+  State *previousState;
+d326 1
+a326 1
+#ifdef USETHREADS
+d340 1
+a340 1
+		       ThreadIdString(h.sslocation)));
+d354 1
+a354 2
+    vmSemV((semaphore *)wn->waiting);
+    vmSemFree((semaphore *)wn->waiting);
+d401 1
+a401 1
+#ifdef USETHREADS
+d422 1
+a422 1
+  vmThreadId srv;
+d433 1
+a433 1
+  h.sslocation = vmMyThreadId();
+d439 1
+a439 1
+  TRACE(rinvoke, 4, ("It is on node %s", ThreadIdString(srv)));
+d456 1
+a456 1
+struct State *stateFetch(OID oid, vmThreadId loc)
+a470 17
+
+int noDependentThreads(struct State *state)
+{
+  whatnext *wn = (whatnext *)IIScLookup(whattodonext, (int)state);
+  return (IIScIsNIL(wn) || wn->action != DoResumeThread);
+}
+
+void threadDependsOn(struct State *s, semaphore *w, int *ress, int nress)
+{
+  whatnext *wn = (whatnext *)vmMalloc(sizeof(whatnext));
+  wn->action = DoResumeThread;
+  wn->ress = ress;
+  wn->nress = nress;
+  wn->waiting = (struct semaphore *)w;
+  IIScInsert(whattodonext, (int)s, (int)wn);
+}
+
+d478 1
+d480 1
+@
+
+
+1.3
+log
+@Checkpoint
+@
+text
+@a278 1
+#ifndef NDEBUG
+a282 1
+#endif
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d5 1
+d22 1
+d29 20
+d104 3
+a108 1
+  SETBROKEN(obj->flags);
+d161 3
+a163 2
+  assert(!IIScIsNIL(r));
+  assert((r & (int)why) == (int)why);
+a170 1
+    IIScInsert(allfrozen, (int)obj, r);
+d172 1
+d174 2
+a188 1
+  return (Reason)why == RInitially;
+d222 2
+a301 1
+  int oldinh;
+d303 1
+a303 1
+  oldinh = anticipateGC(64 * 1024);
+d309 1
+a309 1
+  } else if ((wn->action == AnotherState || wn->action == RemoteReturn) &&
+d329 1
+a329 1
+  } else if ((wn->action == AnotherState || wn->action == RemoteReturn) &&
+d347 1
+a347 1
+      TRACE(rinvoke, 0, ("remote return: sendMsg failed"));
+d353 2
+a354 2
+  } else if (wn->action == ResumeThread) {
+    assert(state->sp - state->sb == wn->nress * 8);
+d356 2
+a357 1
+    vmSemV(wn->waiting);
+d368 1
+a368 1
+  inhibit_gc = oldinh;
+d400 1
+a400 1
+  dependsOn(state, oldstate, AnotherState, args, nress);
+a427 1
+  int oldinh;
+d429 1
+a429 1
+  oldinh = anticipateGC(64 * 1024);
+d453 1
+a453 1
+    TRACE(rinvoke, 0, ("forward activation: sendMsg failed"));
+d456 1
+a456 1
+  inhibit_gc = oldinh;
+d463 1
+a463 1
+    state = vmMalloc(sizeof(State));
+d478 1
+a478 1
+  return (IIScIsNIL(wn) || wn->action != ResumeThread);
+d483 2
+a484 2
+  whatnext *wn = vmMalloc(sizeof(whatnext));
+  wn->action = ResumeThread;
+d487 1
+a487 1
+  wn->waiting = w;
+d493 1
+a493 1
+  whatnext *wn = vmMalloc(sizeof(whatnext));
+d498 1
+a498 1
+  if (action == RemoteReturn) wn->loc = getLocFromObj((Object)t);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d20 1
+d25 1
+d32 1
+d274 1
+d276 1
+a276 1
+  ISetDelete(allProcesses, (int)state);
+d307 1
+d313 2
+a314 2
+    TRACE(rinvoke, 3, ("Returning to remote activation %s on %s",
+		       OIDString(h.ss),
+d334 3
+d340 1
+d396 2
+a397 2
+  Object obj = state->op;
+  vmThreadId srv = getLocFromObj(obj);
+d400 1
+d402 3
+d429 1
+@

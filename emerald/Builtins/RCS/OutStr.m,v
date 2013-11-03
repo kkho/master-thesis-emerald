@@ -1,0 +1,396 @@
+head	1.10;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.10
+	103alpha:1.10
+	102alpha:1.10
+	101alpha:1.10
+	100alpha:1.10
+	DIKU_0:1.7
+	immel_start:1.4;
+locks; strict;
+
+
+1.10
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.09.26.15.22.57;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.03.03.05.46.25;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.06.16.05.25.31;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.02.22.45.58;	author mueller;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.31.01.54.30;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.03.15.09.25;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.01.18.19.11;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.44.58;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.44.57;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.10
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)OutStream.m	1.2  3/6/91
+%
+export OutStream to "Builtins"
+
+const OutStream <- immutable object OutStream builtin 0x1011
+
+  const OutStreamType <- typeobject OutStreamType builtin 0x1611
+    operation putChar [Character]
+    operation putInt [Integer, Integer]
+    operation putReal [ Real ]
+    operation putString [ String ]
+    operation flush
+    operation close
+  end OutStreamType
+
+  export function getSignature -> [ r : Signature ]
+    r <- OutStreamType
+  end getSignature
+
+  export operation toUnix [ fn: String, mode: String ] -> [ r: OutStreamType ]
+    var fd: Integer <- -1
+    var url: String <- fn
+    const m0 : Character <- mode[0]
+
+    if m0 = 'w' then url <- ">" || url
+    elseif m0 = 'a' then url <- ">>" || url
+    else return end if
+    primitive "NCCALL" "EMSTREAM" "EMS_OPEN" [ fd ] <- [ url ]
+    if fd >= 0 then r <- self.create[ fd ] end if
+  end toUnix
+
+  export operation create [ fd: Integer ] -> [ r: OutStreamType ]
+    r <- object aUnixOutStream builtin 0x1411
+      export operation putChar[ r: Character ]
+	primitive "NCCALL" "EMSTREAM" "EMS_PUTC" [] <- [fd,r]
+      end putChar
+
+      export operation putInt [ number: Integer, width: Integer ]
+	primitive "NCCALL" "EMSTREAM" "EMS_PUTI" [] <- [fd,number,width]
+      end putInt
+
+      export operation writeInt[ r: Integer, size: Integer ]
+	primitive "NCCALL" "EMSTREAM" "EMS_WRITEI" [] <- [fd,r,size]
+      end writeInt
+
+      export operation putReal[ r: Real ]
+	primitive "NCCALL" "EMSTREAM" "EMS_PUTF" 2 [] <- [fd,r]
+      end putReal
+
+      export operation putString[ r: String ]
+	primitive "NCCALL" "EMSTREAM" "EMS_PUTS" [] <- [fd,r]
+      end putString
+
+      export operation flush
+	primitive "NCCALL" "EMSTREAM" "EMS_FLUSH" [] <- [fd]
+      end flush
+
+      export operation close
+	primitive "NCCALL" "EMSTREAM" "EMS_CLOSE" [] <- [fd]
+      end close
+    end aUnixOutStream
+  end create
+end OutStream
+@
+
+
+1.9
+log
+@Common subexpression elimination
+@
+text
+@d29 1
+a29 1
+    primitive "CCALL" "EMSTR_OPEN" [ fd ] <- [ url ]
+d36 1
+a36 1
+	primitive "CCALL" "EMSTR_PUTC" [] <- [fd,r]
+d40 1
+a40 1
+	primitive "CCALL" "EMSTR_PUTI" [] <- [fd,number,width]
+d44 1
+a44 1
+	primitive "CCALL" "EMSTR_WRITEI" [] <- [fd,r,size]
+d48 1
+a48 1
+	primitive "CCALL" "EMSTR_PUTF" 2 [] <- [fd,r]
+d52 1
+a52 1
+	primitive "CCALL" "EMSTR_PUTS" [] <- [fd,r]
+d56 1
+a56 1
+	primitive "CCALL" "EMSTR_FLUSH" [] <- [fd]
+d60 1
+a60 1
+	primitive "CCALL" "EMSTR_CLOSE" [] <- [fd]
+@
+
+
+1.8
+log
+@Use new streams code
+@
+text
+@d24 1
+d26 2
+a27 2
+    if mode[0] = 'w' then url <- ">" || url
+    elseif mode[0] = 'a' then url <- ">>" || url
+@
+
+
+1.7
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d21 9
+a29 9
+  export operation toUnix [fn : String, mode : String] -> [r : OutStreamType]
+    var f : Integer <- ~1
+    if mode[0] != 'w' and mode[0] != 'a' then
+      return
+    end if
+    primitive "SYS" "JFOPEN" 2 [f] <- [fn, mode]
+    if f != 0 then
+      r <- self.create[f]
+    end if
+d32 1
+a32 1
+  export operation create [ f : Integer ] -> [r : OutStreamType]
+d34 2
+a35 3
+      const myf : Integer <- f
+      export operation putChar [r : Character]
+	primitive "SYS" "FPUTCHAR" 2 [] <- [myf, r]
+d38 2
+a39 2
+      export operation putInt [number : Integer, width : Integer]
+	primitive "SYS" "FPUTINT" 3 [] <- [myf, number, width]
+d42 2
+a43 2
+      export operation writeInt [r : Integer, size : Integer]
+	primitive "SYS" "FWRITEINT" 3 [] <- [myf, r, size]
+d46 2
+a47 2
+      export operation putReal [r : Real]
+	primitive "SYS" "FPUTREAL" 2 [] <- [myf, r]
+d50 2
+a51 2
+      export operation putString [r : String]
+	primitive "SYS" "FPUTSTRING" 2 [] <- [myf, r]
+d55 1
+a55 1
+	primitive "SYS" "FFLUSH" 1 [] <- [myf]
+d59 1
+a59 1
+	primitive "SYS" "FCLOSE" 1 [] <- [myf]
+@
+
+
+1.6
+log
+@toUnix now takes an fopen style mode string
+@
+text
+@d23 1
+a23 1
+    if mode(0) != 'w' and mode(0) != 'a' then
+@
+
+
+1.5
+log
+@Rename FOPEN to JFOPEN to avoid system definition
+@
+text
+@a5 1
+
+d21 1
+a21 1
+  export operation toUnix [fn : String, flags : Integer, mode : Integer] -> [r : OutStreamType]
+d23 5
+a27 2
+    primitive "SYS" "JFOPEN" 3 [f] <- [fn, flags, mode]
+    if f >= 0 then
+@
+
+
+1.4
+log
+@Corrected missing export
+@
+text
+@d24 1
+a24 1
+    primitive "SYS" "FOPEN" 3 [f] <- [fn, flags, mode]
+@
+
+
+1.3
+log
+@New faster unix streams
+@
+text
+@d41 1
+a41 1
+      operation writeInt [r : Integer, size : Integer]
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d23 4
+a26 4
+    var fd : Integer <- ~1
+    primitive "SYS" "JOPEN" 3 [fd] <- [fn, flags, mode]
+    if fd >= 0 then
+      r <- self.create[fd]
+d30 1
+a30 1
+  export operation create [ fd : Integer ] -> [r : OutStreamType]
+d32 4
+a35 6
+      const myfd : Integer <- fd
+      monitor
+	var isBroken :    Boolean <- false
+	var isClosed : 	  Boolean <- false
+	const buff <- Buffer.create[myfd]
+	const bc <- BitChunk.create[4]
+d37 3
+a39 5
+	export operation putChar [r : Character]
+	  if isBroken or isClosed then returnAndFail end if
+	  buff.addChar[r]
+	  failure returnAndFail end failure
+	end putChar
+d41 3
+a43 17
+	export operation putInt [number : Integer, width : Integer]
+	  const chars <- number.asString
+	  var theWidth : Integer
+	  var pad : Character
+	  
+	  if isBroken or isClosed then returnAndFail end if
+	  if width < 0 then
+	    pad <- '0'
+	    theWidth <- ~width
+	  else
+	    pad <- ' '
+	    theWidth <- width
+	  end if
+	  buff.pad[pad, theWidth - chars.length]
+	  buff.addString[chars]
+	  failure returnAndFail end failure
+	end putInt
+d45 3
+a47 12
+	operation writeInt [r : Integer, size : Integer]
+	  bc.setunsigned[0, 32, r]
+%	  bc.ntoh[0, 32]
+	  if size >= 4 then
+	    buff.addChar[bc.getunsigned[0, 8]]
+	    buff.addChar[bc.getunsigned[8, 8]]
+	  end if
+	  if size >= 2 then
+	    buff.addChar[bc.getunsigned[16, 8]]
+	  end if
+	  buff.addChar[bc.getunsigned[24, 8]]
+	end writeInt
+d49 3
+a51 2
+	export operation putReal [r : Real]
+	  const chars <- r.asString
+d53 3
+a55 4
+	  if isBroken or isClosed then returnAndFail end if
+	  buff.addString[chars]
+	  failure returnAndFail end failure
+	end putReal
+d57 3
+a59 21
+	export operation putString [r : String]
+	  if isBroken or isClosed then returnAndFail end if
+	  buff.addString[r]
+	  failure returnAndFail end failure
+	end putString
+
+	export operation flush
+	  if isBroken or isClosed then returnAndFail end if
+	  buff.write
+	end flush
+
+	export operation close
+	  if isBroken then returnAndFail end if
+	  buff.write
+	  if myfd != 1 then
+	    isClosed <- true
+	    primitive "SYS" "JCLOSE" 1 [] <- [myfd]
+	  end if
+	  failure returnAndFail end failure
+	end close
+      end monitor
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)OutStream.m	1.1  3/6/91
+d9 1
+a9 1
+  const OutStreamType <- type OutStreamType builtin 0x1611
+@

@@ -1,0 +1,43 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@const tclass <- class tclass [xxfoo : Integer]
+  field foo : Integer <- xxfoo
+end tclass
+
+const driv <- object driv
+  const myTest <- runtest.create[stdin, stdout, "tclass"]
+  initially
+    const x <- tclass.create[56]
+    mytest.check[x$foo = 56, "x$foo = 56"]
+    mytest.done
+  end initially
+end driv
+@

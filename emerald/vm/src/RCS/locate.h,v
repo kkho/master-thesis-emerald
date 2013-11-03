@@ -1,0 +1,135 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.11.20.23.31;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Object location.
+@
+
+
+1.5
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@#ifndef _EMERALD_LOCATE_H
+#define _EMERALD_LOCATE_H
+
+#ifndef _EMERALD_ISET_H
+#include "iset.h"
+#endif
+
+#ifndef _EMERALD_OISC_H
+#include "oisc.h"
+#endif
+
+#ifndef _EMERALD_TYPES_H
+#include "types.h"
+#endif
+
+#ifndef _EMERALD_DIST_H
+#include "dist.h"
+#endif
+
+#ifndef _EMERALD_RINVOKE_H
+#include "rinvoke.h"
+#endif
+
+#define LOCATE_TIMES_TO_TRY 5
+
+typedef struct locationRecord {
+  OID  oid, ctoid;
+  enum { LEasy, LAggressive } stage;
+  int count;
+  ISet outstandingRequests;
+  ISet waitingStates;
+  ISet waitingMsgs;
+} locationRecord;
+
+extern OISc outstandingLocates;
+
+extern void aggressivelyLocate(Object);
+extern void locateHandleDown(noderecord *nd);
+#endif
+@
+
+
+1.4
+log
+@'.'
+@
+text
+@d24 2
+d29 1
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d20 4
+d29 1
+d35 1
+a35 1
+extern void locateHandleUpDown(noderecord *nd);
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d16 2
+a17 2
+#ifndef _EMERALD_THREADS_H
+#include "threads.h"
+a23 1
+  semaphore forAnswer;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d31 1
+@

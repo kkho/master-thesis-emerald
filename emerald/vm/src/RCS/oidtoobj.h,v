@@ -1,0 +1,145 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.05.04.19.21.36;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Check in current version
+@
+text
+@/****************************************************************************
+ File     : oidtoobject.h 
+ Date     : 08-11-92
+ Author   : Mark Immel
+
+ Contents : Routines to obtain objects from OIDs and vice versa
+
+ Modifications
+ -------------
+
+*****************************************************************************/
+
+#ifndef _EMERALD_OIDTOOBJECT_H
+#define _EMERALD_OIDTOOBJECT_H
+
+#include "types.h"
+#include "otable.h"
+
+extern OTable ObjectTable;
+
+extern void OIDToObjectInit(void);
+#define OIDFetch(o) (OTableLookupByOID(ObjectTable, (o)))
+extern void OIDRemove(OID oid, Object o);
+extern void OIDRemoveAny(Object o);
+extern void OIDInsert(OID oid, Object o);
+extern void OIDInsertFromSeq(unsigned seq, Object o);
+extern void UpdateOIDTables(OID oid, Object o);
+
+extern void	NewOID(OID *theOID);
+extern Bits32	OIDSeqOf(Object o);
+extern int	EqOID(OID oid1, OID oid2);
+#define OIDOf(o) (OTableLookupByObject(ObjectTable, (Object)(o)))
+extern OID FOIDOf(Object o);
+extern OID nooid;
+extern AbCon findAbCon(OID, OID), findConCon(ConcreteType);
+int findOpByName(ConcreteType ct, char *name);
+extern void UpdateObjectLocation(Object oldo, Object newo);
+
+char *OIDString( OID );
+#endif /* _EMERALD_OIDTOOBJECT_H */
+@
+
+
+1.4
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@d36 1
+@
+
+
+1.3
+log
+@Reimplemented the object table
+@
+text
+@a22 1
+extern Object OIDFetchSeq(unsigned id);
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d17 1
+a17 2
+#include "oisc.h"
+#include "iosc.h"
+d19 1
+a19 2
+extern OISc OIDToObjectTable;
+extern IOSc ObjectToOIDTable;
+d22 1
+a22 1
+#define OIDFetch(o) ((Object) OIScLookup(OIDToObjectTable, (o)))
+d33 1
+a33 1
+#define OIDOf(o) (IOScLookup(ObjectToOIDTable, (int)(o)))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 2
+a14 2
+#ifndef _OIDTOOBJECT_H
+#define _OIDTOOBJECT_H
+d42 1
+a42 1
+#endif /* _OIDTOOBJECT_H */
+@

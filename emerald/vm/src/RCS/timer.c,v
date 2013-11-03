@@ -1,0 +1,349 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.3
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.23.17.01.05;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Timer callback infrastructure.
+@
+
+
+1.4
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@#define E_NEEDS_SIGNAL
+#define E_NEEDS_SOCKET
+#include "system.h"
+
+#include "trace.h"
+
+#include "storage.h"
+
+int timeAdvanced;
+
+#ifdef WIN32
+HANDLE alarmWakeup;
+DWORD nextWake;
+static inline unsigned TOMSEC(struct timeval t)
+{
+  return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
+
+void alarmThread(void *arg)
+{
+  DWORD status;
+  while (1) {
+    TRACE(dist, 7, ("alarmThread: waiting for %d", nextWake));
+    status = WaitForSingleObject(alarmWakeup, nextWake);
+    TRACE(dist, 8, ("alarmThread: woke up status = %d", status));
+    switch (status) {
+    case WAIT_FAILED:
+      perror("WaitForSingleObject");
+      break;
+    case WAIT_OBJECT_0:
+      break;
+    case WAIT_TIMEOUT:
+      nextWake = INFINITE;
+      timeAdvanced = 1;
+      break;
+    }
+  }
+}
+#else
+void sigalarmHandler(int sig)
+{
+  timeAdvanced = 1;
+}
+#endif /* WIN32 */
+
+
+void TimerInit(void)
+{
+#ifndef WIN32
+  extern void establishHandler(int, void (*h)(int));
+  establishHandler(SIGALRM, sigalarmHandler);
+#else
+  HANDLE t;
+  DWORD tid;
+  alarmWakeup = CreateSemaphore(0, 0, 1, 0);
+  if (alarmWakeup == 0) {
+    perror("CreateSemaphore");
+    die();
+  }
+  nextWake = INFINITE;
+  t = CreateThread(0, 8192, (LPTHREAD_START_ROUTINE)alarmThread, 0, 0, &tid);
+  if (t == 0) {
+    perror("CreateThread");
+    die();
+  }
+  if (SetThreadPriority(t, THREAD_PRIORITY_ABOVE_NORMAL) == 0) {
+    perror("SetThreadPriority");
+    die();
+  }
+#endif /* WIN32 */
+}
+
+static void ScheduleAlarm(struct timeval when)
+{
+#ifndef WIN32
+  struct itimerval interval;
+  
+  if (when.tv_sec < 0 || when.tv_usec < 0 || (when.tv_sec == 0 && when.tv_usec == 0)) {
+    timeAdvanced = 1;
+  } else {
+    /* clock will reset itself at each expiry to this interval     */
+    interval.it_interval.tv_sec   = 0;
+    interval.it_interval.tv_usec  = 0;
+
+    /* this sets the initial clock interval                        */
+    interval.it_value = when;
+
+    /* now start the timer so that it signals with a SIGALRM at expiration */
+    if (setitimer(ITIMER_REAL, &interval, NULL) < 0) {
+      perror("schedule.setitimer");
+    }
+  }
+#else
+  nextWake = TOMSEC(when);
+  TRACE(dist, 8, ("ScheduleAlarm, calling release, nextWake = %d", nextWake));
+  ReleaseSemaphore(alarmWakeup, 1, 0);
+#endif /* WIN32 */
+}
+
+static void CancelAlarm(void)
+{
+#ifndef WIN32
+  struct itimerval interval;
+
+  interval.it_interval.tv_sec   = 0;
+  interval.it_interval.tv_usec  = 0;
+
+  /* this sets the initial clock interval                        */
+  interval.it_value = interval.it_interval;
+
+  /* now cancel the timer */
+  if (setitimer(ITIMER_REAL, &interval, NULL) < 0) 
+    perror("cancel.setitimer");
+#else
+  nextWake = INFINITE;
+  TRACE(dist, 8, ("CancelAlarm, calling release, nextWake = %d", nextWake));
+  ReleaseSemaphore(alarmWakeup, 1, 0);
+#endif /* WIN32 */
+}
+
+inline struct timeval TimeMinus(struct timeval a, struct timeval b)
+{
+  struct timeval r;
+  if (b.tv_usec > a.tv_usec) {
+    r.tv_sec = a.tv_sec - b.tv_sec - 1;
+    r.tv_usec = a.tv_usec + 1000000 - b.tv_usec;
+  } else {
+    r.tv_sec = a.tv_sec - b.tv_sec;
+    r.tv_usec = a.tv_usec - b.tv_usec;
+  }
+  if (r.tv_sec < 0 || r.tv_usec < 0) r.tv_sec = r.tv_usec = 0;
+  return r;
+}
+
+struct timeval TimePlus(struct timeval a, struct timeval b)
+{
+  struct timeval r;
+  r.tv_usec = a.tv_usec + b.tv_usec;
+  r.tv_sec = a.tv_sec + b.tv_sec;
+  while (r.tv_usec > 1000000) {
+    r.tv_usec -= 1000000;
+    r.tv_sec ++;
+  }
+  return r;
+}
+
+int TimeLess(struct timeval a, struct timeval b)
+{
+  return a.tv_sec < b.tv_sec ||
+    (a.tv_sec == b.tv_sec && a.tv_usec <= b.tv_usec);
+}
+
+typedef struct TimeList {
+  struct TimeList *prev, *next;
+  struct timeval when;
+  void (*cb)(void *);
+  void *arg;
+} TimeList;
+static TimeList *sleepers;
+
+void afterTime(struct timeval t, void (*cb)(void *), void *arg)
+{
+  struct timeval now, when;
+  TimeList *curr = (TimeList *)vmMalloc(sizeof (*curr)), *prev, *this;
+  gettimeofday(&now, 0);
+
+  when = TimePlus(now, t);
+
+  if (TimeLess(when, now)) {
+    cb(arg);
+  } else {
+    curr->when = when;
+    curr->cb = cb;
+    curr->arg = arg;
+    for (prev = 0, this = sleepers; 
+	 this && TimeLess(this->when, when);
+	 prev = this, this = this->next) ;
+    curr->prev = prev;
+    curr->next = this;
+    if (prev) {
+      prev->next = curr;
+    } else {
+      sleepers = curr;
+      ScheduleAlarm(TimeMinus(sleepers->when, now));
+    }
+    if (this) this->prev = curr;
+  }
+}
+
+/*
+ * This function has to be a little careful to make sure that if a callback
+ * function schedules another callback that it works ok.
+ */
+void checkForTimeouts(void)
+{
+  TimeList *this;
+  struct timeval now;
+  int didWakeups = 0;
+
+  gettimeofday(&now, 0);
+  while (sleepers && TimeLess(sleepers->when, now)) {
+    didWakeups = 1;
+    this = sleepers;
+    sleepers = this->next;
+    if (sleepers) sleepers->prev = 0;
+
+    this->cb(this->arg);
+    vmFree((char *)this);
+  }
+  if (sleepers) {
+    ScheduleAlarm(TimeMinus(sleepers->when, now));
+  } else {
+    CancelAlarm();
+  }
+}
+
+struct timeval nextWakeup(void)
+{
+  static struct timeval zero;
+  return sleepers ? sleepers->when : zero;
+}
+@
+
+
+1.3
+log
+@More reliable process management, got xforms working
+@
+text
+@d23 1
+a23 1
+    TRACE(dist, 2, ("alarmThread: waiting for %d", nextWake));
+d25 1
+a25 1
+    TRACE(dist, 2, ("alarmThread: woke up status = %d", status));
+d95 1
+a95 1
+  TRACE(dist, 2, ("ScheduleAlarm, calling release, nextWake = %d", nextWake));
+d116 1
+a116 1
+  TRACE(dist, 2, ("CancelAlarm, calling release, nextWake = %d", nextWake));
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d135 1
+a135 1
+static inline struct timeval TimePlus(struct timeval a, struct timeval b)
+d147 1
+a147 1
+static inline int Earlier(struct timeval a, struct timeval b)
+d169 1
+a169 1
+  if (Earlier(when, now)) {
+d176 1
+a176 1
+	 this && Earlier(this->when, when);
+d201 1
+a201 1
+  while (sleepers && Earlier(sleepers->when, now)) {
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 5
+a5 3
+#include <sys/time.h>
+#include <signal.h>
+#include <stdio.h>
+d11 29
+d44 2
+d49 22
+a70 1
+  signal(SIGALRM, sigalarmHandler);
+d75 1
+d93 5
+d102 1
+d114 5
+d121 1
+a121 1
+static inline struct timeval TimeMinus(struct timeval a, struct timeval b)
+d131 1
+d190 4
+d196 1
+a196 1
+  TimeList *this, *next;
+d199 1
+a199 1
+  
+d204 2
+a205 1
+    next = this->next;
+a208 2
+    sleepers = next;
+    if (sleepers) sleepers->prev = 0;
+d215 6
+@

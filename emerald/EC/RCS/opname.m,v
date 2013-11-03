@@ -1,0 +1,143 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.5
+	carlton_start:1.4
+	immel_start:1.2;
+locks; strict;
+
+
+1.5
+date	94.08.17.16.51.27;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.12.10.17.07.21;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.55.30;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.55.29;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.5
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@export Opname
+
+const opname <- immutable object Opname
+  export operation literal [s : String] -> [r : Ident]
+    r <- Environment.getEnv.getITable.lookup[s, 999]
+  end literal
+end Opname
+@
+
+
+1.4
+log
+@Use nameof rather than asString
+@
+text
+@d3 3
+a5 3
+const opname <- class Opname (Tree) [xxid : Ident]
+  class export operation literal [s : String] -> [r : OpName]
+    r <- OpName.create[0, Environment.getEnv.getITable.lookup[s, 999]]
+a6 26
+    const field id : Ident <- xxid
+
+    export function upperbound -> [r : Integer]
+      r <- ~1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nid : Ident
+      const it <- Environment.getEnv.getITable
+      if id !== nil then nid <- it.lookup[id.asString, 999] end if
+      r <- opname.create[ln, nid]
+    end copy
+    export function asString -> [r : String]
+      r <- "opname (" || id.asString || ")"
+    end asString
+    export function same [o : Tree] -> [r : Boolean]
+      const s <- nameof o
+      r <- false
+      if s = "anopname" then
+	r <- id == (view o as OpName)$id
+      end if
+    end same
+
+@
+
+
+1.3
+log
+@Removed all monitors
+@
+text
+@d26 1
+a26 1
+      const s <- o.asString
+d28 1
+a28 1
+      if s.length >= 6 and s.getSlice[0, 6] = "opname" then
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a6 1
+  monitor
+a31 1
+  end monitor
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 5
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+import Ident from "Jekyll"
+export Opname to "Jekyll"
+d4 1
+a4 1
+  type export operation literal [s : String] -> [r : OpName]
+@

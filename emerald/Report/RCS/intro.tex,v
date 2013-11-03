@@ -1,0 +1,661 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.5
+date	97.01.21.23.48.47;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.03.14.16.54.51;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.09.16.22.32.17;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.25.16.32.59;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.29.12;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Many changes to make the Report up to date
+@
+text
+@\section{Introduction}
+
+The primary goal of \emd{}
+\cite{Black86-oopsla,Black87-tse,Jul88tocs,Raj90spe} is to simplify distributed
+programming through language support while providing acceptable
+performance and flexibility both in local and distributed environments.
+Emerald also demonstrates that the object-based model of programming can
+be incorporated both elegantly and efficiently in distributed systems.
+\emd{} draws heavily upon the experience gained from
+Smalltalk \cite{Goldberg83}, the Argus Language and System
+\cite{Liskov84-argus} and, in particular, the Eden system
+\cite{Almes85,Black85-eden-experiences} and the Eden Programming
+Language (EPL) \cite{Black85-epl}.
+
+Featuring an object-oriented style of programming, \emd{} presents
+a unified semantic view of objects appropriate for
+private, local, data-only objects as well as shared,
+remote, concurrently-executing objects. The nature of objects in \emd{}
+is similar to that in Smalltalk \cite{Goldberg83}, i.e., all 
+data items are objects with a uniform semantic model for operations
+on them, but \emd{} does not have any notion of {\em class}.
+\emd{} was explicitly
+designed to support data abstraction: all
+typing of objects is at an abstract level and does not depend on the 
+implementation chosen. Abstract typing aids
+in the dynamic construction of distributed programs by allowing any object in
+a large, possibly distributed, program to be replaced by any other
+type-consistent object.
+Type consistency or {\em conformity} is an important
+aspect of Emerald, and is discussed below.
+Another advantage of treating types as first class objects is 
+that it makes polymorphism inherent in \emd{}.
+
+Recognizing {\em location} as an important attribute of an object in
+distributed programs, \emd{} gives the programmer access to the location
+of objects through primitives that permit the inspection and selection of
+location. Alternatively, when desired, the location details may be left
+to the reasonably-chosen system-defaults.
+However, this recognition of the importance of location 
+for distributed programming has its drawbacks, viz., the semantics of \emd{}
+are complicated both because location is apparent and because systems may
+be partially unavailable.
+
+This report defines the Emerald programming language.
+The Emerald
+approach to programming is discussed in \cite{Raj90spe}, where several
+examples of Emerald programs may be found.
+
+@
+
+
+1.4
+log
+@Remove description of restrict
+@
+text
+@d3 2
+a4 4
+The justification for \emd{}, as for any new programming language, is
+that existing languages have proved to be unsatisfactory for the
+applications at hand. The primary goal of \emd{}
+\cite{Black86-oopsla,Black87-tse,Jul88tocs} is to simplify distributed
+d9 1
+a9 6
+
+For pragmatic reasons, it is often advantageous to base new languages on
+the better features of existing languages. For efficiency and other
+considerations, language design for distributed systems is strongly
+influenced by the underlying distributed operating system.
+Consequently, \emd{} draws heavily upon the experience gained from
+d44 3
+a46 9
+The semantics of a programming language are difficult to describe precisely
+without resorting to formal semantics; perhaps a future report may describe
+the semantics of \emd{} formally. In this report we first present an
+overview of the language features, and then describe the various language
+constructs informally. People who plan to write and execute Emerald programs
+will find the example in Appendix~\ref{compiler appendix} useful; they
+should also keep the \emd{} System User's Guide \cite{Jul88-emdguide} for
+more details about using the \emd{} compiler and kernel. The Emerald
+approach to programming is discussed in \cite{Raj88-approach}, where several
+a48 398
+The rest of this introductory section contains an overview of the \emd{}
+language, adapted in part from Norman Hutchinson's Ph.D. dissertation
+\cite{Hutchinson87}, and other \emd{} Project reports.
+
+\subsection{Emerald Objects}
+\label{overview}
+Emerald extends the utility of a single object model to
+distributed systems. The object is used as the sole
+abstraction mechanism for the notions of data, procedure, and
+process.  All entities in Emerald are objects spanning the spectrum from
+small entities (e.g., Booleans and integers) to large entities (e.g.,
+directories, compilers, and entire file systems).
+An object exists as long as it can be named, or equivalently,
+can be referenced to by an identifier.
+
+Each Emerald object consists of:
+\begin{itemize}
+    \item{} A {\em name}\/, which uniquely identifies the object within the
+network.
+    \item{} A {\em representation}\/, which, except in the case of a
+primitive object,
+consists of references to other objects.
+    \item{} A set of {\em operations}\/, which define the functions and
+procedures that the object can execute.  Exported operations
+may be invoked by other objects; other operations are private to the object.
+    \item{} An optional {\em process}\/, which is started after the object is
+initialized, and executes in parallel with
+invocations of the object's operations.  An object without a process is
+passive and executes only as a result of invocations while an object with a
+process has an active existence and executes independently of other objects.
+\end{itemize}
+Each object has two other attributes.  An object has a {\em location} that
+specifies the node on which that object is currently located.  Emerald
+objects may be defined to be {\em immutable}, i.e. these objects do not
+change over time.
+Immutability helps by simplifying sharing in a
+distributed system by permitting such objects to be freely copied from node
+to node.
+Immutability is a logical assertion on the part of the programmer rather
+than a physical property; the system does not attempt to check it.
+
+Concurrency exists both between objects and within an object.
+Within the network many objects can execute
+concurrently.  Within a single object, several operation invocations can be
+in progress simultaneously, and these execute in parallel with
+the object's 
+internal process.  To control access to variables shared by different
+operations, objects can be declared to be monitored.
+Processes synchronize through system-defined
+{\em condition} objects.  An object's process executes outside of the monitor,
+but can invoke monitored operations when it needs access to the shared state.
+
+Each object has an optional {\em initially} section; this is a 
+parameterless operation that executes 
+exactly once when the object is created, and is used
+to initialize the object state.
+When the initially operation is done,
+the object's process is started, and it is ready to accept invocations.
+
+\subsection{Invocation}
+The only mechanism for communication in Emerald is the  {\em
+invocation}.
+An Emerald object may invoke
+some operation defined in another object, passing arguments to the
+invocation and receiving results.
+Assuming that {\it target} is an object reference, the phrase:
+
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+target.operationName\/\LB{}argument1, argument2\/\RB{}\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+means execute the operation named {\it operationName} on the object
+currently referenced by {\it target}, passing {\it argument1 } and
+{\it argument2} as
+arguments.  Invocations are synchronous; the process performing the
+invocation is suspended until the operation is completed or until
+the run-time system determines that the operation cannot be
+completed.
+All arguments and results of invocations are passed by object
+reference, i.e., the invoker and invokee share references to
+the argument.
+
+\subsection{Abstract types}
+Central to Emerald are the concepts of {\em abstract type} and
+{\em type conformity}. Since all types in Emerald, by definition, are
+abstract types, this report will generally omit the adjective {\it abstract}
+and simply use the word
+{\em type}\footnote{We may later 
+make references to {\it concrete} types; these may informally be
+regarded as machine representations of object implementations
+and are not of primary concern 
+to the \emd{} programmer. To reduce confusion, we may occasionally qualify
+types as being abstract.}.
+All identifiers in Emerald are
+typed, and the programmer must declare
+the type of the objects that an identifier may name.
+A type defines a collection of {\em operation signatures}, 
+i.e., operation names and the types of their arguments and results. 
+A type is represented by
+an Emerald object that specifies such a list of signatures.
+For example, if the variable {\em MyMailbox} is declared as:
+
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{var} MyMailbox : AbstractMailbox\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+then any object that is assigned to MyMailbox must implement 
+(at least) the 
+operations defined by AbstractMailbox.
+
+\label{conformintro}
+The  type of the object being assigned must {\em conform} to
+the  type of the identifier.  Conformity is the basis of type
+checking in Emerald.
+Informally, a type 
+{\it S}
+conforms to a type 
+{\it T}
+(written 
+{\it S}
+\conforms{} 
+{\it T}\/) 
+if:
+\begin{enumerate}
+\item{} {\it S} provides at least the operations of {\it T}
+({\it S} may have more operations).
+\item{} For each operation in {\it T},
+the corresponding operation in {\it S}
+has the same number of arguments and results.
+\item{} The  types of the results of {\it S}\/'s 
+operations conform to the  types of the results of 
+{\it T}\/'s operations.
+\item{} The  types of the arguments of {\it T}\/'s 
+operations conform to the  types of the arguments of 
+{\it S}\/'s 
+operations (i.e., arguments must conform in the opposite direction).
+\end{enumerate}
+It requires little effort to establish that
+the conformity relation between types is both reflexive 
+and transitive. Additionally, note that conformity 
+is anti-symmetric: A~\conforms{}~B does not imply that B~\conforms{}~A;
+in fact, if A~\conforms{}~B and B~\conforms{}~A, then A and B are
+identical types.
+Types therefore form a partial order with conformity as 
+the ordering relation.
+
+The relationship between  types and object implementations is 
+many-to-one in both directions.  A single object may 
+conform to many  types, and a
+ type may be implemented by many different objects.
+Figure \ref{manytoone} illustrates these relationships.  In the
+figure, A above B means A \conforms{} B.
+
+\begin{figure}[bt]
+\vspace{3.7in}
+\hspace{1in}\special{psfile=manytoone.ps}
+\caption{Example  types and object implementations}
+\label{manytoone}
+\end{figure}
+
+The object
+{\it DiskFile}
+implements the  type 
+{\it InputOutputFile},
+the  types
+{\it InputFile}
+and
+{\it OutputFile}
+(which require only a subset of the 
+{\it InputOutputFile}
+operations), and also the
+ type 
+{\bf Any}
+(which requires no operations at all).
+The  type
+{\it InputOutputFile}
+illustrates that a type may have several implementations,
+perhaps tuned to different
+usage patterns.
+Temporary files may be implemented in primary memory
+(using 
+{\it InCoreFile}
+objects)
+to provide fast access while giving up permanence in the face of crashes.
+On the other hand, permanent files implemented using
+{\it DiskFile}
+would continue to exist across crashes.
+
+Since Emerald objects may conform to more than one  type, it may be
+appropriate to change one's {\em view} of a particular object at run-time.
+This change may either be a {\em widening}, i.e., the number of 
+operations viewed as being supported by the object is increased, 
+or a {\em narrowing}, i.e., the number of available operations is reduced.
+Widening corresponds to a move up in the type partial order and narrowing
+to a move down the type hierarchy.  
+Narrowing requires no run-time check of its validity, since any
+object conforming to some type in the partial order
+also conforms to all types that it is greater than
+(with respect to \conforms) .  Widening
+on the other hand requires that the system check that
+the given object in fact does support the operations required by the new
+type. 
+
+An example of where such view changes are required 
+is in the implementation of a directory system.  For example, consider the
+type {\em Directory} defined as follows:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} Directory \assign{} \tn{type} Directory\+\\*{}%
+  \kw{operation} Add\/\LB{}name \CO{} \tn{String}, thing \CO{} \tn{Any}\/\RB{}\\*{}%
+  \kw{operation} Lookup\/\LB{}name \CO{} \tn{String}\/\RB{} \returns{} \/\LB{}thing \CO{} \tn{Any}\/\RB{}\\*{}%
+  \kw{operation} Delete\/\LB{}name \CO{} \tn{String}\/\RB{}\-\\*{}%
+\kw{end} Directory
+\end{tabbing}\end{minipage}}
+
+\noindent
+with additional variables declared as
+
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{var} f : InputOutputFile\\*{}%
+\kw{var} g : OutputFile\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+and $f$ is currently naming a file object.
+If this file, $f$, is to inserted into a directory {\it d}, the invocation:
+
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+d.Add\/\LB{}``myfile'', f\/\RB{}\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+may be used.
+Since the second argument to {\it Add} on directories has type
+{\bf Any},
+its type {\it InputOutputFile} is narrowed to {\bf Any}.
+When the same object is retrieved from
+the directory {\it d}, the assignment:
+
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+f \assign{} d.Lookup\/\LB{}``myfile''\/\RB{}\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+will fail because
+the type of the result of {\it Lookup} is {\bf Any}, and {\bf Any}
+does not conform
+to {\it InputOutputFile}, the type of {\it f}.
+Therefore, the preceding statement is
+not type-correct and is rejected by the compiler.  On the other hand, since
+it is known that the object returned by executing {\it Lookup} on 
+{\it d} with the
+argument {\it ``myfile''} is in fact an {\it InputOutputFile},
+an explicit change of view:
+
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+f \assign{} \kw{view} d.Lookup\/\LB{}``myfile''\/\RB{} \kw{as} InputOutputFile\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+may be used. This widening can be established as correct only at
+run-time.
+
+\subsection{Object creation}
+In most object-based systems, new objects are created by an
+operation on a {\em class} (as in Smalltalk) or a
+{\em type} object (as in Hydra).
+This class object
+defines the structure and behavior of all its 
+{\em instances}.
+In addition, the class object responds to {\em new} invocations to create new
+instances.
+
+In contrast, an Emerald object is created by executing an 
+{\em object constructor} (cf. Section~\ref{object constructor}).
+An object constructor is an Emerald expression
+that defines the representation, the operations, and the 
+process of an object.  
+\begin{figure}[tb]
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} myDirectory \CO{} Directory \assign{} \kw{monitor} \kw{object} oneEntryDirectory\+\\*{}%
+  \kw{var} name \CO{} \tn{String} \assign{} ``''\\*{}%
+  \kw{var} An \CO{} \tn{Any} \assign{} \kw{nil}\\*{}%
+  \kw{export} \kw{operation} Add\/\LB{}n \CO{} \tn{String}, o \CO{} \tn{Any}\/\RB{}\+\\*{}%
+    name \assign{} n\\*{}%
+    An \assign{} o\-\\*{}%
+  \kw{end} Add\\*{}%
+  \kw{export} \kw{function} Lookup\/\LB{}n \CO{} \tn{String}\/\RB{} \returns{} \/\LB{}o \CO{} \tn{Any}\/\RB{}\+\\*{}%
+    \kw{if} n $=$ name \kw{then}\+\\*{}%
+      o \assign{} An\-\\*{}%
+    \kw{else}\+\\*{}%
+      o \assign{} \kw{nil}\-\\*{}%
+    \kw{end} \kw{if}\-\\*{}%
+  \kw{end} Lookup\\*{}%
+  \kw{export} \kw{operation} Delete\/\LB{}n \CO{} \tn{String}\/\RB{}\+\\*{}%
+    \kw{if} n $=$ name \kw{then}\+\\*{}%
+      name \assign{} ``''\\*{}%
+      An \assign{} \kw{nil}\-\\*{}%
+    \kw{end} \kw{if}\-\\*{}%
+  \kw{end} Delete\-\\*{}%
+\kw{end} oneEntryDirectory
+\end{tabbing}\end{minipage}}
+\caption{A oneEntryDirectory object}
+\label{1leveldirectory}
+\end{figure}
+For example, suppose
+the Emerald program in Figure \ref{1leveldirectory} is executed;
+it results in the creation of a single object.  If we wished to create
+more
+{\it oneEntryDirectories}
+we would embed the object constructor of Figure \ref{1leveldirectory}
+in a context in which it could
+be repeatedly executed, such as the body of a loop or operation.  
+\label{class/instance}
+\begin{figure}[tbp]
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} myDirectoryCreator \assign{} \kw{immutable} \kw{object} oneEntryDirectoryCreator\+\\*{}%
+  \kw{export} \kw{operation} Empty \returns{} \/\LB{}result \CO{} Directory\/\RB{}\+\\*{}%
+    result \assign{} \kw{monitor} \kw{object} oneEntryDirectory\+\\*{}%
+      \kw{var} name \CO{} \tn{String} \assign{} ``''\\*{}%
+      \kw{var} An \CO{} \tn{Any} \assign{} \kw{nil}\\*{}%
+      \kw{export} \kw{operation} Store\/\LB{}n \CO{} \tn{String}, o \CO{} \tn{Any}\/\RB{}\+\\*{}%
+	name \assign{} n\\*{}%
+	An \assign{} o\-\\*{}%
+      \kw{end} Store\\*{}%
+      \kw{export} \kw{function} Lookup\/\LB{}n \CO{} \tn{String}\/\RB{} \returns{} \/\LB{}o \CO{} \tn{Any}\/\RB{}\+\\*{}%
+	\kw{if} n $=$ name \kw{then}\+\\*{}%
+	  o \assign{} An\-\\*{}%
+	\kw{else}\+\\*{}%
+	  o \assign{} \kw{nil}\-\\*{}%
+	\kw{end} \kw{if}\-\\*{}%
+      \kw{end} Lookup\\*{}%
+      \kw{export} \kw{operation} Delete\/\LB{}n \CO{} \tn{String}\/\RB{}\+\\*{}%
+	\kw{if} n $=$ name \kw{then}\+\\*{}%
+	  name \assign{} ``''\\*{}%
+	  An \assign{} \kw{nil}\-\\*{}%
+	\kw{end} \kw{if}\-\\*{}%
+      \kw{end} Delete\-\\*{}%
+    \kw{end} oneEntryDirectory\-\\*{}%
+  \kw{end} Empty\-\\*{}%
+\kw{end} oneEntryDirectoryCreator
+\end{tabbing}\end{minipage}}
+\caption{A oneEntryDirectory creator}
+\label{2leveldirectorycreator}
+\end{figure}
+\noindent This is
+illustrated in Figure \ref{2leveldirectorycreator}.
+Execution of this example creates the single
+object specified by the outermost object constructor.  That object exports
+an operation called 
+{\it Empty};
+invoking the
+{\it Empty}
+operation executes the inner object constructor,
+creating a new
+object that conforms to the  type \id{Directory}.
+The code generated when compiling
+an object constructor is called the {\em concrete type} of the
+objects created by execution of the constructor and serves to define
+the structure of these objects as well as provide the implementation
+for the operations defined on them.
+
+The goal of supporting the uniform object model for all objects (local or 
+distributed, small or large) may be achieved by a compiler using different
+implementation styles for objects by deducing the usage pattern and size of
+each object. The important thing to note is that these details are kept
+hidden from the programmer, who sees only the uniform object model.
+
+\subsection{Distribution}
+Emerald is designed for the construction of distributed applications,
+using objects as the units of processing and
+distribution. A programming language for distributed systems must support
+two broad classes of applications, viz., 
+applications that are genuinely
+distributed, e.g., replicated nameservers, 
+and 
+centralized applications in a
+distributed environment, e.g., compilers.
+
+Emerald helps in
+the construction of both classes: those
+that are born to distribution, as well as those that
+have had distribution thrust upon them.
+For the former, \emd{} permits object migration through primitives
+to control the placement and movement of objects. For the latter, \emd{}
+provides primitives to manipulate and invoke objects
+in a location-independent manner. 
+@
+
+
+1.3
+log
+@Fixed the references
+@
+text
+@d267 1
+a267 3
+type. To prevent type misuse and to enhance security, \emd{} also
+provides a {\em restrict} capability that prevents unrestrained widening of
+an object's type).
+d332 1
+a332 10
+run-time. To place a limit on the widening of an object, an explicit
+restriction:
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+g \assign{} \kw{restrict} f \kw{to} OutputFile\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+\noindent
+may be placed. Note that the restriction is on the reference $g$, and not on
+the actual object.
+@
+
+
+1.2
+log
+@Checkpoint of August 94 updates for DIKU course
+@
+text
+@d6 1
+a6 1
+\cite{Black86-oopsla,Black87-tse,Jul88-tocs} is to simplify distributed
+d64 1
+a64 1
+\cite{Hutch87-thesis}, and other \emd{} Project reports.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d109 1
+a109 2
+operations, the shared variables and the operations manipulating them
+can be defined within a monitor.
+d269 1
+a269 1
+an object's type (see also Section \ref{restrict exp}).
+d275 1
+a275 1
+{\small\it\begin{tabbing}
+d277 6
+a282 6
+\kw{const} Directory \defined{} \kw{type} Directory\+\\*{}%
+  \kw{operation} Add\/\LB{}name : \kw{String}, thing : \kw{Any}\/\RB{}\\*{}%
+  \kw{operation} Lookup\/\LB{}name : \kw{String}\/\RB{} \returns{} \/\LB{}thing : \kw{Any}\/\RB{}\\*{}%
+  \kw{operation} Delete\/\LB{}name : \kw{String}\/\RB{}\-\\*{}%
+\kw{end} Directory\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+d361 1
+a361 1
+{\small\it\begin{tabbing}
+d363 22
+a384 25
+\kw{const} myDirectory : Directory \defined{} \kw{object} oneEntryDirectory\+\\*{}%
+  \kw{export} Add, Lookup, Delete\\*{}%
+  \kw{monitor} \+\\*{}%
+    \kw{var} name : \kw{String} \assign{} \kw{nil}\\*{}%
+    \kw{var} An : \kw{Any} \assign{} \kw{nil}\\*{}%
+    \kw{operation} Add\/\LB{}n : \kw{String}, o : \kw{Any}\/\RB{}\+\\*{}%
+      name \assign{} n\\*{}%
+      An \assign{} o\-\\*{}%
+    \kw{end} Add\\*{}%
+    \kw{function} Lookup\/\LB{}n : \kw{String}\/\RB{} \returns{} \/\LB{}o : \kw{Any}\/\RB{}\+\\*{}%
+      \kw{if} n $=$ name \kw{then}\+\\*{}%
+	o \assign{} An\-\\*{}%
+      \kw{else}\+\\*{}%
+	o \assign{} \kw{nil}\-\\*{}%
+      \kw{end} \kw{if}\-\\*{}%
+    \kw{end} Lookup\\*{}%
+    \kw{operation} Delete\/\LB{}n : \kw{String}\/\RB{}\+\\*{}%
+      \kw{if} n $=$ name \kw{then}\+\\*{}%
+	name \assign{} \kw{nil}\\*{}%
+	An \assign{} \kw{nil}\-\\*{}%
+      \kw{end} \kw{if}\-\\*{}%
+    \kw{end} Delete\-\\*{}%
+  \kw{end} \kw{monitor}\-\\*{}%
+\kw{end} oneEntryDirectory\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+d398 1
+a398 1
+{\small\it\begin{tabbing}
+d400 23
+a422 27
+\kw{const} myDirectoryCreator \defined{} \kw{immutable} \kw{object} oneEntryDirectoryCreator\+\\*{}%
+  \kw{export} Empty\\*{}%
+  \kw{operation} Empty \returns{} \/\LB{}result : Directory\/\RB{}\+\\*{}%
+    result \assign{} \kw{object} oneEntryDirectory\+\\*{}%
+      \kw{export} Add, Lookup, Delete\\*{}%
+      \kw{monitor} \+\\*{}%
+	\kw{var} name : \kw{String} \assign{} \kw{nil}\\*{}%
+	\kw{var} An : \kw{Any} \assign{} \kw{nil}\\*{}%
+	\kw{operation} Store\/\LB{}n : \kw{String}, o : \kw{Any}\/\RB{}\+\\*{}%
+	  name \assign{} n\\*{}%
+	  An \assign{} o\-\\*{}%
+	\kw{end} Store\\*{}%
+	\kw{function} Lookup\/\LB{}n : \kw{String}\/\RB{} \returns{} \/\LB{}o : \kw{Any}\/\RB{}\+\\*{}%
+	  \kw{if} n $=$ name \kw{then}\+\\*{}%
+	    o \assign{} An\-\\*{}%
+	  \kw{else}\+\\*{}%
+	    o \assign{} \kw{nil}\-\\*{}%
+	  \kw{end} \kw{if}\-\\*{}%
+	\kw{end} Lookup\\*{}%
+	\kw{operation} Delete\/\LB{}n : \kw{String}\/\RB{}\+\\*{}%
+	  \kw{if} n $=$ name \kw{then}\+\\*{}%
+	    name \assign{} \kw{nil}\\*{}%
+	    An \assign{} \kw{nil}\-\\*{}%
+	  \kw{end} \kw{if}\-\\*{}%
+	\kw{end} Delete\-\\*{}%
+      \kw{end} \kw{monitor}\-\\*{}%
+   \kw{end} oneEntryDirectory\-\\*{}%
+d424 2
+a425 2
+\kw{end} oneEntryDirectoryCreator\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+@

@@ -1,0 +1,125 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.5
+	carlton_start:1.4
+	immel_start:1.3;
+locks; strict;
+
+
+1.6
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.08.17.16.51.31;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.03.02.21.16.38;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.57.23;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.57.22;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.57.21;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.6
+log
+@Many changes
+@
+text
+@export Scanner
+
+const yystype <- Tree
+
+const scanner <- immutable object scanner
+@
+
+
+1.5
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d5 1
+a5 1
+const scanner == immutable object scanner
+@
+
+
+1.4
+log
+@Implement eval
+@
+text
+@a3 4
+const InputThing <- typeobject InputThing
+  operation getChar -> [Character]
+  function eos -> [Boolean]
+end InputThing
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d4 4
+@
+
+
+1.2
+log
+@Added the definition of yystype
+@
+text
+@d1 1
+a1 11
+import InputBuffer from "Jekyll"
+import Ident, IdentTable from "Jekyll"
+export Scanner to "Jekyll"
+import tree, Printable from "Jekyll"
+import sym from "Jekyll"
+import opname from "Jekyll"
+import charlit from "Jekyll"
+import builtinlit from "Jekyll"
+import intlit from "Jekyll"
+import reallit from "Jekyll"
+import stringlit from "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 2
+@

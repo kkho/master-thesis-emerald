@@ -1,0 +1,56 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.01.22.00.05.57;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.2
+log
+@Fix to use <- instead of ==, better tests of vectors
+@
+text
+@const thairy <- object thairy
+  const myTest <- runtest.create[stdin, stdout, "thairy"]
+  initially
+    % each test looks like myTest.check[<boolean expression>, "<same exp>"]
+    var i : Integer <- 4
+    i <- ((i + i) * (i + i) * (i + i) + (i + i) * (i + i) * (i + i))
+    myTest.done
+  end initially
+end thairy
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "thairy"]
+@

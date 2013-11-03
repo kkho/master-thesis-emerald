@@ -1,0 +1,427 @@
+head	1.16;
+access;
+symbols
+	105alpha:1.16
+	104alpha:1.16
+	103alpha:1.16
+	102alpha:1.16
+	101alpha:1.16
+	100alpha:1.16
+	DIKU_0:1.16
+	carlton_start:1.14
+	immel_start:1.8;
+locks; strict;
+
+
+1.16
+date	94.08.17.16.51.31;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.12.04.13.21;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.12.11.01.08.40;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.10.21.16.03;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.04.06.19.38.01;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.05.19.12.38.35;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.05.18.12.04.59;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.05.14.15.55.17;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.56.55;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.56.53;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.56.52;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.56.51;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.16
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@export RecordLit
+
+const T <- Tree
+
+const recordlit <- class Recordlit (OTree) [xxsfname : Tree, xxname : Tree, xxfields : Tree]
+    field codeOID : Integer
+    field id : Integer
+    field sfname : Tree <- xxsfname
+    field name : Tree <- xxname
+    field fields : Tree <- xxfields
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- name
+      elseif i = 1 then
+	r <- fields
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	name <- r
+      elseif i = 1 then
+	fields <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nsfname, nname, nfields : Tree
+      if sfname !== nil then nsfname <- sfname.copy[i] end if
+      if name !== nil then nname <- name.copy[i] end if
+      if fields !== nil then nfields <- fields.copy[i] end if
+      r <- recordlit.create[ln, nsfname, nname, nfields]
+    end copy
+    operation iremoveSugar -> [r : OTree]
+      var theparams, thedecls, ops : Tree
+      theparams <- seq.create[ln]
+      thedecls <- seq.create[ln]
+      ops <- seq.create[ln]
+      ops.rcons[nil]
+      ops.rcons[nil]
+      ops.rcons[nil]
+      
+      for i : Integer <- 0 while i <= fields.upperbound by i <- i + 1
+	begin
+	  const v <- fields[i]
+	  const onefield <- view v as vardecl
+	  const sdecl <- onefield$xsym.copy[0]
+	  const shasid <- view sdecl as hasIdent
+	  const sid <- shasid$id
+	  const pid <- Environment.getEnv.getITable.Lookup["@@__" || sid.asString, 999]
+	  const sparam <- sym.create[ln, pid]
+	  const sref  <-  sym.create[ln, pid]
+	  const afield <- FieldDecl.create[ln, sdecl, onefield$xtype.copy[0], sref]
+% If doing move/visit
+	  afield$isAttached <- onefield$isAttached
+	  thedecls.rcons[afield]
+	  theparams.rcons[param.create[ln, sparam, onefield$xtype.copy[0]]]
+	end 
+      end for
+      r <- xclass.create[ln, 
+	sfname,
+	name,
+	nil,		% base
+	theparams,
+	nil,		% creators
+	thedecls,	% decls
+	ops]		% ops
+      r$f <- f
+    end iremoveSugar
+    
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    r <- self.iremoveSugar[]
+    r <- r.removeSugar[ob]
+  end removeSugar
+  export function asString -> [r : String]
+    r <- "recordlit"
+  end asString
+end Recordlit
+@
+
+
+1.15
+log
+@First attempt at abcons
+@
+text
+@d48 2
+a49 2
+	  const f <- view v as Sym
+	  const sdecl <- f$xsym.copy[0]
+d55 1
+a55 1
+	  const afield <- FieldDecl.create[ln, sdecl, f$xtype.copy[0], sref]
+d57 1
+a57 1
+	  afield$isAttached <- f$isAttached
+d59 1
+a59 1
+	  theparams.rcons[param.create[ln, sparam, f$xtype.copy[0]]]
+@
+
+
+1.14
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d48 1
+a48 7
+	  const f <- view v as typeobject X
+	    function getXSym -> [Tree]
+	    function getXType -> [Tree]
+% If doing move/visit
+	    op setIsAttached[Boolean]
+	    function getIsAttached -> [Boolean]
+	  end X
+d50 1
+a50 1
+	  const shasid <- view sdecl as typeobject X function getid -> [Ident] end X
+@
+
+
+1.13
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d47 1
+a47 1
+	  const v <- fields(i)
+@
+
+
+1.12
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d81 1
+a81 1
+    r <- iremoveSugar[]
+@
+
+
+1.11
+log
+@Fix parsing of operations, initiallies and recoveries
+@
+text
+@d59 2
+a60 2
+	  const sparam <- symdef.create[ln, pid]
+	  const sref  <-  symref.create[ln, pid]
+@
+
+
+1.10
+log
+@Removed all monitors
+@
+text
+@d37 1
+a37 1
+      var theparams, thedecls : Tree
+d40 5
+a72 1
+	nil,		% export
+d75 1
+a75 3
+	nil,		% initially
+	nil,		% ops
+	nil]		% process
+@
+
+
+1.9
+log
+@Got rid of monitors and fix
+@
+text
+@a5 1
+  monitor
+a76 1
+  end monitor
+@
+
+
+1.8
+log
+@Clean up param
+@
+text
+@d38 1
+a38 1
+      var theparams, themonitor, thedecls : Tree
+a63 1
+      themonitor <- xmonitor.create[ln, thedecls, nil, nil, nil]
+d71 2
+a72 2
+	nil,		% decls
+	themonitor,
+@
+
+
+1.7
+log
+@Type checking problems
+@
+text
+@d61 1
+a61 1
+	  theparams.rcons[param.create[ln, sparam, f$xtype.copy[0], nil]]
+@
+
+
+1.6
+log
+@Get rid of objectflags, use otree
+@
+text
+@d37 1
+a37 1
+    operation iremoveSugar -> [r : Tree]
+@
+
+
+1.5
+log
+@Enabled attach declarations
+@
+text
+@d5 1
+a5 1
+const recordlit <- class Recordlit (Tree) [xxsfname : Tree, xxname : Tree, xxfields : Tree]
+a6 1
+    field f : ObjectFlags <- ObjectFlags.create
+a37 2
+      const hasFlags <- typeobject X op setf [ObjectFlags] end X
+      var x : hasFlags
+d76 1
+a76 2
+      x <- view r as hasFlags
+      x$f <- f
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@d51 2
+a52 2
+%	    op setIsAttached[Boolean]
+%	    function getIsAttached -> [Boolean]
+d62 1
+a62 1
+%	  afield$isAttached <- f$isAttached
+@
+
+
+1.3
+log
+@Removed unnecessary virtuals
+@
+text
+@d1 1
+a1 13
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+import Ident from "Jekyll"
+import ObjectFlags from "Jekyll"
+import Seq from "Jekyll"
+import Symdef from "Jekyll"
+import Symref from "Jekyll"
+import Fielddecl from "Jekyll"
+import Param from "Jekyll"
+import Xmonitor from "Jekyll"
+import Xclass from "Jekyll"
+export RecordLit to "Jekyll"
+d39 1
+a39 1
+      const hasFlags <- type X op setf [ObjectFlags] end X
+d47 1
+a47 1
+	  const f <- view v as type X
+d55 1
+a55 1
+	  const shasid <- view sdecl as type X function getid -> [Ident] end X
+@
+
+
+1.2
+log
+@Don't waste space on move/visit/attached
+@
+text
+@d90 1
+a90 2
+	nil,		% process
+	nil]		% virtuals
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d62 3
+a64 2
+	    op setIsAttached[Boolean]
+	    function getIsAttached -> [Boolean]
+d73 2
+a74 1
+	  afield$isAttached <- f$isAttached
+@

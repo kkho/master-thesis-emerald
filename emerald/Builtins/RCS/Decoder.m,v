@@ -1,0 +1,156 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.4;
+locks; strict;
+
+
+1.6
+date	96.03.19.22.42.38;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.11.23.17.12.36;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.08.18.17.20.45;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.01.19.19.59.37;	author aveitch;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.01.19.17.21.50;	author aveitch;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.01.19.03.36.21;	author aveitch;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@Stop using mutable objects with no state, changed the name of instanceFlags
+@
+text
+@const Decoder <- immutable object Decoder builtin 0x1024
+  const DecoderType <- typeobject DecoderType builtin 0x1624
+  end DecoderType
+  export function getSignature -> [result : Signature]
+    result <- DecoderType
+  end getSignature
+
+  export function Create [] -> [result : DecoderType]
+    result <- object aDecoder builtin 0x1424
+      var pad : Integer
+      initially
+      end initially
+
+      process
+	const stdout : OutStream <- (locate 1).getStdout
+
+	var ctl : String <- "STARTSERVER"
+	begin
+	  primitive "SYS" "DISTCTL" 1 [ ] <- [ ctl ]
+	  failure
+	    stdout.putString[ "rinvoke server start failed\n" ]
+	  end failure
+	end
+	ctl <- "PING"
+	begin
+	  primitive "SYS" "DISTCTL" 1 [] <- [ ctl ]
+	  failure
+	    stdout.putString[ "Can't ping the rootdir node\n" ]
+	  end failure
+	end
+      end process
+    end aDecoder
+  end Create
+end Decoder
+
+export Decoder to "Builtins"
+
+
+@
+
+
+1.5
+log
+@Root directory creation, some small cleanups
+@
+text
+@d10 1
+@
+
+
+1.4
+log
+@Decoder and Stub should not be immutable
+@
+text
+@d10 3
+d14 1
+a14 1
+	var Done : Boolean
+d16 14
+a29 4
+	loop
+          primitive self "SYS" "DECODEMSG" 1 [Done] <- []
+	  exit when Done = true
+	end loop
+@
+
+
+1.3
+log
+@Missed changing one instance of old byte code
+@
+text
+@d2 1
+a2 1
+  const DecoderType == immutable typeobject DecoderType builtin 0x1624
+d9 1
+a9 1
+    result <- immutable object aDecoder builtin 0x1424
+@
+
+
+1.2
+log
+@Update code number
+@
+text
+@d9 1
+a9 1
+    result <- immutable object aDecoder builtin 0x1421
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 2
+a2 2
+const Decoder <- immutable object Decoder builtin 0x1021
+  const DecoderType == immutable typeobject DecoderType builtin 0x1621
+@

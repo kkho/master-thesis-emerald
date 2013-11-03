@@ -1,0 +1,199 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	95.03.03.05.48.52;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.25.23.41.38;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.25.16.27.51;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Shell script to invoke the interpreter.  This one understands multiple
+versions and the -o flags (same as emc).
+@
+
+
+1.3
+log
+@Major reorganization
+@
+text
+@#!/bin/sh
+#
+# First, set EMERALDROOT, if not already set
+# In the properly installed version, this will be:
+EMERALDROOT=${EMERALDROOT-/cs/public/lib/emerald}
+#
+# But for the testing version we need
+# EMERALDROOT=${EMERALDROOT-/dsg/project3/emerald}
+export EMERALDROOT
+LPATH=$EMERALDROOT/lib
+XPATH=$LPATH/${EMERALDARCH}
+#
+# If there is a variable in the environment called EMERALDVERSION, it should
+# look like -1, -2, -3 indicating that the user wants the immediately
+# previous version, the one 2 versions ago, and so on.  We set VERSIONDELTA
+# to be the number of versions back that one wants to go, i.e.,
+# EMERALDVERSION without the "-".
+
+if [ "$EMERALDVERSION" != "" ] ; then
+    VERSIONDELTA=`echo $EMERALDVERSION | /bin/sed -e 's/-//'`
+else
+    VERSIONDELTA=
+fi
+ARGS=
+#
+# There are three arguments that control the space used by the garbage
+# collection system:  -O -g -G.
+#	-On	- sets the size of the old generation, where all compiler
+#		  generated objects and all long lived runtime created
+#		  objects live.  This is suffixed with k (or K) for
+#		  kilobytes and m (or M) for megabytes.  The abolute minimum
+#		  for the compiler is -O1M, and it should likely be set to
+#		  -O1536k or -O2m to make sure that reasonably sized user
+#		  programs don't blow it.  For the interpreter when it is
+#		  running user programs, setting this to 512k is probably
+#		  not unreasonable.
+#	-gn	- sets the size of the new generation, where objects
+#		  allocated at run time first reside to n (again with k or m
+#		  suffixes).  The default is 128k, which seems good from
+#		  practical experience.
+#	-Gn	- sets the copyCount to n. The copy count indicates the
+#		  number of collections that an object needs to survive to
+#		  be promoted to the old generation.  A copy count of 1
+#		  means that all surviving objects get promoted at each
+#		  collection, which is really too soon for most programs.
+#		  The default is 2, which is about right, and is as high as
+#		  it can be set in this version of the runtime system.
+EARGS=-O512k
+
+# Look at our arguments, and divide them between version numbering ones
+# (-o), ones that need to be passed to emx early (before the builtin file)
+# which are the garbage collection related ones (-g -G -O), and the rest
+# which get passed after the builtins are loaded (-T, -v and everything
+# else).
+
+for i do
+    case $i in
+	-o)  VERSIONDELTA=1 ;;
+	-o*) VERSIONDELTA=`echo $i | /bin/sed -e 's/-o//'` ;;
+	-O*) EARGS="$EARGS $i" ;;
+	-g*) EARGS="$EARGS $i" ;;
+	-G*) EARGS="$EARGS $i" ;;
+	*) ARGS="$ARGS $i"
+    esac
+done
+# 
+# If we don't have a version specified, then just use the latest one.
+#
+if [ "$VERSIONDELTA" = "" ] ; then
+    exec $XPATH/emx $EARGS -B $LPATH/Builtins $ARGS 
+else
+# 
+# Otherwise, we have to figure out what is the latest version, and then
+# subtract VERSIONDELTA to get the number of the version that we want.  Note
+# that when a version is specified we report on the version number that we
+# choose to use to let the user know what is going on.
+#
+    ALL=`echo $LPATH/Compiler.*`
+    LATEST=1
+    for i in $ALL ; do
+	j=`echo $i | /bin/sed -e 's/^[^.]*\.//'`
+	BIGGER=`/bin/expr $j ">" $LATEST`
+	if [ $BIGGER = 1 ] ; then LATEST=$j ; fi
+    done
+    VERSION=`/bin/expr $LATEST - $VERSIONDELTA`
+    if [ ! -x $XPATH/emx.$VERSION ] ; then 
+	echo "No such version \"-$VERSIONDELTA\"."
+    else
+	echo "Using version $VERSION"
+	exec $XPATH/emx.$VERSION $EARGS -B $LPATH/Builtins.$VERSION $ARGS 
+    fi
+fi
+@
+
+
+1.2
+log
+@Added documentation to the shell commands emx and emc
+@
+text
+@d3 1
+d5 1
+a5 1
+# EMERALDROOT=/usr/local/lib/emerald
+d8 1
+a8 1
+EMERALDROOT=/vol/projects2/emerald/norm/to.put.in.usr.local.lib.emerald
+d10 2
+a11 1
+XPATH=$EMERALDROOT/lib
+d15 2
+a16 2
+# previous version, the one 2 version ago, and so on.  We set VERSIONDELTA
+# to be the number of version back that one wants to go, i.e.,
+d45 1
+a45 1
+#		  collection, which is really to soon for most programs.
+d70 1
+a70 1
+    exec $XPATH/emx $EARGS -B $XPATH/Builtins $ARGS 
+d78 1
+a78 1
+    ALL=`echo $XPATH/emx.*`
+d90 1
+a90 1
+	exec $XPATH/emx.$VERSION $EARGS -B $XPATH/Builtins.$VERSION $ARGS 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 15
+a22 1
+EARGS=
+d24 30
+a53 4
+# In the properly installed version, this will be:
+# PATH=/usr/local/lib/emerald
+PATH=/vol/projects2/emerald/norm/reallib
+EMERALDROOT=$PATH
+d59 2
+d64 3
+d68 1
+a68 1
+    exec $PATH/emx $EARGS -B $PATH/Builtins $ARGS
+d70 7
+a76 1
+    ALL=`echo $PATH/emx.*`
+d84 1
+a84 1
+    if [ ! -x $PATH/emx.$VERSION ] ; then 
+d88 1
+a88 1
+	exec $PATH/emx.$VERSION $EARGS -B $PATH/Builtins.$VERSION $ARGS
+@

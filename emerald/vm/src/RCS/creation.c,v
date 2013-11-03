@@ -1,0 +1,456 @@
+head	1.11;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.10
+	103alpha:1.9
+	102alpha:1.7
+	101alpha:1.6
+	100alpha:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	2007.06.11.02.29.48;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	98.05.04.19.21.36;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.05.01.04.47.38;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.04.30.20.46.11;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.04.20.13.19.44;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.04.08.21.45.27;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.18.12.27;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.11
+log
+@Check in current version
+@
+text
+@/* comment me!
+ */
+
+#define E_NEEDS_STRING
+#include "system.h"
+
+#include "streams.h"
+#include "storage.h"
+#include "vm_exp.h"
+#include "types.h"
+#include "iisc.h"
+#include "trace.h"
+#include "vm.h"
+#include "misc.h"
+#include "squeue.h"
+#include "assert.h"
+#include "iset.h"
+#include "creation.h"
+#include "globals.h"
+#include "dist.h"
+#include "call.h"
+
+extern ISet allProcesses;
+
+/*
+ * Extra space for malloc overruns
+ */
+#define EXTRASPACE  0
+
+Object AllocateObject(ct, size)
+ConcreteType ct;
+int size;
+{
+  Object o;
+
+  regRoot(ct);
+  o = (Object) gc_malloc(sizeofObject + EXTRASPACE + size);
+  unregRoot();
+  SETRESDNT(o->flags);
+  SETCODEPTR(o->flags, ct);
+  if (inDistGC()) SETDISTGC(o->flags);
+  return o;
+}
+
+Object CreateUninitializedObject(ConcreteType ct)
+{
+  Object o;
+  regRoot(ct);
+  o = AllocateObject(ct, ct->d.instanceSize);
+  unregRoot();
+  if (HASINITIALLY(ct)) freeze(o, RInitially);
+  return o;
+}
+
+Object CreateObjectFromOutside(ConcreteType ct, unsigned int sb)
+{
+  Object o;
+  OpVectorElement ove;
+  regRoot(ct);
+  o = AllocateObject(ct, ct->d.instanceSize);
+  unregRoot();
+  ove = ct->d.opVector->d.data[OVE_INITIALLY];
+  if (!ISNIL(ove)) {
+    State *state = newState(o, ct);
+    int res;
+    freeze(o, RInitially);
+    TRACE(initiallies, 1, ("Invoking initially of a %.*s",
+			   ct->d.name->d.items,
+			   ct->d.name->d.data));
+    memcpy((void *)state->sb, (void *)sb, 8 * ove->d.nargs);
+    state->sp = state->fp = state->sb + 8 * ove->d.nargs;
+    pushBottomAR(state);
+
+    /* set up the interpreter state */
+    state->pc = (u32) ove->d.code->d.data;
+    res = interpret(state);
+    assert(res == 0);
+  }
+  return o;
+}
+
+/*
+ * Create-and-initialize routines for builtin types.
+ */
+
+Vector CreateVector(ConcreteType ct, unsigned nelems)
+{
+  Vector v;
+  int is;
+
+  is = (ct->d.instanceSize < 0 ?
+	-ct->d.instanceSize : ct->d.instanceSize);
+  regRoot(ct);
+  v = (Vector) AllocateObject(ct, nelems*is+sizeof(int));
+  unregRoot();
+  assert (!HASINITIALLY(ct));
+  v->d.items = nelems;
+  return v;
+}
+
+String CreateString(char *s)
+{
+  int n = strlen(s);
+  String o = (String) CreateVector(BuiltinInstCT(STRINGI),n);
+  o->d.items = n;
+  memmove(o->d.data, s, n);
+  return o;
+}
+
+void runState(State *state, int asynch)
+{
+  extern int interpret(State *);
+  extern ISet running;
+
+  if (asynch) {
+    makeReady(state);
+  } else {
+    ISetInsert(running, (int)state);
+    interpret(state);
+    ISetDelete(running, (int)state);
+  }
+}
+
+/*
+ * Return true if the current stack frame is the last one.
+ */
+int bottomStackFrame(State *state)
+{
+  int *fpintp = (int *)state->fp;
+  return fpintp == 0 || fpintp[-2] == 0;
+}
+
+State *newState(Object o, ConcreteType ct)
+{
+  ConcreteType stateCT = BuiltinInstCT(INTERPRETERSTATEI);
+  State *state;
+  OID oid;
+
+  state = (State *)vmMalloc(sizeof(State));
+  state->firstThing = RESDNTBIT;
+  SETCODEPTR(state->firstThing, stateCT);
+  if (inDistGC()) SETDISTGC(state->firstThing);
+  state->cp = ct;
+  state->op = o;
+  state->sb = (int)vmMalloc(stackSize);
+  state->sp = state->sb;
+  state->opp = (OpVectorElement)JNIL;
+  state->ep = (Object) JNIL;
+  state->et = (ConcreteType) JNIL;
+  state->nstoid = nooid;
+  state->nsoid = nooid;
+  state->psoid = nooid;
+  state->psnres = 0;
+  NewOID(&oid); 
+  OIDInsert(oid, (Object)state);
+  TRACE(distgc, 5, ("Created a state %#x with OID %s", state, OIDString(oid)));
+  TRACE(rinvoke, 5, ("Created a state %#x with OID %s", state, OIDString(oid)));
+  TRACE(process, 5, ("Created a state %#x with OID %s", state, OIDString(oid)));
+  ISetInsert(allProcesses, (int)state);
+  return state;
+}
+
+void deleteState(State *state)
+{
+  TRACE(distgc, 5, ("Deleting a state %#x with oid %s",
+		    (unsigned int)state, OIDString(OIDOf(state))));
+
+  TRACE(process, 5, ("Deleting a state %#x with oid %s",
+		    (unsigned int)state, OIDString(OIDOf(state))));
+  if (!isNoOID(state->nsoid)) {
+    TRACE(process, 0, ("State %#x still has nsoid %s",
+		       state, OIDString(state->nsoid)));
+  }
+  ISetDelete(allProcesses, (int)state);
+
+  OIDRemoveAny((Object)state);
+#ifdef USEDISTGC
+  distGCFreeState(state);
+#endif
+  tryToFindState(state);
+  if (state->sb) vmFree((void *)state->sb);
+  vmFree(state);
+}
+
+void setupState(State *state, Object o, ConcreteType ct)
+{
+  ISetInsert(allProcesses, (int)state);
+  SETRESDNT(state->firstThing);
+  state->cp = ct;
+  state->op = o;
+  state->sb = (int)vmMalloc(stackSize);
+  state->sp = state->sb;
+  state->opp = (OpVectorElement)JNIL;
+  state->ep = (Object) JNIL;
+  state->et = (ConcreteType) JNIL;
+}
+
+/*
+ * Run takes an object and executes the indexed operation:
+ * one of OVE_INITIALLY, OVERECOVERY, or OVE_PROCESS.
+ * The stack pointer to use is given by sp; a new stack is allocated
+ * if that parameter is a 0.
+ *
+ * In the sequential version, this calls the interpreter directly,
+ * and is therefore synchronous.  In the concurrent version, this
+ * asynchronously creates a new process and continues for processes.
+ */
+void run(Object o, int index, int asynch)
+{
+  extern int debugFirst;
+  ConcreteType ct;
+  OpVectorElement ope;
+  State *state;
+
+  ct = CODEPTR(o->flags);
+  state = newState(o, ct);
+
+  ope = ct->d.opVector->d.data[index];
+  state->opp = ope;
+  state->ep = (Object) JNIL; state->et = (ConcreteType) JNIL;
+  state->pc = (int)ope->d.code->d.data;
+
+  pushBottomAR(state);
+
+  if (debugFirst) {
+    debugFirst = 0; 
+    (void) debug(state, "First time");
+  }
+  PROFILEBUMP(0, ope, ct);
+  IFTRACE(call, 1) {
+    docall(-index-1, state->sp, state->fp, state->cp, state->op, state->sb);
+  }
+  runState(state, index == OVE_PROCESS || asynch);
+}
+@
+
+
+1.10
+log
+@Reimplemented the object table
+@
+text
+@d147 1
+d193 1
+d219 1
+@
+
+
+1.9
+log
+@Eradicated all vestiges of the old TRACE0-7 macros
+@
+text
+@d155 1
+a155 1
+  TRACE(distgc, 15, ("Created a state %#x with OID %s", state, OIDString(oid)));
+d164 1
+a164 1
+  TRACE(distgc, 15, ("Deleting a state %#x with oid %s",
+@
+
+
+1.8
+log
+@Improved distgc tracing and fixed over-aggressive nature
+@
+text
+@d67 3
+a69 3
+    TRACE2(initiallies, 1, "Invoking initially of a %.*s",
+	   ct->d.name->d.items,
+	   ct->d.name->d.data);
+@
+
+
+1.7
+log
+@Made unavailable much more reliable, move correctly moves attached objects
+@
+text
+@d155 1
+a155 1
+  TRACE(distgc, 5, ("Created a state %#x with OID %s", state, OIDString(oid)));
+d164 1
+a164 1
+  TRACE(distgc, 5, ("Deleting a state %#x with oid %s",
+@
+
+
+1.6
+log
+@More reliable process management, got xforms working
+@
+text
+@d149 1
+d151 2
+a152 1
+  state->nsnres = 0;
+d157 1
+d167 6
+@
+
+
+1.5
+log
+@'.'
+@
+text
+@d149 2
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d142 1
+d151 2
+a152 1
+  TRACE(rinvoke, 5, ("Created a state with OID %s", OIDString(oid)));
+d157 16
+d175 2
+a176 4
+  ConcreteType stateCT = BuiltinInstCT(INTERPRETERSTATEI);
+
+  state->firstThing = RESDNTBIT;
+  SETCODEPTR(state->firstThing, stateCT);
+d213 1
+a213 1
+    debug(state, "First time");
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d4 3
+a6 5
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <stdio.h>
+#include <fcntl.h>
+#pragma pointer_size short
+d8 1
+a8 1
+#include "memory.h"
+d20 1
+a20 1
+#include "threads.h"
+@
+
+
+1.2
+log
+@Cleaned up
+@
+text
+@d4 1
+d43 1
+a43 1
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d131 1
+a131 2
+  u32 newfp = fpintp[-2];
+  return newfp == 0;
+d151 1
+@

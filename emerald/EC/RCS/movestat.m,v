@@ -1,0 +1,251 @@
+head	1.9;
+access;
+symbols
+	105alpha:1.9
+	104alpha:1.9
+	103alpha:1.9
+	102alpha:1.9
+	101alpha:1.9
+	100alpha:1.9
+	DIKU_0:1.5
+	carlton_start:1.5
+	immel_start:1.3;
+locks; strict;
+
+
+1.9
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.05.03.18.17.40;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.03.23.23.00.17;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.17;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.54.33;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.54.32;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.54.30;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.9
+log
+@Many changes
+@
+text
+@export Movestat
+
+const movestat <- class Movestat (Tree) [xxexp : Tree, xxloc : Tree, xxop : Ident]
+    field exp : Tree <- xxexp
+    field loc : Tree <- xxloc
+    field xop : Ident <- xxop
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- exp
+      elseif i = 1 then
+	r <- loc
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	exp <- r
+      elseif i = 1 then
+	loc <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nexp, nloc : Tree
+      if exp !== nil then nexp <- exp.copy[i] end if
+      if loc !== nil then nloc <- loc.copy[i] end if
+      r <- movestat.create[ln, nexp, nloc, xop]
+    end copy
+
+  export operation flatten [ininvoke : Boolean, indecls : Tree] -> [r : Tree, outdecls : Tree]
+    exp, outdecls <- exp.flatten[true, indecls]
+    if loc !== nil then loc, outdecls <- loc.flatten[true, outdecls] end if
+    r <- self
+  end flatten
+
+  export operation resolveSymbols[thest : SymbolTable, nexp : Integer]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.resolveSymbols[thest, 1]
+      end if
+      ch <- ch + 1
+    end loop
+  end resolveSymbols
+
+  export operation generate[xct : Printable]
+    const bc <- view xct as ByteCode
+
+    const s : String <- xop$name
+    bc.pushSize[8]
+    exp.generate[bc]
+    if s != "unfix" then
+      loc.generate[bc]
+    end if
+    bc.popSize
+    bc.addCode["SYS"]
+    if s = "move" then
+      bc.addCode["JMOVE"]
+    elseif s = "fix" then
+      bc.addCode["JFIX"]
+    elseif s = "unfix" then
+      bc.addCode["JUNFIX"]
+    elseif s = "refix" then
+      bc.addCode["JREFIX"]
+    else
+      assert false
+    end if
+    if s = "unfix" then
+      bc.addValue[2, 1]		% one argument, two words
+    else
+      bc.addValue[4, 1]		% two arguments, four words
+    end if
+  end generate
+
+  export function asString -> [r : String]
+    r <- xop$name||"stat"
+  end asString
+end Movestat
+@
+
+
+1.8
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@d34 1
+a34 1
+    loc, outdecls <- loc.flatten[true, outdecls]
+@
+
+
+1.7
+log
+@Type check and generate code right for move and fix
+@
+text
+@d32 6
+@
+
+
+1.6
+log
+@Re-implement the mobility primitives
+@
+text
+@d32 14
+@
+
+
+1.5
+log
+@Get rid of return on generate
+@
+text
+@d3 1
+a3 1
+const movestat <- class Movestat (Tree) [xxexp : Tree, xxloc : Tree]
+d6 1
+d29 1
+a29 1
+      r <- movestat.create[ln, nexp, nloc]
+d33 26
+d62 1
+a62 1
+    r <- "movestat"
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d31 1
+a31 1
+  export operation generate[xct : Printable] -> [rct : None]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a29 1
+  end monitor
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d1 1
+a1 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+export Movestat to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d35 1
+a35 1
+  export operation generate[xct : Printable]
+@

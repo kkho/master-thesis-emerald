@@ -1,0 +1,160 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.02.14.16.53.48;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.03.08.05.41.42;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.07.06.47.10;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.07.06.38.01;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Increase max token size (again)
+@
+text
+@%{
+#include "defs.h"
+#include "vmcpar.h"
+
+char *strsave(), *strsavestrip();
+int linenumber = 1;
+#undef YYLMAX
+#define YYLMAX (20 * 8192)
+%}
+L [A-Za-z_]
+Z [A-Za-z0-9_]
+D [0-9]
+Q ([^\\"]|\\.)
+%%
+"@@".*"\n"		{ /* ignore comments */ linenumber ++; }
+{L}{Z}*			{ yylval.string = strsave(yytext); return ID; }
+\"{Q}*\"		{ yylval.string = strsavestrip(yytext); return STRING; }
+"{"			{ getString("{", 0); return CODE; }
+[ \t]			;
+[\n]			{ linenumber ++; }
+^State:			{ return KSTATE; }
+^Interrupts:		{ return KINTERRUPTS; }
+^Instructions:		{ return KINSTRUCTIONS; }
+%%
+getString(start, comment)
+char *start;
+int comment;
+{
+  int level = 1, c, i = 0, last = '.';
+  char buffer[YYLMAX];
+  while (*start) {
+    assert(i < YYLMAX);
+    buffer[i++] = *start++;
+  }
+  while (comment || level >= 1) {
+    assert(i < YYLMAX);
+    buffer[i++] = c = input();
+    if (c == '\n') linenumber ++;
+    if (!c) break;
+    if (c == '{') level++;
+    if (c == '}') if (--level < 1 && !comment) break;
+    if (comment && last == '*' && c == '/') break;
+    last = c;
+  }
+  buffer[i] = '\0';
+  yylval.string = strsavestrip(buffer);
+}
+
+lexInit()
+{
+
+}
+
+char *strsave(s)
+char *s;
+{
+  char *t = malloc(strlen(s)+1);
+  strcpy(t, s);
+  return t;
+}
+
+char *strsavestrip(s)
+char *s;
+{
+  int len = strlen(s);
+  char *t = malloc(len-1);
+  sprintf(t, "%.*s", len-2, s+1);
+  return t;
+}
+@
+
+
+1.3
+log
+@Make more portable to other lex-like things
+@
+text
+@d8 1
+a8 1
+#define YYLMAX 8192
+@
+
+
+1.2
+log
+@Avoid writing into yytext
+@
+text
+@d6 1
+d15 1
+a15 1
+"@@".*"\n"		/* ignore comments */;
+d19 2
+a20 1
+[ \t\n]			;
+d38 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d28 1
+d30 2
+a31 1
+    yytext[i++] = *start++;
+d34 2
+a35 1
+    yytext[i++] = c = input();
+d42 2
+a43 3
+  yytext[i] = '\0';
+  yyleng = i;
+  yylval.string = strsavestrip(yytext);
+@

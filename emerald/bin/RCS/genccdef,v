@@ -1,0 +1,74 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	2007.06.11.02.45.27;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.11.20.13.01;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Generate the ccalls def file.
+@
+
+
+1.2
+log
+@Check in current version
+@
+text
+@#!/bin/csh -f
+#
+# Generate the tables and lists that drive the new ccalls mechanism
+
+set files = ($*)
+set ccdef = $EMERALDROOT/lib/ccdef
+@@ moduleindex = 0
+cp /dev/null $ccdef
+
+foreach file ($files)
+  set modulename = `echo $file:r | tr a-z A-Z`
+  echo Generating $modulename
+  echo >> $ccdef "#define ${modulename} $moduleindex"
+  set ccs = `grep '^CCALL' $file | sed -e 's/CCALL *( *//' -e 's/,/ /g' -e 's/)//' -e 's/"//g' -e 's/;//' -e 's/\r//'`
+  @@ i = 1
+  @@ functionindex = 0
+  while ($i < $#ccs)
+    set functionname = $ccs[$i]
+    @@ i ++
+    set ccallname = $ccs[$i]
+    @@ i ++
+    set ccallstring = $ccs[$i]
+    @@ i ++
+    echo >> $ccdef "#define ${ccallname} $functionindex"
+    @@ functionindex ++
+  end
+  @@ moduleindex ++
+end
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 1
+a14 1
+  set ccs = `grep '^CCALL' $file | sed -e 's/CCALL *( *//' -e 's/,/ /g' -e 's/)//' -e 's/"//g' -e 's/;//'`
+@

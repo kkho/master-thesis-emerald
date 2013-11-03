@@ -1,0 +1,417 @@
+head	1.12;
+access;
+symbols
+	105alpha:1.12
+	104alpha:1.12
+	103alpha:1.12
+	102alpha:1.12
+	101alpha:1.12
+	100alpha:1.12
+	DIKU_0:1.10
+	carlton_start:1.7
+	immel_start:1.2;
+locks; strict;
+
+
+1.12
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.08.22.23.43.47;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.08.17.16.50.43;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.12.04.13.21;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.12.10.17.07.07;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.34;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.32;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.12
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@export Ifclause
+
+const ifclause <- class Ifclause (Tree) [xxexp : Tree, xxstats : Tree]
+    field exp : Tree <- xxexp
+    field stats : Tree <- xxstats
+    field st  : SymbolTable
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- exp
+      elseif i = 1 then
+	r <- stats
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	exp <- r
+      elseif i = 1 then
+	stats <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nexp, nstats : Tree
+      if exp !== nil then nexp <- exp.copy[i] end if
+      if stats !== nil then nstats <- stats.copy[i] end if
+      r <- ifclause.create[ln, nexp, nstats]
+    end copy
+
+  export operation flatten [ininvoke : Boolean, indecls : Tree] -> [r : Tree, outdecls : Tree]
+    var decls : Tree
+    var val : Tree
+    assert !ininvoke
+    val, decls <- exp.flatten[ininvoke, nil]
+    if decls !== nil then
+      exp <- Eblock.create[ln, decls, val]
+    else
+      assert val == exp
+    end if
+    outdecls <- indecls
+    r <- self
+  end flatten
+
+    export operation shouldUseCase [xsym :Symbol, min : Integer, max : Integer]
+      -> [r : Boolean, nsymb : Symbol, s : Sym, nmin : Integer, nmax : Integer, val : Integer]
+
+      r <- false
+      if nameof exp = "aninvoc" then
+	const i <- view exp as Invoc
+	const t <- i$target
+	const o <- i$xopname
+	const a <- i$args
+	var arg : Tree
+	var str, argstr : String
+
+	% Check the target
+	if nameof t = "asym" then
+	  s <- view t as Sym
+	  if xsym == nil then 
+	    nsymb <- s$mysym
+	  else
+	    nsymb <- xsym
+	  end if
+	  if s$mysym !== nsymb then return end if
+	else
+	  return
+	end if
+
+	% check the opname
+	if o$name != "=" then return end if
+
+	% check the args
+	if a.upperbound != 0 then return end if
+	
+	arg <- a[0]
+	if nameof arg = "anarg" then arg <- arg[0] end if
+
+	argstr <- nameof arg
+	if argstr != "aliteral" then return end if
+	const asLiteral <- (view arg as Literal)
+	const index <- asLiteral$index
+	const valstr <- asLiteral$str
+	if index = IntegerIndex then
+	  val <- Integer.literal[valstr]
+	elseif index = CharacterIndex then
+	  val <- valstr[0].ord
+	else
+	  return
+	end if
+	if min == nil or val < min then
+	  nmin <- val
+	else
+	  nmin <- min
+	end if
+	if max == nil or val > max then
+	  nmax <- val
+	else
+	  nmax <- max
+	end if
+	r <- true
+      else
+	return
+      end if
+    end shouldUseCase
+
+  export operation defineSymbols[pst : SymbolTable]
+    self$exp.defineSymbols[pst]
+    self$st <- SymbolTable.create[pst, CBlock]
+    self$st$myTree <- self
+    self$stats.defineSymbols[self$st]
+  end defineSymbols
+
+  export operation resolveSymbols [pst : SymbolTable, nexp : Integer]
+    self$exp.resolveSymbols[self$st, 1]
+    self$stats.resolveSymbols[self$st, 0]
+  end resolveSymbols
+
+  export operation typeCheck 
+    const booleantype <- (view BuiltinLit.findTree[0x1003, nil] as hasInstAT).getInstAT.asType
+    
+    var t : hasConforms
+    t <- view exp.getAT as hasConforms
+    if t !== nil then t <- view t.asType as hasConforms end if
+    if t == nil then
+      Environment$env.ttypecheck["No type for if clause on %d\n", 
+	{ exp$ln }]
+    elseif !t.conformsTo[exp$ln, booleantype] then
+      Environment$env.SemanticError[exp$ln, "boolean required", nil]
+    end if
+
+    FTree.typeCheck[self]
+  end typeCheck
+
+  export function asString -> [r : String]
+    r <- "ifclause"
+  end asString
+end Ifclause
+@
+
+
+1.11
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d32 14
+a132 24
+
+    var lastLineNumber : Integer <- 0
+    for i : Integer <- 0 while i <= stats.upperbound by i <- i + 1
+      const it <- stats[i]
+      if it$ln != 0 then
+	lastLineNumber <- it$ln
+      else
+	lastLineNumber <- lastLineNumber + 1
+      end if
+      const itsname <- nameof it
+      if itsname = "aninvoc" or 
+	  itsname = "astarinvoc" or 
+	  itsname = "aquestinvoc" then
+	const junk <- it.getAT
+      elseif itsname = "anexp" or
+	  itsname = "anunaryexp" or
+	  itsname = "aliteral" or
+	  itsname = "anxview" or
+	  itsname = "anewexp" or
+	  itsname = "asym" then
+	Environment$env.SemanticError[lastLineNumber,
+	  "Found an expression where a statement was expected", nil]
+      end if
+    end for
+@
+
+
+1.10
+log
+@August 94 Checkpoint II
+@
+text
+@d106 40
+@
+
+
+1.9
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d42 1
+a42 1
+	var str, argstr, valstr : String
+@
+
+
+1.8
+log
+@First attempt at abcons
+@
+text
+@d39 1
+a39 1
+	const o <- view i$xopname as OpName
+d58 1
+a58 1
+	if o$id.asString != "=" then return end if
+d67 5
+a71 2
+	if argstr = "anintlit" then
+	  valstr <- (view arg as hasStr)$str
+d73 1
+a73 2
+	elseif argstr = "acharlit" then
+	  valstr <- (view arg as hasStr)$str
+d97 1
+@
+
+
+1.7
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d68 1
+a68 1
+	  valstr <- (view arg as typeobject t function getStr -> [String] end t)$str
+d71 1
+a71 1
+	  valstr <- (view arg as typeobject t function getStr -> [String] end t)$str
+@
+
+
+1.6
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d63 2
+a64 2
+	arg <- a(0)
+	if nameof arg = "anarg" then arg <- arg(0) end if
+d72 1
+a72 1
+	  val <- valstr(0).ord
+@
+
+
+1.5
+log
+@Use nameof rather than asString
+@
+text
+@d94 1
+a94 1
+    self$st <- SymbolTable.create[pst, STContext.CBlock]
+@
+
+
+1.4
+log
+@Fix parsing of operations, initiallies and recoveries
+@
+text
+@d36 1
+a36 1
+      if exp.asString = "invoc" then
+d39 1
+a39 1
+	const o <- i$xopname
+d45 1
+a45 1
+	if t.asString.getSlice[0, 3] = "sym" then
+d58 1
+a58 1
+	if o.asString != "opname (=)" then return end if
+d64 1
+a64 1
+	if arg.asString = "arg" then arg <- arg(0) end if
+d66 2
+a67 2
+	argstr <- arg.asString
+	if argstr.length > 6 and argstr.getSlice[0, 6] = "intlit" then
+d70 1
+a70 1
+	elseif argstr.length > 7 and argstr.getSlice[0, 7] = "charlit" then
+@
+
+
+1.3
+log
+@Removed all monitors
+@
+text
+@d39 1
+a39 1
+	const o <- i$opname
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a90 1
+  end monitor
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 5
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable, Symbol, STContext from "Jekyll"
+import Invoc from "Jekyll"
+import Sym from "Jekyll"
+export Ifclause to "Jekyll"
+d69 1
+a69 1
+	  valstr <- (view arg as type t function getStr -> [String] end t)$str
+d72 1
+a72 1
+	  valstr <- (view arg as type t function getStr -> [String] end t)$str
+@

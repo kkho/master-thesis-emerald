@@ -1,0 +1,1143 @@
+head	1.25;
+access;
+symbols
+	105alpha:1.25
+	104alpha:1.25
+	103alpha:1.25
+	102alpha:1.25
+	101alpha:1.25
+	100alpha:1.25
+	DIKU_0:1.21
+	carlton_start:1.17
+	immel_start:1.9;
+locks; strict;
+
+
+1.25
+date	96.03.19.22.43.30;	author norm;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	95.04.04.05.08.43;	author norm;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	95.03.29.18.19.54;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	94.08.17.16.50.37;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.12.20.21.09.00;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.06.10.15.51.27;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.03.12.17.20.38;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.03.02.18.32.43;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.02.17.00.09.07;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.12.10.17.06.56;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.05.14.23.15.08;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.04.22.22.52.10;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.04.22.22.52.09;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.04.22.22.52.07;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.52.06;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.52.04;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.52.02;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.52.01;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.51.59;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.25
+log
+@Stop using mutable objects with no state, changed the name of instanceFlags
+@
+text
+@const Template <- class Template
+    var s : String <- ""
+    var t : String <- ""
+    var finalString : String
+    var lastBrand : Character <- nil
+    var lastCount : Integer  <- 0
+    var cs : CString
+
+    operation flush
+      if lastBrand !== nil and lastCount != 0 then
+	if lastCount < 0 then
+	  s <- s || "%*" || lastBrand.asString
+	elseif lastCount = 1 then
+	  s <- s || "%" || lastBrand.asString
+	else
+	  s <- s || "%" || lastCount.asString || lastBrand.asString
+	end if
+      end if
+      lastCount <- 0
+    end flush
+
+    export operation isVector [whatBrand : Character]
+      self.flush
+      lastBrand <- whatBrand
+      lastCount <- ~1
+      t <- t || "data\0"
+    end isVector
+
+    export operation addOne [whatBrand : Character, name : String]
+      if whatBrand != 'Z' then
+	if lastBrand !== nil and lastBrand != whatBrand then self.flush end if
+	lastBrand <- whatBrand
+	lastCount <- lastCount + 1
+      end if
+      t <- t || name || "\0"
+    end addOne
+
+    export operation addLineNumbers[lineNumbers : String]
+      self.flush
+      t <- t || lineNumbers
+    end addLineNumbers
+
+    export function fetchIndex -> [r : Integer]
+      if cs == nil then
+	r <- nil
+      else
+	r <- cs.fetchIndex
+      end if
+    end fetchIndex
+
+    operation finalize
+      if finalString == nil then
+	const env : EnvironmentType <- Environment$env
+	const needDebugInfo <- env$generateDebugInfo and t != ""
+	self.flush
+	
+	if lastBrand !== nil then
+	  if needDebugInfo then
+	    finalString <- s || "\0" || t
+	  else
+	    finalString <- s || "\0"
+	  end if
+	elseif needDebugInfo then
+	  finalString <- "\0" || t
+	end if
+      end if
+    end finalize
+
+    export operation getIndex [start : Integer, q : CPQueue]
+      if cs == nil then
+	self.finalize
+	if finalString !== nil then
+	  cs <- CString.create
+	  cs$s <- finalString
+	  cs.getIndex[start, q]
+	end if
+      end if
+    end getIndex
+
+    export operation cpoint [file : OutStream]
+      if cs !== nil then 
+	cs.cpoint[file]
+      end if
+    end cpoint
+    export operation getString -> [r : String]
+      self.finalize
+      r <- finalString
+    end getString
+end Template
+
+export Template
+
+const aoove <- Array.of[OpVectorE]
+
+const OPVectorCT <- immutable object OPVectorCT
+  const obj <- "-OB-"
+  const OPVectorCTOID <- 0x1819
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export operation fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+  
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+  
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[OPVectorCTOID, file]
+  end CPoint
+end OPVectorCT
+
+const OpVector <- class OpVector
+    const obj <- "+OB-"
+
+    field d	     : aoove <- aoove.create[~10]
+    var myind : Integer <- ~1
+
+    export function asString -> [s : String]
+      s <- "opvector"
+    end asString
+
+    export operation addUpper[e : OpVectorE]
+      d.addUpper[e]
+    end addUpper
+    
+    export operation setElement[i : Integer, e : OpVectorE]
+      d[i] <- e
+    end setElement
+
+    export function getElement[i : Integer] -> [r : OpVectorE]
+      r <- d[i]
+    end getElement
+
+    export function upperbound -> [r : Integer]
+      r <- d.upperbound
+    end upperbound
+
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+	OPVectorCT.getIndex[start, q]
+	for i : Integer <- 0 while i <= d.upperbound by i <- i + 1
+	  begin
+	    const dd <- d[i]
+	    if dd !== nil then
+	      dd.getIndex[start, q]
+	    end if
+	  end 
+	end for
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+    
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeint[4 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+      file.writeInt[0x00000000 + OPVectorCT.fetchIndex, 4]
+      x <- d.upperbound + 1
+      file.writeInt[x, 4]
+      for i : Integer <- 0 while i <= d.upperbound by i <- i + 1
+	begin
+	  const dd <- d[i]
+	  if dd == nil then
+	    x <- 0x80000000
+	  else
+	    x <- dd.fetchIndex
+	  end if
+	end 
+	file.writeInt[x, 4]
+      end for
+    end CPoint
+
+    export operation generateBuiltin -> [r : COpVector]
+      const voove <- Vector.of[COpVectorE]
+      var i : Integer <- 0
+      const limit : Integer <- d.upperbound
+      const myv <- voove.create[limit + 1]
+      var dd : OpVectorE
+
+      loop
+	exit when i > limit
+	dd <- d[i]
+	if dd !== nil then
+	  myv[i] <- dd.generateBuiltin
+	end if
+	i <- i + 1
+      end loop
+      r <- COpVector.literal[myv]
+    end generateBuiltin
+
+    initially
+      d.addUpper[nil]		% initially
+      d.addUpper[nil]		% process
+      d.addUpper[nil]		% recovery
+    end initially
+end OpVector
+
+export OpVector
+
+const OPVectorECT <- immutable object OPVectorECT
+  const obj <- "-OB-"
+  const OPVectorECTOID <- 0x181a
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export operation fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+  
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq  !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+  
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[OPVectorECTOID, file]
+  end CPoint
+end OPVectorECT
+
+const OpVectorE <- class OpVectorE [xxname : String]
+    const obj <- "+OB-"
+    field name  : String <- xxname
+    field id : Integer
+    field nargs : Integer <- 0
+    field nress : Integer <- 0
+    field templ : Template
+    field code  : String <- ""
+
+    const csname :    CString <- CString.create
+    const cscode: CString <- CString.create
+    var myind : Integer <- ~1
+
+    export function asString -> [s : String]
+      s <- "opvectore"
+    end asString
+
+    export operation setOthers [x : aoa]
+      cscode$others <- x
+    end setOthers
+
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+	OPVectorECT.getIndex[start, q]
+	csname$s <- name
+	csname.getIndex[start, q]
+	if templ !== nil then
+	  templ.getIndex[start, q]
+	end if
+	if code !== nil then
+	  cscode$s <- code
+	  cscode.getIndex[start, q]
+	end if
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+    
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeInt[4 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+      file.writeInt[0x00000000 + OPVectorECT.fetchIndex, 4]
+
+      file.writeInt[id, 4]
+      file.writeInt[nargs, 4]
+      file.writeInt[nress, 4]
+
+      x <- csname.fetchIndex
+      file.writeInt[x, 4]
+
+      if templ == nil then
+	x <- 0x80000000
+      else
+	x <- templ.fetchIndex
+      end if
+      file.writeInt[x, 4]
+
+      if code == nil then
+	x <- 0x80000000
+      else
+	x <- cscode.fetchIndex
+      end if
+      file.writeInt[x, 4]
+    end CPoint
+    export operation generateBuiltin -> [r : COpVectorE]
+      r <- COpVectorE.create[id, nargs, nress, name, templ.getString, code]
+    end generateBuiltin
+end OpVectorE
+
+export OpVectorE
+
+const CTCodeCT <- immutable object CTCodeCT
+  const obj <- "-OB-"
+  const CTCodeCTOID <- 0x1818
+  const myind <- object x
+      field myind : Integer <- ~1
+      field myq : CPQueue
+  end x
+  export operation fetchIndex -> [r : Integer]
+    r <- myind$myind
+  end fetchIndex
+
+  export operation getIndex [start : Integer, q : CPQueue]
+    if myind$myq !== q then
+      myind$myq <- q
+      q.AddUpper[self]
+      myind$myind <- q.upperbound
+    end if
+  end getIndex
+
+  export operation CPoint [file : OutStream]
+    file.putString[obj]
+    OIDWriter.Out[CTCodeCTOID, file]
+  end CPoint
+end CTCodeCT
+
+const CreateOne <- class CreateOne [codeid : Integer, xxid : Integer]
+  const obj <- "*OB*"
+  const field id : Integer <- xxid
+    var myind : Integer <- ~1
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+  
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.AddUpper[self]
+	myind <- q.upperbound
+      end if
+    end getIndex
+  
+    export operation CPoint [file : OutStream]
+      file.putString[obj]
+      OIDWriter.Out[codeid, file]
+      OIDWriter.Out[id, file]
+    end CPoint
+end CreateOne
+
+
+const CTCode <- class CTCode
+    const obj <- "+OB+"
+    var csname :    CString <- CString.create
+    var csfilename :    CString <- CString.create
+    
+    field instanceSize    : Integer
+    field instanceFlags : Integer
+    field opVec           : OpVector <- OpVector.create
+    field name            : String
+    field filename        : String
+    field templ		  : Template
+    field mytype	  : CPAble
+    const field literals  : aoip <- aoip.create[~8]
+    var cliterals         : CInts
+
+    field id 		  : Integer
+    var myind : Integer <- ~1
+    var creationThing : CreateOne
+
+    export function asString -> [s : String]
+      s <- "ct"
+    end asString
+
+    export operation getIndex [start : Integer, q : CPQueue]
+      if myind < 0 then
+	q.addUpper[self]
+	myind <- q.upperbound
+	CTCodeCT.getIndex[start, q]
+	opVec.getIndex[start, q]
+	if name !== nil then
+	  csname$s <- name
+	  csname.getIndex[start, q]
+	end if
+	if filename !== nil then
+	  csfilename$s <- filename
+	  csfilename.getIndex[start, q]
+	end if
+	if templ !== nil then
+	  templ.getIndex[start, q]
+	end if
+	if mytype !== nil then
+	  mytype.getIndex[start, q]
+	end if
+	if literals !== nil then
+	  cliterals <- CInts.create[literals]
+	  cliterals.getIndex[start, q]
+	end if
+	if name !== nil and name = "Compilation" then
+	  creationThing <- CreateOne.create[id, 0]
+	  creationThing.getIndex[start, q]
+	end if
+      end if
+    end getIndex
+
+    export function fetchIndex -> [r : Integer]
+      r <- myind
+    end fetchIndex
+
+    export operation CPoint [file : OutStream]
+      var x : Integer
+      file.putString[obj]
+      file.writeInt[16 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+      OIDWriter.Out[id, file]
+      file.writeInt[0x40000000 + CTCodeCT.fetchIndex, 4]
+      file.writeInt[instanceSize, 4]
+      file.writeInt[instanceFlags, 4]
+      x <- opVec.fetchIndex
+      file.writeInt[x, 4]
+      if name == nil then
+	x <- 0x80000000
+      else
+	x <- csname.fetchIndex
+      end if
+      file.writeInt[x, 4]
+      if filename == nil then
+	x <- 0x80000000
+      else
+	x <- csfilename.fetchIndex
+      end if
+      file.writeInt[x, 4]
+      if templ == nil then
+	x <- 0x80000000
+      else
+	x <- templ.fetchIndex
+      end if
+      file.writeInt[x, 4]
+      if mytype == nil then
+	x <- 0x80000000
+      else
+	x <- mytype.fetchIndex
+      end if
+      file.writeInt[x, 4]
+
+      % Write the literals
+      if cliterals == nil then
+	x <- 0x80000000
+      else
+	x <- cliterals.fetchIndex
+      end if
+      file.writeInt[x, 4]
+    end CPoint
+    export operation generateBuiltin -> [r : ConcreteType]
+      % Turn the literals into the real thing.
+      const lits <- VectorOfInt.create[(literals.upperbound + 1) * 4]
+      for i : Integer <- 0 while i <= literals.upperbound by i <- i + 1
+	lits[4 * i]     <- 0	 % The first two lines are the Node of the OID.
+	lits[4 * i + 1] <- (0).setBit[16, literals[i].second = 1]
+	lits[4 * i + 2] <- literals[i].first
+	% This is eventually overwritten with the pointer to the actual
+	% object when it is relocated.
+	lits[4 * i + 3] <- 0x80000000
+      end for
+      r <- ConcreteType.create[
+	instanceSize,
+	instanceFlags,
+	opVec.generateBuiltin,
+	name,
+	filename,
+	templ.getString,
+	nil,
+	LiteralList.literal[lits]]
+      primitive "INSTALLINOID" [] <- [id, r]
+      if mytype !== nil then
+	var typeid : Integer
+	typeid <- (view mytype as hasID)$id
+	primitive "RELOCATETYPE" [] <- [r, typeid]
+      end if
+    end generateBuiltin
+end CTCode
+
+export CTCode
+export CreateOne
+@
+
+
+1.24
+log
+@Fix serious GC bugs, add a new builtin
+@
+text
+@d369 1
+a369 1
+    field instanceTagMask : Integer
+d428 1
+a428 1
+      file.writeInt[instanceTagMask, 4]
+d477 1
+a477 1
+	instanceTagMask,
+@
+
+
+1.23
+log
+@Get rid of split, and make execute now and eval work again
+@
+text
+@d473 1
+a473 1
+	lits[4 * i + 3] <- 0x2a2a2a2a
+d483 1
+a483 1
+	ImmutableVectorOfInt.literal[lits]]
+@
+
+
+1.22
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d468 3
+a470 3
+	lits[3 * i]     <- 0	 % The first two lines are the Node of the OID.
+	lits[3 * i + 1] <- (0).setBit[16, literals[i].second = 1]
+	lits[3 * i + 2] <- literals[i].first
+d473 1
+a473 1
+	lits[3 * i + 3] <- 0x2a2a2a2a
+@
+
+
+1.21
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d53 1
+a53 1
+	const env <- Environment$env
+@
+
+
+1.20
+log
+@First attempt at abcons
+@
+text
+@d38 1
+a38 1
+    export operation addLineNumbers[s : String]
+d40 1
+a40 1
+      t <- t || s
+a236 2
+
+const aoa <- Array.of[Any]
+@
+
+
+1.19
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@a488 1
+	const hasid <- typeobject t function getid -> [Integer] end t
+@
+
+
+1.18
+log
+@Finalized merge with Mark Immels version
+@
+text
+@a0 10
+const OIDWriter <- immutable object OIDWriter
+  export operation Out [Seq : Integer, File : OutStream]
+    file.writeInt[0, 4]   % IPAddress
+    file.writeInt[0, 1]   % Emerald Instance
+    file.writeInt[0, 1]   % Unused
+    file.writeInt[0, 2]   % Epoch
+    file.writeInt[Seq, 4] % Sequence
+  end Out
+end OIDWriter
+
+a363 1
+const aoi <- Array.of[Integer]
+d377 1
+a377 1
+    const field literals  : aoi <- aoi.create[~8]
+d471 2
+a472 2
+	lits[3 * i + 1] <- 0
+	lits[3 * i + 2] <- literals[i]
+@
+
+
+1.17
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d1 9
+a106 1
+  const stars <- "****"
+d126 1
+a126 2
+    file.putString[stars]
+    file.writeInt[OPVectorCTOID, 4]
+a130 1
+    const stars <- "****"
+d180 1
+a180 2
+      x <- 0x00000000 + OPVectorCT.fetchIndex
+      file.writeInt[x, 4]
+a224 1
+  const stars <- "****"
+d244 1
+a244 2
+    file.putString[stars]
+    file.writeInt[OPVectorECTOID, 4]
+d248 2
+a250 1
+    const stars <- "****"
+d267 1
+a267 1
+    export operation setOthers [x : Array.of[Any]]
+d296 1
+a296 2
+      x <- 0x00000000 + OPVectorECT.fetchIndex
+      file.writeInt[x, 4]
+a327 1
+  const stars <- "****"
+d347 1
+a347 2
+    file.putString[stars]
+    file.writeInt[CTCodeCTOID, 4]
+a353 1
+  const stars <- "****"
+d369 2
+a370 4
+      file.putString[stars]
+      file.writeInt[codeid, 4]
+      file.putString[stars]
+      file.writeInt[id, 4]
+a376 1
+    const stars <- "****"
+d437 3
+a439 5
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+      file.putString[stars]
+      file.writeInt[id, 4]
+      x <- 0x40000000 + CTCodeCT.fetchIndex
+      file.writeInt[x, 4]
+d479 1
+a479 1
+      const lits <- VectorOfInt.create[(literals.upperbound + 1) * 3]
+d481 6
+a486 3
+	lits[3 * i]     <- 0x2a2a2a2a
+	lits[3 * i + 1] <- literals[i]
+	lits[3 * i + 2] <- 0x2a2a2a2a
+@
+
+
+1.16
+log
+@Implement external dictionary for symbol lookups
+@
+text
+@d139 1
+a139 1
+      d(i) <- e
+d143 1
+a143 1
+      r <- d(i)
+d157 1
+a157 1
+	    const dd <- d(i)
+d180 1
+a180 1
+	  const dd <- d(i)
+d200 1
+a200 1
+	dd <- d(i)
+d202 1
+a202 1
+	  myv(i) <- dd.generateBuiltin
+d486 3
+a488 3
+	lits(3 * i)     <- 0x2a2a2a2a
+	lits(3 * i + 1) <- literals(i)
+	lits(3 * i + 2) <- 0x2a2a2a2a
+@
+
+
+1.15
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d392 1
+d422 4
+d438 1
+a438 2
+      var x, nLiterals : Integer
+      nLiterals <- literals.upperbound + 1
+d440 1
+a440 1
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 12 * nLiterals, 4]
+d475 6
+a480 6
+      file.writeInt[nLiterals * 3, 4]
+      for i : Integer <- 0 while i < nLiterals by i <- i + 1
+	file.putString[stars]
+	file.writeInt[literals(i), 4]
+	file.writeInt[nil, 4]
+      end for
+d483 7
+d497 2
+a498 1
+	nil]
+@
+
+
+1.14
+log
+@Create AT objects under the control of executenow
+@
+text
+@d376 2
+d391 1
+d433 2
+a434 1
+      var x : Integer
+d436 1
+a436 1
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+d469 8
+@
+
+
+1.13
+log
+@Optimized checkpoint file format for objects without ids
+@
+text
+@d476 6
+@
+
+
+1.12
+log
+@Generate type objects for concretetypes
+@
+text
+@d125 1
+a125 1
+    const obj <- "+OB+"
+d173 1
+a173 3
+      file.writeint[12 + 4 + (d.upperbound - d.lowerbound + 1) * 4, 4]
+      file.putString[stars]
+      file.putString[stars]
+d247 1
+a247 1
+    const obj <- "+OB+"
+d291 1
+a291 3
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+      file.putString[stars]
+      file.putString[stars]
+@
+
+
+1.11
+log
+@Removed all monitors
+@
+text
+@d392 2
+d419 3
+d436 1
+a436 1
+      file.writeInt[12 + 4 + 4 + 4 + 4 + 4 + 4, 4]
+d463 6
+d477 2
+a478 1
+	templ.getString]
+@
+
+
+1.10
+log
+@Implement change to "new" keyword.
+@
+text
+@a2 1
+  monitor
+d10 1
+a10 1
+    private operation flush
+d52 1
+a52 1
+    private operation finalize
+a89 1
+  end monitor
+a100 1
+    monitor
+a102 1
+    end monitor
+a123 1
+  monitor
+a215 1
+  end monitor
+a224 1
+    monitor
+a226 1
+    end monitor
+a247 1
+  monitor
+a322 1
+  end monitor
+a331 1
+    monitor
+a333 1
+    end monitor
+a357 1
+  monitor
+a377 1
+  end monitor
+a380 1
+  monitor
+a468 1
+  end monitor
+@
+
+
+1.9
+log
+@Do not set HASOID for objects without interesting ids
+@
+text
+@d213 1
+a213 1
+      r <- COpVector.new[myv]
+@
+
+
+1.8
+log
+@Corrected the generation of debug info
+@
+text
+@d181 1
+a181 1
+      x <- 0x40000000 + OPVectorCT.fetchIndex
+d305 1
+a305 1
+      x <- 0x40000000 + OPVectorECT.fetchIndex
+@
+
+
+1.7
+log
+@Made generation of debugging info optional
+@
+text
+@d56 1
+d58 1
+d60 7
+a66 4
+	  finalString <- s || "\0" 
+	end if
+	if env$generateDebugInfo and t != "" then
+	  finalString <- finalString || t
+@
+
+
+1.6
+log
+@type -> typeobject sed
+@
+text
+@d55 1
+d57 5
+a61 2
+	if lastBrand !== nil or t != "" then
+	  finalString <- s || "\0" || t
+@
+
+
+1.5
+log
+@Generate debugging info for parameters and retuls
+@
+text
+@a0 2
+import CString from "Jekyll"
+import CPQueue from "Jekyll"
+d85 1
+a85 1
+export Template to "Jekyll"
+d215 1
+a215 1
+export OpVector to "Jekyll"
+d326 1
+a326 1
+export OpVectorE to "Jekyll"
+d478 2
+a479 2
+export CTCode to "Jekyll"
+export CreateOne to "Jekyll"
+@
+
+
+1.4
+log
+@Implemented executenow
+@
+text
+@d34 5
+a38 3
+      if lastBrand !== nil and lastBrand != whatBrand then self.flush end if
+      lastBrand <- whatBrand
+      lastCount <- lastCount + 1
+@
+
+
+1.3
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d357 1
+a357 1
+const CreateOne <- class CreateOne [codeid : Integer, id : Integer]
+d359 1
+d473 1
+@
+
+
+1.2
+log
+@Implemented templates for vectors
+@
+text
+@d8 1
+d53 9
+d63 7
+a69 5
+      self.flush
+      if lastBrand !== nil or t != "" then
+	cs <- CString.create
+	cs$s <- s || "\0" || t
+	cs.getIndex[start, q]
+d78 4
+d188 19
+d320 3
+a323 1
+
+d464 9
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 4
+a16 2
+      if lastBrand !== nil and lastCount > 0 then
+	if lastCount = 1 then
+d25 7
+d54 1
+a54 1
+      if lastBrand !== nil then
+@

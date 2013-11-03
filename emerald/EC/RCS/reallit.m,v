@@ -1,0 +1,233 @@
+head	1.8;
+access;
+symbols
+	105alpha:1.8
+	104alpha:1.8
+	103alpha:1.8
+	102alpha:1.8
+	101alpha:1.8
+	100alpha:1.8
+	DIKU_0:1.8
+	carlton_start:1.6
+	immel_start:1.5;
+locks; strict;
+
+
+1.8
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.05.23.16.26.01;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.56.48;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.56.47;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.56.45;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.56.44;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.8
+log
+@First attempt at abcons
+@
+text
+@export Reallit
+
+const reallit <- class Reallit (Tree) [xstr : String]
+  const myindex <- 0x0a
+  const field str : String <- xstr
+
+  export operation copy [i : Integer] -> [r : Tree]
+    r <- self
+  end copy
+  export function asString -> [r : String]
+    r <- "reallit (" || str || ")"
+  end asString
+
+  export operation generate[xct : Printable]
+    const mycs <- CString.create
+    const bc <- view xct as ByteCode
+    mycs$s <- str
+    mycs.getAnID
+    bc.fetchLiteral[mycs$myid]
+    bc.addOther[mycs]
+    bc.addCode["STRF"]
+    if bc$size != 4 then 
+      bc.fetchVariableSecondThing[0x1800 + myindex, 0x1600 + myindex] 
+    end if
+  end generate
+
+  export operation getIsNotManifest -> [r : Boolean]
+    r <- false
+  end getIsNotManifest
+
+  export operation execute -> [r : Tree]
+    r <- self
+  end execute
+  export operation getAT -> [r : Tree]
+    r <- builtinlit.create[self$ln, myindex].getInstAT
+  end getAT
+  export operation getCT -> [r : Tree]
+    r <- builtinlit.create[self$ln, myindex].getInstCT
+  end getCT
+end Reallit
+@
+
+
+1.7
+log
+@Preparatory work for Ab/Cons
+@
+text
+@d16 1
+a16 8
+    const bc <- view xct as typeobject BCType
+      operation addCode[String]
+      operation addValue[Integer, Integer]
+      function  getSize -> [Integer]
+      operation addOther[Any]
+      operation fetchLiteral [Integer]
+      operation fetchVariableSecondThing[Integer, Integer]
+    end BCType
+@
+
+
+1.6
+log
+@Get rid of return on generate
+@
+text
+@d22 1
+d29 3
+a31 1
+    if bc$size != 4 then bc.fetchLiteral[0x1800 + myindex] end if
+@
+
+
+1.5
+log
+@Clean up literals
+@
+text
+@d14 1
+a14 1
+  export operation generate[xct : Printable]-> [rct : None]
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@d4 2
+a5 2
+  monitor
+    field str : String <- xstr
+d7 7
+a13 14
+    export function upperbound -> [r : Integer]
+      r <- ~1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      r <- self
+    end copy
+    export function asString -> [r : String]
+      r <- "reallit (" || str || ")"
+    end asString
+  end monitor
+d23 1
+a23 1
+    mycs$s <- self$str
+d28 1
+a28 1
+    if bc$size != 4 then bc.fetchLiteral[0x180a] end if
+d39 1
+a39 1
+    r <- builtinlit.create[self$ln, 0x0a].getInstAT
+d42 1
+a42 1
+    r <- builtinlit.create[self$ln, 0x0a].getInstCT
+@
+
+
+1.3
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d1 1
+a1 5
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import BuiltinLit from "Jekyll"
+import CString from "Jekyll"
+export Reallit to "Jekyll"
+d23 1
+a23 1
+    const bc <- view xct as type BCType
+@
+
+
+1.2
+log
+@Generate code for real literals (convert from string at runtime)
+@
+text
+@d25 1
+a25 1
+  export operation generate[xct : Printable]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+d26 1
+d30 3
+d34 6
+a39 3
+    bc.addCode["LDIS"]
+    bc.addValue[0, 2]
+    bc.addCode["TRAPF"]
+@

@@ -1,0 +1,44 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	93.06.15.19.56.40;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@test if file is a symlink, using test -h
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/bin/sh
+#
+# returns "filename is a symbolic link"
+# on systems supporting test -h
+#
+
+if [ $# != 1 ] ; then
+  echo "usage: issymlink <filename>"
+  exit 1
+fi
+
+test -h $1
+
+@

@@ -1,0 +1,76 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.04.20.13.18.53;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.04.09.15.23.14;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Make the install .zip file for the win32 architecture
+@
+
+
+1.2
+log
+@Use a private directory so installs can happen in parallel
+@
+text
+@#!/bin/csh -f
+setenv EMERALDARCH win32
+set file = $EMERALDROOT/emerald-${EMERALDVERSION}-bin-${EMERALDARCH}.zip
+rm -rf $EMERALDROOT/tmp/$EMERALDARCH
+mkdir $EMERALDROOT/tmp/$EMERALDARCH
+mkdir $EMERALDROOT/tmp/$EMERALDARCH/lib
+mkdir $EMERALDROOT/tmp/$EMERALDARCH/bin
+mkdir $EMERALDROOT/tmp/$EMERALDARCH/src
+mkdir $EMERALDROOT/tmp/$EMERALDARCH/src/emerald
+cp $EMERALDROOT/vm/$EMERALDARCH/emx.exe $EMERALDROOT/tmp/$EMERALDARCH/bin/
+cp $EMERALDROOT/bin/emc.bat $EMERALDROOT/tmp/$EMERALDARCH/bin/
+cp $EMERALDROOT/lib/{opoid,??def,Compiler,Builtins} $EMERALDROOT/tmp/$EMERALDARCH/lib/
+cp $EMERALDROOT/Example/{kilroy,first,count}.m $EMERALDROOT/tmp/$EMERALDARCH/src/emerald/
+cp $EMERALDROOT/Example/{kilroy,first,count}.x $EMERALDROOT/tmp/$EMERALDARCH/src/emerald/
+cd $EMERALDROOT/tmp/$EMERALDARCH
+rm -f $file
+zip -r $file *
+rm -rf $EMERALDROOT/tmp/$EMERALDARCH/*
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 12
+a15 12
+rm -rf $EMERALDROOT/tmp
+mkdir $EMERALDROOT/tmp
+mkdir $EMERALDROOT/tmp/lib
+mkdir $EMERALDROOT/tmp/bin
+mkdir $EMERALDROOT/tmp/src
+mkdir $EMERALDROOT/tmp/src/emerald
+cp $EMERALDROOT/vm/$EMERALDARCH/emx.exe $EMERALDROOT/tmp/bin/
+cp $EMERALDROOT/bin/emc.bat $EMERALDROOT/tmp/bin/
+cp $EMERALDROOT/lib/{opoid,??def,Compiler,Builtins} $EMERALDROOT/tmp/lib/
+cp $EMERALDROOT/Example/{kilroy,first,count}.m $EMERALDROOT/tmp/src/emerald/
+cp $EMERALDROOT/Example/{kilroy,first,count}.x $EMERALDROOT/tmp/src/emerald/
+cd $EMERALDROOT/tmp
+d18 1
+a18 1
+rm -rf $EMERALDROOT/tmp/*
+@

@@ -1,0 +1,62 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@#ifndef _EMERALD_VM_I_H
+#define _EMERALD_VM_I_H
+
+/*
+ *  I was having problems with vm.i.h's getting included multiple times,
+ *  so I created this wrapper which should be used in place of it.
+ *  I added a #define VM_I_H line to vm.desc, so I shouldn't really
+ *  need to have it above; but I'm putting it there for show anyways.
+ */
+
+#include "vm_i.h"
+
+#endif /* _EMERALD_VM_I_H */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 2
+a2 2
+#ifndef _VM_I_H
+#define _VM_I_H
+d13 1
+a13 1
+#endif /* _VM_I_H */
+@

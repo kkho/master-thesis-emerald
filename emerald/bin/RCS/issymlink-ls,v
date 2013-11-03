@@ -1,0 +1,71 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	96.02.14.16.53.21;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.15.23.46.40;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.19.56.40;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@test if file is a symlink, using ls
+@
+
+
+1.3
+log
+@Discard output from grep
+@
+text
+@#!/bin/sh
+#
+# returns "filename is a symbolic link"
+# on systems which don't support a symbolic link option to test
+#
+
+if ls -l 2>/dev/null $* | egrep -s "^[lL].* -> " > /dev/null; then true; else false; fi
+
+@
+
+
+1.2
+log
+@IBMs use an L instead of an l to indicate a symlink
+@
+text
+@d7 1
+a7 1
+if ls -l 2>/dev/null $* | egrep -s "^[lL].* -> " ; then true; else false; fi
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 1
+a7 1
+if ls -l 2>/dev/null $* | egrep -s "^l.* -> " ; then true; else false; fi
+@

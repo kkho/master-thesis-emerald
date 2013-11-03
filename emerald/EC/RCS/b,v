@@ -1,0 +1,111 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.4
+	carlton_start:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	94.08.25.16.26.52;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.08.17.16.50.32;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.06.20.08.15.24;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.03.22.45.07;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@needed by ffs
+@
+
+
+1.4
+log
+@Cleaned up Makefile targets
+@
+text
+@unset dogeneration
+set compilingbuiltins
+set exporttree
+../Builtins/Integer.m
+../Builtins/Char.m
+../Builtins/Boolean.m
+../Builtins/String.m
+../Builtins/Bitchunk.m
+../Builtins/VOfChar.m
+../Builtins/Vec.m
+../Builtins/IVec.m
+../Builtins/Array.m
+../Builtins/InStr.m
+../Builtins/OutStr.m
+../Builtins/CType.m
+../Builtins/Node.m
+../Builtins/RISA.m
+../Builtins/RISC.m
+unset exporttree
+unset compilingbuiltins
+set dogeneration
+@
+
+
+1.3
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@a0 1
+load name
+a1 1
+unset docompilation
+@
+
+
+1.2
+log
+@8.3 file names
+@
+text
+@d4 1
+d19 2
+d22 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a6 1
+../Builtins/Character.m
+d10 3
+a12 3
+../Builtins/VectorOfChar.m
+../Builtins/Vector.m
+../Builtins/IVector.m
+d14 2
+a15 2
+../Builtins/InStream.m
+../Builtins/OutStream.m
+@

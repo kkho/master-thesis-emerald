@@ -1,0 +1,255 @@
+head	1.8;
+access;
+symbols
+	105alpha:1.8
+	104alpha:1.8
+	103alpha:1.8
+	102alpha:1.8
+	101alpha:1.8
+	100alpha:1.8
+	DIKU_0:1.4
+	immel_start:1.2;
+locks; strict;
+
+
+1.8
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.02.14.16.50.55;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.26.15.23.27;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.09.16.21.06.00;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.08.25.11.26.23;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.03.06.19.50.57;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.45.29;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.45.26;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.8
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)Time.m	1.2  3/6/91
+%
+const Time <- immutable object Time builtin 0x100d
+  const TimeType <- immutable typeobject TimeType builtin 0x160d
+    function + [o : Time] -> [r : Time]
+    function - [o : Time] -> [r : Time]
+    function * [o : Integer] -> [r : Time]
+    function / [o : Integer] -> [r : Time]
+    function > [o : Time] -> [r : Boolean]
+    function >= [o : Time] -> [r : Boolean]
+    function < [o : Time] -> [r : Boolean]
+    function <= [o : Time] -> [r : Boolean]
+    function = [o : Time] -> [r : Boolean]
+    function != [o : Time] -> [r : Boolean]
+    function getSeconds -> [r : Integer]
+    function getMicroSeconds -> [r : Integer]
+    function asString -> [String]
+    function asDate -> [String]
+  end TimeType
+  export function getSignature -> [result : Signature]
+    result <- TimeType
+  end getSignature
+  export operation create [seconds : Integer, microseconds : Integer] -> [result : TimeType]
+    result <- immutable object aTime builtin 0x140d
+      var secs : Integer <- seconds
+      var msecs: Integer <- microseconds
+      initially
+	if msecs < 0 then
+	  secs <- secs + (msecs / 1000000) - 1
+	  msecs <- 1000000 + (msecs # 1000000)
+	end if
+	if msecs >= 1000000 then
+	  secs <- secs + (msecs / 1000000)
+	  msecs <- msecs # 1000000
+	end if
+      end initially
+      export function + [o : Time] -> [r : Time]
+	r <- Time.create[secs+o$seconds, msecs+o$microSeconds]
+      end +
+      export function - [o : Time] -> [r : Time]
+	r <- Time.create[secs-o$seconds, msecs-o$microSeconds]
+      end -
+      export function * [o : Integer] -> [r : Time]
+	r <- Time.create[secs * o, msecs * o]
+      end *
+      export function / [o : Integer] -> [r : Time]
+	r <- Time.create[secs / o, (secs # o * 1000000 + msecs)/ o]
+      end /
+      export function > [o : Time] -> [r : Boolean]
+	r <- secs = o$seconds and msecs > o$microSeconds or secs > o$seconds
+      end >
+      export function >= [o : Time] -> [r : Boolean]
+	r <- secs = o$seconds and msecs >= o$microSeconds or secs > o$seconds
+      end >=
+      export function < [o : Time] -> [r : Boolean]
+	r <- secs = o$seconds and msecs < o$microSeconds or secs < o$seconds
+      end <
+      export function <= [o : Time] -> [r : Boolean]
+	r <- secs = o$seconds and msecs <= o$microSeconds or secs < o$seconds
+      end <=
+      export function = [o : Time] -> [r : Boolean]
+	r <- secs = o$seconds and msecs = o$microSeconds
+      end =
+      export function != [o : Time] -> [r : Boolean]
+	r <- secs != o$seconds or msecs != o$microSeconds
+      end !=
+      export function getSeconds -> [r : Integer]
+	r <- secs
+      end getSeconds
+      export function getMicroSeconds -> [r : Integer]
+	r <- msecs
+      end getMicroSeconds
+      export function asString -> [r : String]
+	const x : String <- msecs.asString
+	const y <- "000000"
+	const l : Integer <- x.length
+	r <- secs.asString || ":"
+	if l < 6 then
+	  r <- r || y[0, 6-x.length]
+        end if
+	r <- r || x
+      end asString
+      export function asDate -> [r : String]
+	primitive "DSTR" [r] <- [secs]
+      end asDate
+    end aTime
+  end create
+  export operation fromLocal [year : Integer, month : Integer, day : Integer, hour : Integer, minute : Integer, second : Integer] -> [r : Time]
+    var seconds : Integer
+    primitive "LSECS" [seconds] <- [year, month, day, hour, minute, second]
+    r <- self.create[seconds, 0]
+  end fromLocal
+end Time
+
+export Time to "Builtins"
+@
+
+
+1.7
+log
+@Added fromLocal
+@
+text
+@d4 2
+a5 2
+const Time == immutable object Time builtin 0x100d
+  const TimeType == immutable typeobject TimeType builtin 0x160d
+d48 1
+a48 1
+	r <- Time.create[secs / o, msecs / o]
+d54 1
+a54 1
+	r <- secs = o$seconds and msecs >= o$microSeconds or secs >= o$seconds
+d60 1
+a60 1
+	r <- secs = o$seconds and msecs <= o$microSeconds or secs <= o$seconds
+@
+
+
+1.6
+log
+@Add constant type information
+@
+text
+@d89 5
+@
+
+
+1.5
+log
+@Admitted that the fields in a time are variable
+@
+text
+@d75 1
+a75 1
+	const x <- msecs.asString
+d77 1
+d79 1
+a79 1
+	if x.length < 6 then
+@
+
+
+1.4
+log
+@Cleaned up the naming of {g,s}et{Element,Slice}
+@
+text
+@d26 2
+a27 2
+      const secs : Integer <- seconds
+      const msecs: Integer <- microseconds
+@
+
+
+1.3
+log
+@Implement Time.asDate
+@
+text
+@d79 1
+a79 1
+	  r <- r || y.getSlice[0, 6-x.length]
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d84 1
+a84 1
+	r <- "A Date, who cares when"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Time.m	1.1  3/6/91
+d5 1
+a5 1
+  const TimeType == immutable type TimeType builtin 0x160d
+@

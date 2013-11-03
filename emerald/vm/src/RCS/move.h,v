@@ -1,0 +1,153 @@
+head	1.7;
+access;
+symbols
+	105alpha:1.7
+	104alpha:1.7
+	103alpha:1.5
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	98.05.22.15.49.12;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.05.08.19.38.21;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.05.01.07.21.05;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.24.16.25.58;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.7
+log
+@Detect and respond to more node failure conditions during locate and move
+@
+text
+@#ifndef _EMERALD_MOVE_H
+#define _EMERALD_MOVE_H
+
+#ifndef _EMERALD_ISET_H
+#include "iset.h"
+#endif
+
+#ifndef _EMERALD_REMOTE_H
+#include "remote.h"
+#endif
+
+extern void sendNVars(Stream str, int n, int *args, Object ep, ConcreteType et);
+extern void extractNVars(Stream str, int n, int *args, Object *epp, ConcreteType *etp, Node srv);
+extern void findActivationsInObject(Object obj, Stream str);
+extern int addActivations(struct State *state, Stream str, int ready);
+extern int move(int option1, Object obj, Node srv, struct State *state);
+extern void fixHere(Object o);
+extern void doIsFixed(Object o, struct State *state, int option);
+extern void unfixHere(Object o);
+extern int isFixedHere(Object o);
+extern void moveHandleDown(struct noderecord *);
+#endif /* _EMERALD_MOVE_H */
+@
+
+
+1.6
+log
+@Cleanups to remove useless leftover drivel found by cxref
+@
+text
+@a11 1
+extern ISet outstandingMoves;
+@
+
+
+1.5
+log
+@Implemented isfixed and unfix remotely
+@
+text
+@a21 1
+extern void forgetIsFixedHere(Object o);
+@
+
+
+1.4
+log
+@'.'
+@
+text
+@d19 2
+d22 1
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d3 10
+d16 1
+a16 1
+extern int addActivations(State *state, Stream str, int ready);
+d20 1
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d4 1
+a4 1
+extern void extractNVars(Stream str, int n, int *args, Object *epp, ConcreteType *etp, vmThreadId srv);
+d7 1
+a7 1
+extern int move(int option1, Object obj, vmThreadId srv, struct State *state);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 2
+a2 2
+#ifndef _MOVE_H
+#define _MOVE_H
+d10 1
+a10 1
+#endif
+@

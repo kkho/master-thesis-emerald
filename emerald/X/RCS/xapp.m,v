@@ -1,0 +1,136 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	95.06.23.22.18.03;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.10.04.05.36.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.09.23.20.31.48;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Trivial X application.
+@
+
+
+1.3
+log
+@Get X working on the current distributed emx
+@
+text
+@const xapp <- object xapp
+
+  const pause : Time <- Time.create[0, 0]
+  const here : Node<- locate self
+  operation pause 
+    stdout.putstring["Pausing\n"]
+    here.delay[pause]
+  end pause
+
+  process
+    var w : Window
+    const exitStatus <- 0
+
+    for i : Integer <- 0 while i < 2 by i <- i + 1
+      w <- X.CreateWindow[50+25*i, 50+25*i, 500, 500,"test"]
+      w.setfont["6x10"]
+      w.text["Hi there", 230, 10]
+      w.batch[true]
+      for j : Integer <- 10 while j < 500 by j <- j + 10
+	w.line[0, j, 499, j]
+	w.line[j, 0, j, 499]
+      end for
+      w.flush
+      self.pause
+
+      w.Relocate[200, 0]
+      w.flush
+      self.pause
+
+      w.batch[false]
+
+      w.set["height=400"]
+      w.flush
+      self.pause
+
+      w.Text["some more stuff", 180, 300]
+      w.flush
+      self.pause
+
+      stdout.putstring[w.get["height"]] stdout.putchar['\n']
+      stdout.putstring[w.get["width"]] stdout.putchar['\n']
+      w.unmap
+      w.Close
+      X.Flush
+      primitive "CCALL" "EXIT" [] <- [exitStatus]
+    end for
+  end process
+end xapp
+
+
+@
+
+
+1.2
+log
+@Upgraded to new monitor structure
+@
+text
+@d3 8
+a10 2
+  initially
+    const here : Node <- (locate 1)
+d12 1
+a12 1
+    const pause : Time <- Time.create[0, 0]
+d24 1
+a24 1
+      here.delay[pause]
+d28 1
+a28 1
+      here.delay[pause]
+d34 1
+a34 1
+      here.delay[pause]
+d38 1
+a38 1
+      here.delay[pause]
+d45 1
+d47 1
+a47 2
+%    stdout.putstring["end of test\n"]
+  end initially
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+import  X,Window, Display  from "X"
+a2 2
+const xapp == object xapp
+
+@

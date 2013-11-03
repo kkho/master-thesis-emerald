@@ -1,0 +1,204 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.4
+	carlton_start:1.4
+	immel_start:1.1;
+locks; strict;
+
+
+1.4
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.12.10.17.07.42;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.57.59;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.4
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@const SIIITable <- class SIIITable [size : Integer]
+    const voi <- Vector.of[Integer]
+    const vos <- Vector.of[String]
+    var currentsize : Integer <- size
+    var valuea : voi <- voi.create[currentsize]
+    var valueb : voi <- voi.create[currentsize]
+    var valuec : voi <- voi.create[currentsize]
+    var keys   : vos <- vos.create[currentsize]
+    var count  : Integer <- 0
+    var limit  : Integer <- (currentsize * 4) / 5
+
+    function hash [s : String] -> [r : Integer]
+      const limit <- s.length
+      r <- limit * 1001
+      for i : Integer <- 0 while i < limit by i <- i + 1
+	r <- r * 127 + s[i].ord
+      end for
+      if r < 0 then r <- ~r end if
+      r <- r # currentsize
+    end hash
+    operation iInsert [s : String, a:Integer,b:Integer,c:Integer]
+      const first <- hash[s]
+      var h : Integer <- first
+      loop
+	const k <- keys[h]
+	if k == nil then
+	  keys[h] <- s
+	  valuea[h] <- a valueb[h] <- b valuec[h] <- c
+	  return
+	elseif s = k then
+	  valuea[h] <- a valueb[h] <- b valuec[h] <- c
+	  count <- count - 1
+	  return
+	end if
+	h <- h + 1
+	if h >= currentsize then h <- 0 end if
+	exit when h = first
+      end loop
+    end iInsert
+
+    operation enlarge
+      const oldvaluea <- valuea
+      const oldvalueb <- valueb
+      const oldvaluec <- valuec
+      const oldkeys   <- keys
+      const oldsize   <- currentsize
+
+      currentsize <- currentsize * 2
+      limit <- (currentsize * 4) / 5
+      valuea <- voi.create[currentsize]
+      valueb <- voi.create[currentsize]
+      valuec <- voi.create[currentsize]
+      keys   <- vos.create[currentsize]
+      for i : Integer <- 0 while i < currentsize by i <- i + 1
+	const k <- keys[i]
+	if k !== nil then
+	  self.iInsert[k, valuea[i],valueb[i],valuec[i]]
+	end if
+      end for
+    end enlarge
+
+    export operation Lookup [s : String] -> [a:Integer,b:Integer,c:Integer]
+      var h : Integer <- hash[s]
+      loop
+	const k <- keys[h]
+	if k == nil then
+	  return
+	elseif k = s then
+	  a <- valuea[h] b <- valueb[h] c <- valuec[h]
+	  return
+	end if
+	h <- h + 1
+	if h >= currentsize then h <- 0 end if
+      end loop
+    end Lookup
+    export operation Insert [s : String, a:Integer,b:Integer,c:Integer]
+      count <- count + 1
+      if count > limit then self.enlarge end if
+      self.iInsert[s, a, b, c]
+    end Insert
+    export operation reset
+      for i : Integer <- 0 while i < currentsize by i <- i + 1
+	keys[i] <- nil
+      end for
+      count <- 0
+    end reset
+end SIIITable
+
+export SIIITable to "Jekyll"
+@
+
+
+1.3
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d16 1
+a16 1
+	r <- r * 127 + s(i).ord
+d25 1
+a25 1
+	const k <- keys(h)
+d27 2
+a28 2
+	  keys(h) <- s
+	  valuea(h) <- a valueb(h) <- b valuec(h) <- c
+d31 1
+a31 1
+	  valuea(h) <- a valueb(h) <- b valuec(h) <- c
+d55 1
+a55 1
+	const k <- keys(i)
+d57 1
+a57 1
+	  self.iInsert[k, valuea(i),valueb(i),valuec(i)]
+d65 1
+a65 1
+	const k <- keys(h)
+d69 1
+a69 1
+	  a <- valuea(h) b <- valueb(h) c <- valuec(h)
+d83 1
+a83 1
+	keys(i) <- nil
+@
+
+
+1.2
+log
+@Removed all monitors
+@
+text
+@d57 1
+a57 1
+	  iInsert[k, valuea(i),valueb(i),valuec(i)]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a1 1
+  monitor
+d12 1
+a12 1
+    private function hash [s : String] -> [r : Integer]
+d21 1
+a21 1
+    private operation iInsert [s : String, a:Integer,b:Integer,c:Integer]
+d41 1
+a41 1
+    private operation enlarge
+a86 1
+  end monitor
+@

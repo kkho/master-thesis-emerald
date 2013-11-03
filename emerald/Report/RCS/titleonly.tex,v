@@ -1,0 +1,56 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.2
+date	94.08.25.16.33.05;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.26.14;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Checkpoint of August 94 updates for DIKU course
+@
+text
+@\documentstyle[fleqn,clbiba,titlepage,normscite]{article}
+\input{pagelayout}
+\input{emcmd}
+\input{abbrevs}
+\input{macros}
+\begin{document}
+\bibliographystyle{myalpha}
+\newcommand{\doone}[1]{\makebox[2cm]{$\lrq{#1}$}}
+\newcommand{\doonenoq}[1]{\makebox[2cm]{${#1}$}}
+\input{uatitle}
+\end{document}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+x ./titleonly.tex, 297 bytes, 1 tape blocks
+@

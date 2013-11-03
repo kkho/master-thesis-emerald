@@ -1,0 +1,791 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.4
+date	97.01.21.23.48.47;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.02.24.00.48.03;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.25.16.33.05;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.26.15;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Many changes to make the Report up to date
+@
+text
+@\section{Types}
+\label{types}
+\label{abstracttypes}
+A type is defined as a collection of operation signatures, where
+each operation signature includes the operation name, and the names and
+types of its arguments and results. Types, being objects, are
+first-class citizens in Emerald. Each type object exports a function without
+arguments called {\em getSignature} that returns an object of the predefined
+\kw{Signature} type. In other words, any object that conforms to 
+the following type:
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{immutable} \kw{typeobject} \tn{type}\+\\*{}%
+  \kw{function} getSignature \returns{} \/\LB{}\tn{Signature}\/\RB{}\-\\*{}%
+\kw{end} \tn{type}\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+
+is a type.  Note that each object with type \tn{signature} has a getSignature
+operation that returns self, thus Signatures are Types.
+
+\subsection{Type Constructors}
+\label{type constructors}
+Signatures are created
+using type constructors.  A type constructor has the following
+structure:
+\begin{quote}\it\begin{tabular}{lcl}
+typeConstructor &$::=$& \opt{\kw{immutable}} \kw{typeobject} typeIdentifier \\
+& &\hspace{0.5in}\oseq{operationSignature} \\
+& &\kw{end} typeIdentifier
+\end{tabular}\end{quote}
+Operation signatures have been defined in
+Section~\ref{operationSignature}, however in type constructors, the
+identifiers in parameter declarations may be omitted.
+An immutable type implies that its objects are abstractly immutable, i.e.
+its objects cannot change their state over time. For example, the predefined
+type  
+\kw{Integer} is immutable because its objects represent integer values which
+cannot change; for instance, the integer 3 cannot be changed to the integer
+4.
+
+\subsection{Syntactictypeof and typeof}
+\label{syntactictypeof}
+\label{syntactictype}
+The syntactictypeof operator evaluates to the statically determined type of
+an expression.  That is, the type of the expression as it can be determined
+by the compiler.  This operation is always evaluated at compile time.  In
+contrast the \kw{typeof} operator returns the most
+accurate type of the expression at run time, which can be a wider type than
+the syntactic type, if either implicit or explicit narrowing has occurred.
+This most accurate type is 
+also called the {\it best fitting} type of the expression.
+See section \ref{typeofobjectconstructor}.  It is always the case that for
+any expression {\it e}, \kw{typeof} {\it e} \conforms \kw{syntactictypeof} {\it e}.
+
+\subsection{Conformity}
+\label{conformity}
+Conformity is the basic relationship between types.  
+A type 
+{\it S}
+conforms to a type 
+{\it T}
+(written 
+{\it S}
+\conforms{} 
+{\it T}\/) 
+if:
+\begin{enumerate}
+  \item{} {\it S} is immutable if {\it T} is immutable.
+  \item{} For each operation $o_T$ in {\it T},
+    there exists an operation $o_S$ in {\it S} with the same name and number
+    of arguments, and
+  \item{} $o_T$ and $o_S$ have the same number of results, and
+  \item{} The  types of the results of $o_S$ operations conform to the
+    types of the results of $o_T$, and 
+  \item{} The  types of the arguments of $o_T$ conform to the  types of the
+    arguments of $o_S$ (i.e., arguments must conform in the opposite
+    direction). 
+\end{enumerate}
+
+If either {\it S} or {\it T} is recursive (the definition of at least one of
+its operations uses its own name), then the previous checks must be
+performed under an assumption that {\it S} \conforms{} {\it T}.
+
+This simple description of conformity suffices for all invocations that
+do not involve parametric polymorphism.  Discussion of polymorphic
+operations and the extensions to the type checking rules required to type
+check them is deferred until Section \ref{polymorphism}.
+
+Some types in the system are exceptions to
+the standard rules for conformity.  For ensuring
+correctness, types such as
+\tn{Boolean}, \tn{Condition}, \tn{Node}, \tn{Signature} and \tn{Time} must
+be implemented only by the system. For performance enhancement,
+the types
+\tn{Character}, \tn{Integer}, \tn{Real}, and \tn{String} are also
+restricted to be implemented only by the system.
+
+\subsection{Polymorphism}
+\label{polymorphism}
+Inclusion polymorphism, where one type is a subtype of another and can be
+used in any context in which the supertype is expected, is fundamental to
+Emerald.  Its type system is defined so that the subtyping relation
+(conformity) is as large as possible while still guaranteeing safety: an
+operation will never be performed on an object that doesn't implement that
+operation.
+
+Emerald also supports parametric polymorphism, where types are either
+explicitly or implicitly passed as arguments to invocations.  The cardinal
+rule regarding types is that it must be possible for the compiler at compile
+time to determine the value of every expression that is used in a position
+where a type is required.  Such positions include variable, constant, and
+parameter declarations, and the second argument to view and restrict
+expressions.
+
+Since types are objects, no special type parameterization form is necessary
+in Emerald; types are passed to operations in the same way as are other
+objects.   The operation signature definition syntax is supplemented with
+three clauses that permit:
+\begin{itemize}
+  \item{}  the introduction of dependent types whose values
+    depend on the value of type arguments (the where clause)
+  \item{} the declaration of type variables that may take on the value of
+    the types of other arguments (the for all clause)
+  \item{} the specification of constraints on the values of type
+    variables (the such that clause).  
+\end{itemize}
+
+\subsubsection{For all clause}
+\begin{quote}\it\begin{tabular}{lcl}
+forallClause & $::=$& \kw{forall} identifier \\
+\end{tabular}\end{quote}
+The for all clause defines the {\it identifier} as a type variable without
+constraint.  If the identifier is not defined elsewhere in the operation
+signature, the for all clause also serves to define it.  The type variable
+will take as its value the type value positionally assigned to it during
+invocation.  The primary purpose of the for all clause is to capture the
+type of some other argument to an invocation, as in the following example of
+the polymorphic identity function which returns its argument and in which
+the type of the result is the same as the type of the argument:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+  \kw{function} identity\/\LB{}a \CO{} t\/\RB{} \returns{} \/\LB{}b \CO{} t\/\RB{}\+\\*{}%
+    \kw{forall} t\\*{}%
+    b \assign{} a\-\\*{}%
+  \kw{end} identity
+\end{tabbing}\end{minipage}}
+
+The for all clause can also be used to introduce a type variable whose value
+is further constrained by a such that clause.
+
+\subsubsection{Where clause}
+\begin{quote}\it\begin{tabular}{lcl}
+whereClause & $::=$& \kw{where} identifier {\assign} typeExpression
+\end{tabular}\end{quote}
+A where clause is semantically equivalent to a constant declaration.  It
+defines the {\it identifier} to have the value of the given {\it
+typeExpression}.  The type expression is evaluated during type checking of
+invocations after type values have been bound to the argument identifiers
+defined in the operation signature and any type variables have also been
+bound to their values.  This permits the construction of dependent types
+whose values depend on the values of type arguments to the invocation, as
+demonstrated in the following example:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+  \kw{function} makeVector\/\LB{}arg \CO{} argType\/\RB{} \returns{} \/\LB{}res \CO{} resType\/\RB{}\+\\*{}%
+    \kw{forall} argType\\*{}%
+    \kw{where} resType \assign{} \tn{Vector}.of\/\LB{}argType\/\RB{}\\[1.0ex]{}%
+    res \assign{} resType.create\/\LB{}10\/\RB{}\\*{}%
+    \kw{for} i \CO{} \tn{Integer} \assign{} 0 \kw{while} i $<$ 10 \kw{by} i \assign{} i $+$ 1\+\\*{}%
+      res\/\LB{}i\/\RB{} \assign{} arg\-\\*{}%
+    \kw{end} \kw{for}\-\\*{}%
+  \kw{end} makeVector
+\end{tabbing}\end{minipage}}
+
+
+\subsubsection{Such that clause}
+\begin{quote}\it \begin{tabular}{lcl}
+suchthatClause & $::=$ & \kw{suchthat} identifier \matches{} typeLiteral
+\end{tabular}\end{quote}
+
+The such that clause allows the possible values that may be taken on by a
+type variable to be constrained.  Any value bound to the given {\it
+identifier} (which must be a type variable) must match the {\it
+typeExpression}.  This clause allows the programmer to require that an
+argument type have a particular collection of operations, as demonstrated in
+the following example:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+  \kw{function} inOrder\/\LB{}a \CO{} t, b \CO{} t, c \CO{} t\/\RB{} \returns{} \/\LB{}r \CO{} \tn{Boolean}\/\RB{}\+\\*{}%
+    \kw{forall} t\\*{}%
+    \kw{\kw{such}\kw{that}} t \conforms{} \kw{typeobject} comparable\+\\*{}%
+      \kw{function} $<=$\/\LB{}comparable, comparable\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\-\\*{}%
+    \kw{end} comparable\\[1.0ex]{}%
+    r \assign{} a $<=$ b \kw{and} b $<=$ c\-\\*{}%
+  \kw{end} inOrder
+\end{tabbing}\end{minipage}}
+
+
+\subsection{Typechecking operation definitions}
+In the presence of parametric polymorphism, some of the identifiers defined
+in the signature of an operation definition will be type variables, which
+will take on 
+different values for each invocation of the operation.  In type checking the
+body of the operation, we can assume only that the value of each type
+variable will match its constraint.  Therefore we type check the body of the
+operation with all type variables bound to their constraints.  Once the
+operation body has been shown to be type correct under this assumption, it
+will be type correct for every invocation since the actual type bound to each
+type variable must match the constraint on that type variable.
+
+\subsection{Typechecking invocations}
+In the presence of parametric polymorphism, the simple rules for
+typechecking invocations (that the type of each argument expression must
+conform to the type of its corresponding formal parameter) is insufficient.
+Therefore, when typechecking an invocation involving type variables, the
+following steps are performed:
+\begin{enumerate}
+  \item{} Bind each type variable to its corresponding type value from the
+    actual arguments.  These may be the arguments themselves, or in the case
+    of type variables introduced by for all clauses, the types of the
+    arguments. 
+  \item{} Create the dependent type introduced in each where clauses in the
+    operation signature.  All of these objects are created simultaneously so
+    that recursive type structures can be successfully created.
+  \item{} Check that the value bound to each type variable matches the
+    constraint on that type variable.
+  \item{} Check that the type of each argument conforms to the type of its
+    corresponding formal parameter.
+  \item{} Determine the result types of the invocation by using the current
+    values of any type variables or dependent type identifiers.
+\end{enumerate}
+\subsection{Conformity revisited}
+Parametric polymorphism complicates the conformity rules as well, since it
+introduces type variables and constraints on them.  The previous rules for
+conformity still must be satisfied, but in addition:
+\begin{enumerate}
+  \item[0]{} If either or both of {\it S} and {\it T} is a bound type
+    variable, then consider the values bound to them rather than the type
+    variable when checking the other rules.
+  \item[5]{} If {\it T} is an unbound type variable then {\it S} must be
+    also, and the constraint on {\it S} must match the constraint on {\it T}.
+\end{enumerate}
+\subsection{Matches}
+The matches relation (\matches{}) between types is very similar to the
+conformity relation (\conforms{}).  In fact, if the types being considered
+are not recursive then the two relations are equivalent.  When checking the
+conformity of two recursive types ({\it S} and {\it T}) we must
+first assume that {\it S} \conforms{} {\it T}.  When checking whether {\it
+S} matches {\it T} we assume instead that {\it S} and {\it T} are equivalent
+types ---  that {\it S} \conforms{} {\it T} and that {\it T} \conforms{} {\it
+S} --- because if the types do match then they will be bound together (since
+matches only comes into play in the presence of type variables).
+
+\subsection{Polymorphism Example}
+\label{polymorphismexample}
+\begin{figure}[tbp]
+\begin{center}
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} Set \assign{} \kw{immutable} \kw{object} Set\+\\*{}%
+  \kw{export} \kw{function} of\/\LB{}eType \CO{} \tn{type}\/\RB{} \returns{} \/\LB{}result \CO{} NewSetType\/\RB{}\+\\*{}%
+    \kw{\kw{such}\kw{that}}\+\\*{}%
+      eType \matches\+\\*{}%
+	\kw{immutable} \kw{typeobject} eType\+\\*{}%
+	  \kw{function} $=$\/\LB{}eType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\-\\*{}%
+	\kw{end} eType\-\-\\*{}%
+    \kw{where}\+\\*{}%
+      NewSetType \assign{}\+\\*{}%
+	\kw{immutable} \kw{typeobject} NewSetType\+\\*{}%
+	  \kw{operation} empty \returns{} \/\LB{}NewSet\/\RB{}\\*{}%
+	  \kw{operation} singleton\/\LB{}eType\/\RB{} \returns{} \/\LB{}NewSet\/\RB{}\\*{}%
+	  \kw{operation} create\/\LB{}sequenceOfeType\/\RB{} \returns{} \/\LB{}NewSet\/\RB{}\-\\*{}%
+	\kw{end} NewSetType\-\-\\*{}%
+    \kw{where}\+\\*{}%
+      sequenceOfeType \assign{}\+\\*{}%
+	\kw{immutable} \kw{typeobject} sequenceOfeType\+\\*{}%
+	  \kw{function} lowerbound \returns{} \/\LB{}\tn{Integer}\/\RB{}\\*{}%
+	  \kw{function} upperbound \returns{} \/\LB{}\tn{Integer}\/\RB{}\\*{}%
+	  \kw{function} getElement\/\LB{}\tn{Integer}\/\RB{} \returns{} \/\LB{}eType\/\RB{}\-\\*{}%
+	\kw{end} sequenceOfeType\-\-\\*{}%
+    \kw{where}\+\\*{}%
+      NewSet \assign{}\+\\*{}%
+	\kw{immutable} \kw{typeobject} NewSet\+\\*{}%
+	  \kw{function} contains\/\LB{}eType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+	  \kw{function} $+$\/\LB{}NewSet\/\RB{} \returns{} \/\LB{}NewSet\/\RB{}\\*{}%
+	  \kw{function} $*$\/\LB{}NewSet\/\RB{} \returns{} \/\LB{}NewSet\/\RB{}\\*{}%
+	  \kw{function} $-$\/\LB{}NewSet\/\RB{} \returns{} \/\LB{}NewSet\/\RB{}\\*{}%
+	  \kw{function} cardinality \returns{} \/\LB{}\tn{Integer}\/\RB{}\-\\*{}%
+	\kw{end} NewSet\-\-\\*{}%
+    result \assign{} \+\\*{}%
+      \kw{object} SetCreator\+\\*{}%
+	\kw{export} \kw{operation} create\/\LB{}v \CO{} sequenceOfeType\/\RB{}\returns{} \/\LB{}result \CO{} NewSet\/\RB{}\+\\*{}%
+	  result \assign{}\+\\*{}%
+	    \kw{object} NewSet\+\\*{}%
+	      \kw{const} repType \assign{} \tn{Vector}.of\/\LB{}eType\/\RB{}\\*{}%
+	      \kw{var} rep \CO{} repType\\[1.0ex]{}%
+	      \cd{} The implementation of the operations and functions.\-\-\\*{}%
+	  \kw{end} NewSet\-\\*{}%
+	\kw{end} create\\*{}%
+	\kw{export} \kw{operation} empty \returns{} \/\LB{}r \CO{} NewSet\/\RB{}\+\\*{}%
+	  r \assign{} self.create\/\LB{}\kw{nil}\/\RB{}\-\\*{}%
+	\kw{end} new\\*{}%
+	\kw{export} \kw{operation} singleton\/\LB{}e \CO{} eType\/\RB{} \returns{} \/\LB{}r \CO{} NewSet\/\RB{}\+\\*{}%
+	  r \assign{} self.create\/\LB{}{e}\/\RB{}\-\\*{}%
+	\kw{end} singleton\-\\*{}%
+      \kw{end} SetCreator\-\-\\*{}%
+  \kw{end} of\-\\*{}%
+\kw{end} Set
+\end{tabbing}\end{minipage}}
+\end{center}
+\caption{A Polymorphic Set Object}
+\label{polymorphicset}
+\end{figure}
+To demonstrate the polymorphism present in \emd{}, a polymorphic {\em Set}
+object is presented in Figure~\ref{polymorphicset}. {\em Set} 
+has an
+operation {\em of} that takes a type as an argument and returns
+an object that can be used as the abstract type of, as well as a creator
+of, sets of things conforming to the original argument to the operation
+{\em of}.  The element type for a set (the type passed to the {\it of}
+function) must be immutable and must
+implement an $=$ operation that returns a \kw{Boolean} object. With this
+{\em Set} definition, we can define creators for sets of integers and
+strings as:
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} IntSet \defined{} Set.of\/\LB{}\tn{Integer}\/\RB{}\\*{}%
+\kw{const} StringSet \defined{} Set.of\/\LB{}\tn{String}\/\RB{}\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+\noindent
+and we can create singleton sets of integers and strings as:
+{\small\it\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} i \defined{} IntSet.singleton\/\LB{}6\/\RB{}\\*{}%
+\kw{const} s \defined{} StringSet.singleton\/\LB{}\terminal{"}abc\terminal{"}\/\RB{}\\*{}%
+\end{tabbing}\vspace{-2\topsep}}
+@
+
+
+1.3
+log
+@Describe records better
+@
+text
+@d19 1
+a19 1
+operation that returns the target object, thus Signatures are Types.
+d35 2
+a36 1
+its objects cannot change value over time. For example, the predefined type 
+d41 13
+a53 7
+\subsection{syntactictypeof and typeof}
+The \kw{syntactictypeof} operator is currently not implemented.  It is
+intended to evaluate to the statically determined type of an expression.  In
+contrast the \kw{typeof} operator (which is implemented) returns the most
+accurate type of the expression at run time.  This most acurate type has on
+occassion been called the ``best fitting abstract type'' of the expression.
+See section \ref{operator typeof}.
+d55 1
+a55 1
+\subsection{conformity}
+d57 32
+d90 1
+a90 1
+the standard conforms and matching rules.  For ensuring
+d92 1
+a92 1
+\kw{Boolean}, \kw{Condition}, \kw{Node}, \kw{Signature} and \kw{Time} must
+d95 1
+a95 1
+\kw{Character}, \kw{Integer}, \kw{Real}, and \kw{String} are also
+d98 31
+a128 10
+\subsection{Other types}
+\label{other types}
+Emerald defines four syntactic abbreviations for commonly occurring
+constructions.
+
+\subsubsection{Classes}
+While Emerald does not have a notion of {\it class\/}, we do recognize that
+it is often convenient to do class-based programming.  Therefore the Emerald
+compiler implements a syntactic extension called a class, and supports a
+form of inheritance (by macro expansion) for classes.
+d130 1
+a130 8
+class &$::=$& \opt{\kw{immutable}} \opt{\kw{monitor}} \kw{class} identifier \opt{\lrq{(} baseClass
+\lrq{)}} \opt{parameterList}\\
+& & \hspace{0.5in} \oseq{classoperation} \\
+& & \hspace{0.5in} \oseq{declaration} \\
+& & \hspace{0.5in} \oseq{operation $|$ initially $|$ process $|$ recovery} \\
+& & \kw{end} identifier\\
+baseClass &$::=$& identifier\\
+classoperation  &$::=$& \kw{class} operation
+d132 8
+a139 35
+
+Classes are expanded syntactially into two nested object constructors.  The
+outer object is immutable and has operations getSignature and create in
+addition to the class operations defined by the programmer.  The parameter
+list is the parameter list to the create operation, and instance constants
+with those names will be declared for each instance.  The rest of the
+components of the class construct go to defining the body of the inner
+object constructor.  
+
+Inheritance is syntactic.  Each component in the base class that is not
+redefined in the subclass will be inherited into the subclass.  Because any
+component can be redefined, there is no guarantee that the type of a
+subclass will conform to the type of its superclass.
+
+An example might help.  Suppose we write the following declaration:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} Complex \assign{} \kw{immutable} \kw{class} Complex\/\LB{}r \CO{} \tn{Real}, i \CO{} \tn{Real}\/\RB{}\+\\*{}%
+  \kw{class} \kw{export} \kw{operation} fromReal\/\LB{}a \CO{} \tn{Real}\/\RB{} \returns{} \/\LB{}e \CO{} Complex\/\RB{}\+\\*{}%
+    e \assign{} self.create\/\LB{}a, 0.0\/\RB{}\-\\*{}%
+  \kw{end} fromReal\\*{}%
+  \kw{export} \kw{function} $+$\/\LB{}other \CO{} Complex\/\RB{} \returns{} \/\LB{}e \CO{} Complex\/\RB{}\+\\*{}%
+    e \assign{} Complex.create\/\LB{}other.getReal $+$ r, other.getImag $+$ i\/\RB{}\-\\*{}%
+  \kw{end} $+$\\*{}%
+  \kw{export} \kw{function} getReal \returns{} \/\LB{}e \CO{} \tn{Real}\/\RB{}\+\\*{}%
+    e \assign{} r\-\\*{}%
+  \kw{end} getReal\\*{}%
+  \kw{export} \kw{function} getImag \returns{} \/\LB{}e \CO{} \tn{Real}\/\RB{}\+\\*{}%
+    e \assign{} i\-\\*{}%
+  \kw{end} getImag\-\\*{}%
+\kw{end} Complex
+\end{tabbing}\end{minipage}}
+
+This is rearranged into the following:
+d143 4
+a146 26
+\kw{const} Complex \assign{} \kw{immutable} \kw{object} Complex\+\\*{}%
+  \kw{const} ComplexType \assign{} \kw{immutable} \kw{typeobject} ComplexType\+\\*{}%
+    \kw{function} getReal \returns{} \/\LB{}ComplexType\/\RB{}\\*{}%
+    \kw{function} getImag \returns{} \/\LB{}ComplexType\/\RB{}\\*{}%
+    \kw{function} $+$\/\LB{}ComplexType\/\RB{} \returns{} \/\LB{}ComplexType\/\RB{}\-\\*{}%
+  \kw{end} ComplexType\\*{}%
+  \kw{export} \kw{function} getSignature \returns{} \/\LB{}r \CO{} \tn{Signature}\/\RB{}\+\\*{}%
+    r \assign{} ComplexType\-\\*{}%
+  \kw{end} getSignature\\*{}%
+  \kw{export} \kw{operation} fromReal\/\LB{}a \CO{} \tn{Real}\/\RB{} \returns{} \/\LB{}e \CO{} Complex\/\RB{}\+\\*{}%
+    e \assign{} self.create\/\LB{}a, 0.0\/\RB{}\-\\*{}%
+  \kw{end} fromReal\\*{}%
+  \kw{export} \kw{operation} create\/\LB{}r \CO{} \tn{Real}, i \CO{} \tn{Real}\/\RB{} \returns{} \/\LB{}e \CO{} Complex\/\RB{}\+\\*{}%
+    e \assign{} \kw{immutable} \kw{object} aComplex\+\\*{}%
+      \kw{export} \kw{function} $+$\/\LB{}other \CO{} Complex\/\RB{} \returns{} \/\LB{}e \CO{} Complex\/\RB{}\+\\*{}%
+	e \assign{} Complex.create\/\LB{}other.getReal $+$ r, other.getImag $+$ i\/\RB{}\-\\*{}%
+      \kw{end} $+$\\*{}%
+      \kw{export} \kw{function} getReal \returns{} \/\LB{}e \CO{} \tn{Real}\/\RB{}\+\\*{}%
+	e \assign{} r\-\\*{}%
+      \kw{end} getReal\\*{}%
+      \kw{export} \kw{function} getImag \returns{} \/\LB{}e \CO{} \tn{Real}\/\RB{}\+\\*{}%
+	e \assign{} i\-\\*{}%
+      \kw{end} getImag\-\\*{}%
+    \kw{end} aComplex\-\\*{}%
+  \kw{end} create\-\\*{}%
+\kw{end} Complex
+d149 2
+a150 1
+We probably need a lot more words on this topic!
+d152 1
+a152 1
+\subsubsection{Enumerations}
+d154 1
+a154 3
+enum &$::=$& \kw{enumeration} identifier\\
+& & \hspace{0.5in} \sseq{enumIdentifier}{\lrq{,}} \\
+& & \kw{end} identifier
+d156 8
+a163 19
+Enumerations provide a creation operation for each element of the type,
+operations {\it first\/} and {\it last\/} that return the first and last
+elements of the enumeration, respectively, and an operation {\it create\/}
+that takes an integer argument and returns that element of the enumeration
+with that ordinal (0 base).  In
+addition, elements of the enumeration support $<$, $<=$, $=$, $!=$, $>=$,
+$>$, {\it succ\/}, {\it pred\/},
+{\it ord\/} and {\it asString\/} operations.  The {\it asString\/} operation
+returns the name of the element as a \tn{String}.  All elements of
+enumerations are immutable.
+
+To be concrete, consider the declaration:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{const} colors \assign{} \kw{enumeration} colors red, blue, green \kw{end} colors
+\end{tabbing}\end{minipage}}
+
+The identifier {\it colors\/} will have type:
+d167 8
+a174 9
+\kw{immutable} \kw{typeobject} ColorCreatorType\+\\*{}%
+  \kw{function}  getSignature \returns{} \/\LB{}\tn{Signature}\/\RB{}\\*{}%
+  \kw{operation} create\/\LB{}\tn{Integer}\/\RB{} \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{operation} first \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{operation} last \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{operation} red \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{operation} green \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{operation} blue \returns{} \/\LB{}ColorType\/\RB{}\-\\*{}%
+\kw{end} ColorCreatorType
+a176 17
+Each element of the enumeration has type:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\kw{immutable} \kw{typeobject} ColorType\+\\*{}%
+  \kw{function} $<$\/\LB{}ColorType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+  \kw{function} $<=$\/\LB{}ColorType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+  \kw{function} $=$\/\LB{}ColorType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+  \kw{function} $!=$\/\LB{}ColorType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+  \kw{function} $>=$\/\LB{}ColorType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+  \kw{function} $>$\/\LB{}ColorType\/\RB{} \returns{} \/\LB{}\tn{Boolean}\/\RB{}\\*{}%
+  \kw{function} succ \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{function} pred \returns{} \/\LB{}ColorType\/\RB{}\\*{}%
+  \kw{function} ord \returns{} \/\LB{}\tn{Integer}\/\RB{}\\*{}%
+  \kw{function} asString \returns{} \/\LB{}\tn{String}\/\RB{}\-\\*{}%
+\kw{end} ColorType
+\end{tabbing}\end{minipage}}
+d178 3
+a180 5
+\subsubsection{Fields}
+\begin{quote}\it\begin{tabular}{lcl}
+field &$::=$& 
+  \opt{\kw{attached}} \kw{field} identifier : type \opt{initializer} \\
+&$|$& \opt{\kw{attached}} \kw{const} \kw{field} identifier : type initializer
+d183 6
+a188 6
+It is often convenient to declare an externally accessible data element of
+an object.  A field declaration does exactly this.  Field declarations can
+only occur with the declaration part of an object constructor.
+Each field declaration expands to a variable declaration and two operation
+definitions (first case) or to a constant declaration and one operation
+definition (second case).  The expansion of:
+d192 7
+a198 1
+\kw{attached} field a \CO{} b \assign{} c
+a200 1
+is
+d202 59
+d263 49
+a311 7
+\kw{attached} \kw{var} a \CO{} b \assign{} c\\*{}%
+\kw{export} \kw{operation} setA\/\LB{}x \CO{} b\/\RB{}\+\\*{}%
+  a \assign{} x\-\\*{}%
+\kw{end} setA\\*{}%
+\kw{export} \kw{function} getA \returns{} \/\LB{}x \CO{} b\/\RB{}\+\\*{}%
+  x \assign{} a\-\\*{}%
+\kw{end} getA
+d313 16
+a328 17
+
+Where the identifier {\it x\/} is chosen to not conflict with any other
+identifier.  Constant fields expand to constant declarations and only the
+{\it getA\/} operation.
+
+\subsubsection{Records}
+
+\begin{quote}\it\begin{tabular}{lcl}
+record &$::=$& \opt{\kw{immutable}} \kw{record} identifier \\
+& & \hspace{0.5in} \seq{field} \\
+& & \kw{end} identifier \\
+field & $::=$ & \opt{\kw{attached}} \kw{var} fieldIdentifier : type
+\end{tabular}\end{quote}
+
+A record declaration:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+d330 6
+a335 9
+\kw{record} aRecord\+\\*{}%
+  \kw{var} a \CO{} Integer\\*{}%
+  \kw{var} c \CO{} String\-\\*{}%
+\kw{end} aRecord
+\end{tabbing}\end{minipage}}
+
+expands to a class:
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+d337 3
+a339 101
+\kw{immutable} class aRecord\/\LB{}xa \CO{} Integer, xc \CO{} String\/\RB{}\+\\*{}%
+  field a \CO{} Integer \assign{} xa\\*{}%
+  field c \CO{} String \assign{} xc\-\\*{}%
+\kw{end} aRecord
+\end{tabbing}\end{minipage}}
+
+Creation of a record is accomplished by invoking the create operation on the
+resulting class object, passing as arguments initial values for each of the
+record's fields.  Given the above declaration of a record the following code
+declares and initializes a record variable.
+
+{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+  \kw{var} a \CO{} aRecord\\[1.0ex]{}%
+  a \assign{} aRecord.create\/\LB{}34, ``A string''\/\RB{}
+\end{tabbing}\end{minipage}}
+
+\emd{} supports syntactic sugar to facilitate accessing the fields of 
+record-like objects.  The syntactic forms are:
+\begin{quote}\it\begin{tabular}{lcl}
+  fieldSelection & $::=$ & expression \lrq{\$} identifier \\
+  subscript      & $::=$ & expression \lrq{[} \sseq{expression}{\lrq{,}} \lrq{]}
+\end{tabular}\end{quote}
+In an expression context these are translated as follows:
+\begin{quote}
+  \makebox[1.5in]{{\it a}\${\it b}} \hfill is translated as \hfill
+  \makebox[1.5in]{{\it a\/}.{\it getB}} \hfill \par
+  \makebox[1.5in]{{\it a\/}\/\LB{\it b, c, d}\/\RB}  \hfill is translated as
+  \hfill \makebox[1.5in]{{\it a\/}.{\it getElement}\LB{}{\it b, c, d}\RB} \hfill
+\end{quote}
+
+
+In an assignment context, these are translated as follows:
+\begin{quote}
+  \makebox[1.5in]{a\$b \assign{} c} \hfill is translated as \hfill
+  \makebox[1.5in]{a.setB\/\LB{}c\/\RB{}} \hfill \par
+  \makebox[1.5in]{a\/\LB{}b, c, d\/\RB{} \assign{} e}  \hfill is translated as
+  \hfill \makebox[1.5in]{a\/.setElement\LB{}b, c, d, e\RB} \hfill
+\end{quote}
+
+\subsection{Predefined types}
+\emd{} implements a number of pre-defined
+objects; these objects are outlined in Table~\ref{BuiltinsTable}
+and specified in greater detail in
+Appendix~\ref{builtin objects}.
+
+
+\begin{table} 
+\begin{center}
+\it
+\begin{tabular}{||l|p{3.5in}||}
+    \hline
+Predefined Type           & Type Description \\
+    \hline
+    \hline
+\kw{Any}		& Has no operations.\\
+\kw{Array}		& A polymorphic, flexible array.\\
+\kw{AOpVector}		& A sequence of operation signatures in a Signature.\\
+\kw{AOpVectorE}		& A single operation signature in a Signature.\\
+\kw{AParamList}		& A list of parameters in an operation Signature.\\
+\kw{BitChunk}		& A container of bits supporting bit-level operations.\\
+\kw{Boolean}		& Logical values with literals \kw{true} 
+			  and \kw{false}.\\
+\kw{Character}		& Individual characters with operations such as
+			  $<$, $>$, $=$, ord, etc.\\
+\kw{ConcreteType}	& A container for the executable code of an object.\\
+\kw{Condition} 		& Condition variables satisfying Hoare monitor semantics.\\
+\kw{COpVector}		& A sequence of operation definitions in a ConcreteType.\\
+\kw{COpVectorE}		& A single operation definition in a ConcreteType.\\
+\kw{Decoder}		& An internal object used for remote invocations.\\
+\kw{Directory}		& An object defining the type of primitive name server directories.\\
+\kw{Handler}		& An object defining the type of object capable of receiving Node state change updates from the run time system.\\
+\kw{InterpreterState}	& An internal object capturing the state of the executio of process.\\
+\kw{ImmutableVector}    & Read-only vector.\\
+\kw{ImmutableVectorOfAny}    & Read-only vector of Any.\\
+\kw{ImmutableVectorOfInt}    & Read-only vector of Integers.\\
+\kw{InStream}		& Input streams.\\
+\kw{Integer} 		& Signed integers.\\
+\kw{Node}		& Objects representing machines.\\
+\kw{NodeList}           & Immutable vectors of node descriptions.\\
+\kw{NodeListElement}	& Immutable node descriptions.\\
+\kw{None}		& The type of \kw{nil}.\\
+\kw{OutStream}		& Output streams.\\
+\kw{Real}		& Approximations of real numbers.\\
+\kw{RISA}		& Readable Indexed Sequence of Any.\\
+\kw{RISC}		& Readable Indexed Sequence of Character.\\
+\kw{Signature}		& Primitive abstract type\\
+\kw{String}		& Character strings.\\
+\kw{Stub}		& An internal object used for remote invocations.\\
+\kw{Time}		& Times and dates\\
+\kw{Type}		& To be used as types in declarations.\\
+\kw{Vector}		& Fixed sized polymorphic vectors.\\
+\kw{VectorOfChar}	& Vector.of[Character].\\
+\kw{VectorOfInt}	& Vector.of[Integer].\\
+\kw{ConcreteType} 	& Executable code.\\
+    \hline
+\end{tabular}
+\end{center}
+\caption{Built-in Types}
+\label{BuiltinsTable}
+\end{table}
+@
+
+
+1.2
+log
+@Checkpoint of August 94 updates for DIKU course
+@
+text
+@d254 2
+a255 2
+  \kw{var} a \CO{} b\\*{}%
+  \kw{var} c \CO{} d\-\\*{}%
+d263 3
+a265 3
+\kw{immutable} class aRecord\/\LB{}xa \CO{} b, xc \CO{} d\/\RB{}\+\\*{}%
+  field a \CO{} b \assign{} xa\\*{}%
+  field c \CO{} d \assign{} xc\-\\*{}%
+d268 11
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+x ./types.tex, 14999 bytes, 30 tape blocks
+d70 1
+a70 1
+class &$::=$& \kw{class} identifier \opt{\lrq{(} baseClass
+d74 1
+a74 3
+& & \hspace{0.5in} \opt{monitor$|$initially} \\
+& & \hspace{0.5in} \oseq{operation} \\
+& & \hspace{0.5in} \opt{process} \\
+d98 1
+a98 1
+  \kw{class} \kw{export} \kw{operation} fromReal\/\LB{}r \CO{} \tn{Real}\/\RB{} \returns{} \/\LB{}e \CO{} Complex\/\RB{}\+\\*{}%
+d168 1
+a168 1
+\kw{const} colors \assign{} enumeration colors red, blue, green \kw{end} colors
+d253 1
+a253 1
+\kw{immutable} \kw{record} aRecord\+\\*{}%
+d302 1
+a302 1
+\begin{tabular}{||l|l||}
+a306 1
+\kw{Type}		& To be used as types in declarations.\\
+d309 4
+a312 1
+\kw{BitChunk}		& Arbitrary bit-level operations.\\
+d317 1
+d319 6
+d326 2
+d336 2
+d340 1
+d342 1
+d344 2
+@

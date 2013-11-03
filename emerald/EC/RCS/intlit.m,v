@@ -1,0 +1,243 @@
+head	1.9;
+access;
+symbols
+	105alpha:1.9
+	104alpha:1.9
+	103alpha:1.9
+	102alpha:1.9
+	101alpha:1.9
+	100alpha:1.9
+	DIKU_0:1.9
+	carlton_start:1.7
+	immel_start:1.4;
+locks; strict;
+
+
+1.9
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.10.17.07.11;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.23.16.26.00;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.53.53;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.52;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.51;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.9
+log
+@First attempt at abcons
+@
+text
+@
+export Intlit
+
+const intlit <- class Intlit (Tree) [xstr : String]
+  const myindex <- 0x06
+    field str : String <- xstr
+
+    export function asString -> [r : String]
+      r <- "intlit (" || str || ")"
+    end asString
+
+  export operation copy [i : Integer] -> [r : Tree]
+    r <- self
+  end copy
+
+  export operation getIsNotManifest -> [r : Boolean]
+    r <- false
+  end getIsNotManifest
+
+  export operation generate[xct : Printable]
+    const bc <- view xct as ByteCode
+    const v <- Integer.Literal[self$str]
+    if ~128 <= v and v <= 127 then
+      bc.addCode["LDIB"]
+      bc.addValue[v, 1]
+    elseif ~32768 <= v and v <= 32767 then
+      bc.addCode["LDIS"]
+      bc.addValue[v, 2]
+    else
+      bc.addCode["LDI"]
+      bc.addValue[v, 4]
+    end if
+    if bc$size != 4 then
+      bc.fetchVariableSecondThing[0x1800 + myindex, 0x1600 + myindex]
+    end if
+  end generate
+  export operation execute -> [r : Tree]
+    r <- self
+  end execute
+  export operation getAT -> [r : Tree]
+    r <- builtinlit.create[self$ln, myindex].getInstAT
+  end getAT
+  export operation getCT -> [r : Tree]
+    r <- builtinlit.create[self$ln, myindex].getInstCT
+  end getCT
+end Intlit
+@
+
+
+1.8
+log
+@Preparatory work for Ab/Cons
+@
+text
+@d21 1
+a21 6
+    const bc <- view xct as typeobject BCType
+      operation addCode[String]
+      operation addValue[Integer, Integer]
+      function  getSize -> [Integer]
+      operation fetchVariableSecondThing[Integer, Integer]
+    end BCType
+@
+
+
+1.7
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d25 1
+a25 1
+      operation fetchLiteral [Integer]
+d39 1
+a39 1
+      bc.fetchLiteral[0x1800 + myindex]
+@
+
+
+1.6
+log
+@Get rid of return on generate
+@
+text
+@d28 4
+a31 1
+    if ~32768 <= v and v <= 32767 then
+@
+
+
+1.5
+log
+@Removed all monitors
+@
+text
+@d20 1
+a20 1
+  export operation generate[xct : Printable] -> [rct : None]
+@
+
+
+1.4
+log
+@Clean up literals
+@
+text
+@a5 1
+  monitor
+a10 1
+  end monitor
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d5 1
+a8 12
+    export function upperbound -> [r : Integer]
+      r <- ~1
+    end upperbound
+
+    export function getElement [i : Integer] -> [r : Tree]
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      r <- self
+    end copy
+
+d14 4
+d38 1
+a38 1
+      bc.fetchLiteral[0x1806]
+d45 1
+a45 1
+    r <- builtinlit.create[self$ln, 0x06].getInstAT
+d48 1
+a48 1
+    r <- builtinlit.create[self$ln, 0x06].getInstCT
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@a0 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import BuiltinLit from "Jekyll"
+d2 1
+a2 1
+export Intlit to "Jekyll"
+d30 1
+a30 1
+    const bc <- view xct as type BCType
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d32 1
+a32 1
+  export operation generate[xct : Printable]
+@

@@ -1,0 +1,631 @@
+head	1.19;
+access;
+symbols
+	105alpha:1.19
+	104alpha:1.19
+	103alpha:1.19
+	102alpha:1.19
+	101alpha:1.19
+	100alpha:1.19
+	DIKU_0:1.14
+	carlton_start:1.11
+	immel_start:1.6;
+locks; strict;
+
+
+1.19
+date	98.02.09.17.55.34;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	95.11.23.17.14.17;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	95.04.04.05.08.43;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	94.08.17.16.50.42;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.12.20.21.09.40;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.09.22.17.57;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.02.17.17.18.21;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.12.16.21.27.42;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.18.18.00.41;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.08.03.09.26.42;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.53.29;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.53.27;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.53.26;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.25;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.23;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.19
+log
+@Checkpoint
+@
+text
+@const IDS <- immutable object IDS
+  const t <- 1
+  const sizes <- {
+    8, % ABSTRACTTYPEI
+    8, % ANYI
+    8, % ARRAYI
+    4, % BOOLEANI
+    1, % CHARACTERI
+    4, % CONDITIONI
+    4, % INTEGERI
+    8, % NILI
+    4, % NODEI
+    4, % SIGNATUREI
+    4, % REALI
+    4, % STRINGI
+    8, % VECTORI
+    4, % TIMEI
+    4, % NODELISTELEMENTI
+    4, % NODELISTI
+    4, % INSTREAMI
+    4, % OUTSTREAMI
+    8, % IMMUTABLEVECTORI
+    4, % BITCHUNKI
+    8, % SEQUENCEOFCHARACTERI
+    8, % HANDLERI
+    4, % VECTOROFCHARI
+    8, % RDIRECTORYI
+    4, % CONCRETETYPEI
+    4, % COPVECTORI
+    4, % COPVECTOREI
+    4, % AOPVECTORI
+    4, % AOPVECTOREI
+    4, % APARAMLISTI
+    4, % VECTOROFINTI
+    4, % INTERPRETERSTATEI
+    8, % DIRECTORYI
+    4, % IVECTOROFANYI
+    8, % SEQUENCEOFANYI
+    4, % IVECTOROFINTI
+    8, % SEQUENCEI
+    4, % STUBI
+    8, % DIRECTORYGAGGLEI
+    4, % LITERALLISTI
+    4, % VECTOROFANYI
+    4, % IVECTOROFSTRINGI
+    4  % VECTOROFSTRINGI
+  }
+
+  const brands : ImmutableVector.of[Character] <- {
+    'v', % ABSTRACTTYPEI
+    'v', % ANYI
+    'v', % ARRAYI
+    'd', % BOOLEANI
+    'c', % CHARACTERI
+    'x', % CONDITIONI
+    'd', % INTEGERI
+    'v', % NILI
+    'x', % NODEI
+    'x', % SIGNATUREI
+    'f', % REALI
+    'x', % STRINGI
+    'v', % VECTORI
+    'x', % TIMEI
+    'x', % NODELISTELEMENTI
+    'x', % NODELISTI
+    'x', % INSTREAMI
+    'x', % OUTSTREAMI
+    'v', % IMMUTABLEVECTORI
+    'x', % BITCHUNKI
+    'v', % SEQUENCEOFCHARACTERI
+    'v', % HANDLERI
+    'x', % VECTOROFCHARI
+    'v', % RDIRECTORYI
+    'x', % CONCRETETYPEI
+    'x', % COPVECTORI
+    'x', % COPVECTOREI
+    'x', % AOPVECTORI
+    'x', % AOPVECTOREI
+    'x', % APARAMLISTI
+    'x', % VECTOROFINTI
+    'x', % INTERPRETERSTATEI
+    'v', % DIRECTORYI
+    'x', % IVECTOROFANYI
+    'v', % SEQUENCEOFANYI
+    'x', % IVECTOROFINTI
+    'v', % SEQUENCEI
+    'x', % STUBI
+    'v', % DIRECTORYGAGGLEI
+    'x', % LITERALLISTI
+    'x', % VECTOROFANYI
+    'x', % IVECTOROFSTRINGI
+    'x'  % VECTOROFSTRINGI
+  }
+
+  export operation IDToSize [id : Integer] -> [size : Integer]
+    var index : Integer <- ~1
+    size <- 8
+    if 0x1600 <= id and id <= 0x1640 then
+      index <- id - 0x1600
+    elseif 0x1800 <= id and id <= 0x1840 then
+      index <- id - 0x1800
+    end if
+    
+    if index >= 0 then
+      size <- sizes[index]
+    end if
+  end IDToSize
+
+  export operation IDToBrand [id : Integer] -> [brand : Character]
+    var index : Integer <- ~1
+    brand <- 'v'
+    if 0x1600 <= id and id <= 0x1640 then
+      index <- id - 0x1600
+    elseif 0x1800 <= id and id <= 0x1840 then
+      index <- id - 0x1800
+    end if
+    
+    if index >= 0 then
+      brand <- brands[index]
+    end if
+  end IDToBrand
+
+  export operation IDToInstCTID [id : Integer] -> [ctid : Integer]
+    var index : Integer
+    if 0x1600 <= id and id <= 0x1640 then
+      const size <- sizes[id - 0x1600]
+      if size = 4 or size = 1 then
+	ctid <- id + 0x200
+      end if
+    elseif 0x1000 <= id and id <= 0x1040 then
+      const size <- sizes[id - 0x1000]
+      if size = 4 or size = 1 then
+	ctid <- id + 0x800
+      end if
+    end if
+  end IDToInstCTID
+  export operation IDToATID [id : Integer] -> [atid : Integer]
+    if 0x1600 <= id and id <= 0x1640 then
+      atid <- id
+    elseif 0x1000 <= id and id <= 0x1040 then
+      atid <- id + 0x200
+    end if
+  end IDToATID
+  export operation IDToCTID [id : Integer] -> [ctid : Integer]
+    if 0x1400 <= id and id <= 0x1440 then
+      ctid <- id
+    elseif 0x1000 <= id and id <= 0x1040 then
+      ctid <- id
+    end if
+  end IDToCTID
+  export operation ConformsByID [ln : Integer, id1 : Integer, id2 : Integer] -> [r : Boolean]
+    var a : Any
+    const e : EnvironmentType <- Environment$env
+    r <- e$conformTable.Lookup[id1, id2]
+    if r == nil then
+      if id1 = id2 then
+	r <- true
+      elseif id1 = 0x1607 then
+	r <- true
+      elseif id2 = 0x1601 then
+	r <- true
+      elseif id1 = 0x1616 or id2 = 0x1616 or
+             id1 = 0x161e or id2 = 0x161e or
+             id1 = 0x1621 or id2 = 0x1621 or
+	     id1 = 0x1623 or id2 = 0x1623 or
+ 	     id1 = 0x1627 or id2 = 0x1627 then
+	if e$tracetypecheck then
+	  e.Warning[ln, "Unknown types (%#x) and (%#x) one vector, conformity assumed", {id1, id2}]
+	end if
+	r <- true
+      elseif 0x1600 <= id2 and id2 <= 0x1640 then
+	  const size <- sizes[id2 - 0x1600]
+	if size = 1 or size = 4 then
+	  r <- false
+	end if
+      end if
+      if r !== nil then
+	e$conformTable.Insert[id1, id2, r]
+      end if
+    end if
+    if r == nil then
+      if e$tracetypecheck then
+	e.Warning[ln, "Unknown types (%#x and %#x), conformity assumed",
+	  { id1, id2} ]
+      end if
+      r <- true
+      e$conformTable.Insert[id1, id2, r]
+    end if
+  end ConformsByID
+end IDS
+
+export IDS
+@
+
+
+1.18
+log
+@Many changes
+@
+text
+@d27 1
+a27 1
+    4, % BUFFERI
+d42 1
+a42 1
+    4, % READERI
+d73 1
+a73 1
+    'x', % BUFFERI
+d88 1
+a88 1
+    'x', % READERI
+@
+
+
+1.17
+log
+@New builtins
+@
+text
+@d24 1
+a24 1
+    8, % RISCI
+d38 1
+a38 1
+    8, % RISAI
+d40 1
+a40 1
+    4, % DECODERI
+d70 1
+a70 1
+    'v', % RISCI
+d84 1
+a84 1
+    'v', % RISAI
+d86 1
+a86 1
+    'x', % DECODERI
+@
+
+
+1.16
+log
+@Fix serious GC bugs, add a new builtin
+@
+text
+@d43 4
+a46 1
+    4  % LITERALLISTI
+d89 4
+a92 1
+    'x'  % LITERALLISTI
+@
+
+
+1.15
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d41 3
+a43 1
+    4  % STUBI
+d84 3
+a86 1
+    'x'  % STUBI
+d159 2
+a160 1
+	     id1 = 0x1623 or id2 = 0x1623 then
+@
+
+
+1.14
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d143 1
+a143 1
+    const e <- Environment$env
+@
+
+
+1.13
+log
+@First attempt at abcons
+@
+text
+@d156 3
+a158 1
+	e.Warning[ln, "Unknown types (%#x) and (%#x) one vector, conformity assumed", {id1, id2}]
+d171 2
+a172 1
+      e.Warning[ln, "Unknown types (%#x and %#x), conformity assumed",
+d174 1
+@
+
+
+1.12
+log
+@Finalized merge with Mark Immels version
+@
+text
+@a0 5
+
+const hasVariableSize <- typeobject hasVariableSize
+  function variableSize -> [Integer]
+end hasVariableSize
+
+a141 9
+    const RISA <- typeobject RISA
+      function lowerbound -> [Integer]
+      function upperbound -> [Integer]
+      function getElement [Integer] -> [Any]
+    end RISA
+    const EnvType <- typeobject EnvType
+      operation Warning [Integer, String, RISA]
+      operation getConformTable -> [IIBTable]
+    end EnvType
+d143 1
+a143 3
+    var e : EnvType
+    primitive var "GETENV" [a] <- []
+    e <- view a as EnvType
+d177 1
+a177 1
+export IDS, hasVariableSize
+@
+
+
+1.11
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d44 3
+a46 1
+    4  % IVECTOROFINTI
+d85 3
+a87 1
+    'x'  % IVECTOROFINTI
+@
+
+
+1.10
+log
+@Install a new Builtin IVectorOfInt
+@
+text
+@d96 1
+a96 1
+      size <- sizes(index)
+d110 1
+a110 1
+      brand <- brands(index)
+d117 1
+a117 1
+      const size <- sizes(id - 0x1600)
+d122 1
+a122 1
+      const size <- sizes(id - 0x1000)
+d171 1
+a171 1
+	  const size <- sizes(id2 - 0x1600)
+@
+
+
+1.9
+log
+@Implement new builtins: ivectorofany, risa
+@
+text
+@d43 2
+a44 1
+    8  % RISAI
+d82 2
+a83 1
+    'v'  % RISAI
+d166 2
+a167 1
+             id1 = 0x1621 or id2 = 0x1621 then
+@
+
+
+1.8
+log
+@Store the AT of exported symbols, do allocation for inlining
+@
+text
+@d41 3
+a43 1
+    8  % DIRECTORYI
+d79 3
+a81 1
+    'v'  % DIRECTORYI
+d161 5
+@
+
+
+1.7
+log
+@Implement the type Directory.
+@
+text
+@d172 1
+@
+
+
+1.6
+log
+@DIKU changes to support TS.of[Integer, String]
+@
+text
+@d40 2
+a41 1
+    4  % INTERPRETERSTATEI
+d76 2
+a77 1
+    'x'  % INTERPRETERSTATEI
+@
+
+
+1.5
+log
+@type -> typeobject sed
+@
+text
+@d9 1
+a9 1
+    4, % ABSTRACTTYPEI
+d44 1
+a44 1
+    'x', % ABSTRACTTYPEI
+@
+
+
+1.4
+log
+@New Emerald syntax for primitives
+@
+text
+@a0 1
+import IIBTable from "Jekyll"
+d2 1
+a2 1
+const hasVariableSize <- type hasVariableSize
+d135 1
+a135 1
+    const RISA <- type RISA
+d140 1
+a140 1
+    const EnvType <- type EnvType
+d174 1
+a174 1
+export IDS, hasVariableSize to "Jekyll"
+@
+
+
+1.3
+log
+@Fixed some sizes, implemented InterpreterState
+@
+text
+@d147 1
+a147 1
+    primitive 198 [a] <- []
+@
+
+
+1.2
+log
+@Implemented Vectorofint
+@
+text
+@d18 1
+a18 1
+    8, % NODEI
+d23 1
+a23 1
+    8, % TIMEI
+d40 2
+a41 1
+    4  % VECTOROFINT
+d44 1
+a44 1
+  const brands <- {
+d53 1
+a53 1
+    'v', % NODEI
+d58 1
+a58 1
+    'v', % TIMEI
+d75 2
+a76 1
+    'x'  % VECTOROFINT
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d39 2
+a40 1
+    4  % APARAMLISTI
+d73 2
+a74 1
+    'x'  % APARAMLISTI
+@

@@ -1,0 +1,161 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.5
+	carlton_start:1.4
+	immel_start:1.2;
+locks; strict;
+
+
+1.5
+date	94.08.17.16.50.41;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.12.10.17.07.04;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.02;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.01;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.5
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@export Fieldsel
+
+const fieldsel <- class Fieldsel (Tree) [xxtarget : Tree, xxfieldref : Tree]
+    field target : Tree <- xxtarget
+    field fieldref : Tree <- xxfieldref
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- target
+      elseif i = 1 then
+	r <- fieldref
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	target <- r
+      elseif i = 1 then
+	fieldref <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var ntarget, nfieldref : Tree
+      if target !== nil then ntarget <- target.copy[i] end if
+      if fieldref !== nil then nfieldref <- fieldref.copy[i] end if
+      r <- fieldsel.create[ln, ntarget, nfieldref]
+    end copy
+    export operation removeSugarOnLeft [a : Tree] -> [r : Tree]
+      const s <- view fieldref as sym
+      const oid <- s$id
+      const nid <- OpName.Literal["set" || oid.asString]
+      r <- invoc.create[s$ln, target, nid, a]
+    end removeSugarOnLeft
+    operation iremoveSugar -> [r : Tree]
+      const s <- view fieldref as sym
+      const oid <- s$id
+      const nid <- OpName.literal["get" || oid.asString]
+      r <- invoc.create[s$ln, target, nid, nil]
+    end iremoveSugar
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    r <- self.iremoveSugar[]
+    r <- FTree.removeSugar[r, ob]
+  end removeSugar
+  export function asString -> [r : String]
+    r <- "fieldsel"
+  end asString
+end Fieldsel
+@
+
+
+1.4
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d33 2
+a34 3
+      const nid <- Environment.getEnv.getITable.lookup["set" || oid.asString, 999]
+      const t <- opname.create[s$ln, nid]
+      r <- invoc.create[s$ln, target, t, a]
+d39 2
+a40 3
+      const nid <- Environment$Env$ITable.lookup["get" || oid.asString, 999]
+      const t <- opname.create[s$ln, nid]
+      r <- invoc.create[s$ln, target, t, nil]
+@
+
+
+1.3
+log
+@Removed all monitors
+@
+text
+@d46 1
+a46 1
+    r <- iremoveSugar[]
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a3 1
+  monitor
+a43 1
+  end monitor
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 8
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import Environment from "Jekyll"
+import sym from "Jekyll"
+import arg from "Jekyll"
+import opname from "Jekyll"
+import invoc from "Jekyll"
+export Fieldsel to "Jekyll"
+@

@@ -1,0 +1,183 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	2007.06.11.01.24.09;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.03.03.05.53.09;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.01.12.04.59.07;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.15.21.18.19;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.5
+log
+@Rename a parameter to avoid conflict with new keyword "in"
+@
+text
+@export runtest
+
+const runtest <- immutable object runtest
+  const runTestType <- typeobject runTestType
+    operation finish [Boolean]
+    operation done
+    operation check  [Boolean, String]
+  end runTestType
+  export function getSignature -> [r : Signature]
+    r <- runTestType
+  end getSignature
+  export operation create [cin : InStream, cout : OutStream, testName : String] -> [r : runTestType]
+    r <- object aRunTest
+      var firstCheckMessagePrinted : Boolean <- false
+      var success : Boolean <- true
+      export operation finish [result : Boolean]
+	if testname !== nil then
+	  if firstCheckMessagePrinted then
+	    cout.PutString["Test \""]
+	    cout.PutString[testname]
+	    cout.PutString["\""]
+	  end if
+	  if result then
+	    cout.PutString[" completed successfully.\^J"]
+	  else
+	    cout.PutString[" failed.\^J"]
+	  end if
+	end if
+      end finish
+      export operation check [b : Boolean, test : String]
+	success <- success & b
+	if ! b then
+	  if ! firstCheckMessagePrinted then
+	    cout.PutString["\^J"]
+	    firstCheckMessagePrinted <- true
+	  end if
+	  cout.PutString["  Test \""]
+	  cout.PutString[test]
+	  cout.PutString["\" failed.\^J"]
+	end if
+      end check
+      function getSuccess -> [r : Boolean]
+	r <- success
+      end getSuccess
+      initially
+	if testname !== nil then
+	  cout.PutString["Test \""]
+	  cout.PutString[testname]
+	  cout.PutString["\" starting ..."]
+	  cout.flush
+	end if
+      end initially
+      export operation done 
+	self.finish[self.getSuccess[]]
+      end done
+    end aRunTest
+  end create
+end runtest
+
+const voi <- Vector.of[Integer]
+const ivoi<- ImmutableVector.of[Integer]
+const aoi <- Array.of[Integer]
+const aoa <- Array.of[Any]
+const voc <- Vector.of[Character]
+const ivoc<- ImmutableVector.of[Character]
+@
+
+
+1.4
+log
+@Accomodate the new streams
+@
+text
+@d12 1
+a12 1
+  export operation create [in : InStream, out : OutStream, testName : String] -> [r : runTestType]
+d19 3
+a21 3
+	    out.PutString["Test \""]
+	    out.PutString[testname]
+	    out.PutString["\""]
+d24 1
+a24 1
+	    out.PutString[" completed successfully.\^J"]
+d26 1
+a26 1
+	    out.PutString[" failed.\^J"]
+d34 1
+a34 1
+	    out.PutString["\^J"]
+d37 3
+a39 3
+	  out.PutString["  Test \""]
+	  out.PutString[test]
+	  out.PutString["\" failed.\^J"]
+d47 4
+a50 4
+	  out.PutString["Test \""]
+	  out.PutString[testname]
+	  out.PutString["\" starting ..."]
+	  out.flush
+@
+
+
+1.3
+log
+@Better testing of arrays
+@
+text
+@a28 2
+	in.close
+	out.close
+@
+
+
+1.2
+log
+@Remove uses of a[b] as shorthand for self.a[b]
+@
+text
+@d65 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d56 1
+a56 1
+	finish[getSuccess[]]
+@

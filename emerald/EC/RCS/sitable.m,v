@@ -1,0 +1,235 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.6
+	carlton_start:1.6
+	immel_start:1.3;
+locks; strict;
+
+
+1.6
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.43;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.01.18.04.20;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.03;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.02;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.6
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@const SITable <- class SITable [size : Integer]
+    const voi <- Vector.of[Integer]
+    const vos <- Vector.of[String]
+    var currentsize : Integer <- size
+    var values : voi <- voi.create[currentsize]
+    var keys   : vos <- vos.create[currentsize]
+    var count  : Integer <- 0
+    var limit  : Integer <- (currentsize * 4) / 5
+
+    operation iInsert [s : String, r : Integer]
+      const first <- s.hash # currentsize
+      var h : Integer <- first
+      loop
+	const k <- keys[h]
+	if k == nil then
+	  keys[h] <- s
+	  values[h] <- r
+	  return
+	elseif s = k then
+	  values[h] <- r
+	  count <- count - 1
+	  return
+	end if
+	h <- h + 1
+	if h >= currentsize then h <- 0 end if
+	exit when h = first
+      end loop
+    end iInsert
+
+    operation enlarge
+      const oldvalues <- values
+      const oldkeys   <- keys
+      const oldsize   <- currentsize
+
+      currentsize <- currentsize * 2
+      limit <- (currentsize * 4) / 5
+      values <- voi.create[currentsize]
+      keys   <- vos.create[currentsize]
+      for i : Integer <- 0 while i < oldsize by i <- i + 1
+	const k <- oldkeys[i]
+	if k !== nil then
+	  self.iInsert[k, oldvalues[i]]
+	end if
+      end for
+    end enlarge
+
+    export function Lookup [s : String] -> [r : Integer]
+      var h : Integer <- s.hash # currentsize
+      loop
+	const k <- keys[h]
+	if k == nil then
+	  return
+	elseif k = s then
+	  r <- values[h]
+	  return
+	end if
+	h <- h + 1
+	if h >= currentsize then h <- 0 end if
+      end loop
+    end Lookup
+    export operation Insert [s : String, r : Integer]
+      count <- count + 1
+      if count > limit then self.enlarge end if
+      self.iInsert[s, r]
+    end Insert
+    export operation reset
+      for i : Integer <- 0 while i < currentsize by i <- i + 1
+	keys[i] <- nil
+      end for
+      count <- 0
+    end reset
+end SITable
+
+export SITable
+@
+
+
+1.5
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d14 1
+a14 1
+	const k <- keys(h)
+d16 2
+a17 2
+	  keys(h) <- s
+	  values(h) <- r
+d20 1
+a20 1
+	  values(h) <- r
+d40 1
+a40 1
+	const k <- oldkeys(i)
+d42 1
+a42 1
+	  self.iInsert[k, oldvalues(i)]
+d50 1
+a50 1
+	const k <- keys(h)
+d54 1
+a54 1
+	  r <- values(h)
+d68 1
+a68 1
+	keys(i) <- nil
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d42 1
+a42 1
+	  iInsert[k, oldvalues(i)]
+@
+
+
+1.3
+log
+@Optimized to use string.hash, repaired enlarging the table
+@
+text
+@a1 1
+  monitor
+d10 1
+a10 1
+    private operation iInsert [s : String, r : Integer]
+d30 1
+a30 1
+    private operation enlarge
+a71 1
+  end monitor
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a10 9
+    private function hash [s : String] -> [r : Integer]
+      const limit <- s.length
+      r <- limit * 1001
+      for i : Integer <- 0 while i < limit by i <- i + 1
+	r <- r * 127 + s(i).ord
+      end for
+      if r < 0 then r <- ~r end if
+      r <- r # currentsize
+    end hash
+d12 1
+a12 1
+      const first <- hash[s]
+d40 2
+a41 2
+      for i : Integer <- 0 while i < currentsize by i <- i + 1
+	const k <- keys(i)
+d43 1
+a43 1
+	  iInsert[k, values(i)]
+d49 1
+a49 1
+      var h : Integer <- hash[s]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d85 1
+a85 1
+export SITable to "Jekyll"
+@

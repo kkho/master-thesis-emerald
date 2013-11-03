@@ -1,0 +1,175 @@
+head	1.7;
+access;
+symbols
+	105alpha:1.7
+	104alpha:1.7
+	103alpha:1.7
+	102alpha:1.7
+	101alpha:1.7
+	100alpha:1.7
+	DIKU_0:1.6
+	carlton_start:1.3
+	immel_start:1.1;
+locks; strict;
+
+
+1.7
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.08.17.16.50.43;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.06.20.08.15.24;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.22.05.35.46;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.11.03.18.51;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.25.16.57.20;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Input file lists
+@
+
+
+1.7
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@gdtypes.m
+iset.m
+iibtable.m
+ittable.m
+objtable.m
+envtype.m
+sitable.m
+cpqueue.m
+nextoid.m
+cstring.m
+bytecode.m
+buffer.m
+ids.m
+eblock.m
+glblref.m
+opname.m
+builtinl.m
+literal.m
+seq.m
+sseq.m
+sym.m
+scan.m
+newid.m
+ctcode.m
+@
+
+
+1.6
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d14 1
+d20 1
+@
+
+
+1.5
+log
+@8.3 file names
+@
+text
+@d2 1
+d4 2
+d17 1
+a17 1
+strlit.m
+a19 4
+charlit.m
+intlit.m
+reallit.m
+boollit.m
+@
+
+
+1.4
+log
+@First attempt at abcons
+@
+text
+@d1 1
+a1 1
+goodtypes.m
+d11 1
+a11 1
+globalref.m
+d13 2
+a14 2
+builtinlit.m
+stringlit.m
+@
+
+
+1.3
+log
+@Export char and bools as well
+@
+text
+@d1 1
+a1 1
+buffer.m
+d4 6
+a13 3
+cpqueue.m
+nextoid.m
+cstring.m
+a23 1
+sitable.m
+@
+
+
+1.2
+log
+@Add type checking of externs and extern decls
+@
+text
+@d17 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a5 1
+sym.m
+a7 2
+charlit.m
+intlit.m
+d11 5
+a16 1
+stringlit.m
+@

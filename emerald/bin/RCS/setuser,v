@@ -1,0 +1,172 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	93.06.18.00.32.30;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.55.53;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@set environment variables and path to find correct Emerald tools
+for the current user.
+@
+
+
+1.2
+log
+@added -s switch to support producing sh compatible output
+@
+text
+@#!/bin/csh -f
+#
+# setuser
+#
+# Script to modify Emerald-related environment variables and user's
+# search path to reflect the specified username or the default
+# username if none is specified.
+#
+# The default output of this script is to be executed by the C-shell or
+# close relative.  Use the following to hide the need for an explicit eval:
+#   alias emuser 'eval `$(EMERALDARCH)/bin/setuser \!*`'
+#
+# Usage (assuming the above alias:)
+#   emuser [-q] [-s] [username]
+#
+#   -q  --  emuser will not display informational messages
+#   -s  --  emuser output will be in sh format
+#
+# A username of "" will remove any user-specific directory from the
+# search path
+#
+# This script and setarch are closely related and any modifications
+# should be made to both in parallel.
+#
+# ToDo:
+# - would be better if the modified emerald directories were inserted
+#   at the same place in the search path as any old ones were, rather
+#   than simply prepending them
+# 
+
+if (! $?EMERALDROOT) then
+    echo "echo Must setenv EMERALDROOT first.;"
+    exit 1
+endif
+
+# parse options
+while (.$1 =~ .-*)
+    if (.$1 == .-q) then
+        set quiet
+    else if (.$1 == .-s) then
+        set shformat
+    else
+        echo "echo Unknown option $1 ignored;"
+    endif
+    shift
+end
+
+if ($#argv >= 1) then
+    set user = $1
+else
+    set user = `whoami`
+endif
+
+if (.$user == .) then
+    echo "unsetenv EMERALDUSER;"
+    set userpath =
+else if (! -r $EMERALDROOT/bin/$user) then
+    echo "echo User $user does not exist.;"
+    exit 1
+else
+    echo "setenv EMERALDUSER $user;"
+    set userpath = $EMERALDROOT/bin/$user
+endif
+
+if ($?EMERALDARCH) then
+    set archpath = $EMERALDROOT/bin/$EMERALDARCH
+else
+    set archpath = 
+endif
+
+# generate a new search path to look in directories appropriate for the
+# specified architecture.  first, remove all references to paths in
+# $EMERALDROOT from the existing path
+if (! $?shformat) then
+    set newpath = `echo $path|tr " " "\012"|grep -v $EMERALDROOT|tr "\012" " "`
+else
+    set newpath = `echo $PATH|tr ":" "\012"|grep -v $EMERALDROOT|tr "\012" " "`
+endif
+
+# now, prepend the appropriate paths to the remainder of the existing path
+set newpath = ( $userpath $archpath $EMERALDROOT/bin $newpath )
+
+if (! $?shformat) then
+  echo "set path = ( $newpath );"
+else
+    set newpath = `echo $newpath | tr " " ":"`
+    echo "PATH=$newpath;"
+    echo "export PATH;"
+endif
+
+if (! $?quiet) then
+    if (.$user == .) then
+        echo "echo Emerald user is now disabled;"
+    else
+        echo "echo Emerald user is now $user;"
+    endif
+endif
+
+exit 0
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 2
+a10 2
+# The output of this script is to be executed by the C-shell or close
+# relative.  Use the following to hide the need for an explicit eval:
+d14 1
+a14 1
+#   emuser [-q] [username]
+d17 1
+d32 1
+a32 1
+    echo "echo Must setenv EMERALDROOT first."
+d36 9
+a44 2
+if (.$1 == .-q) then
+    set quiet
+d46 1
+a46 1
+endif
+d58 1
+a58 1
+    echo "echo User $user does not exist."
+d74 5
+a78 1
+set newpath = `echo $path |tr " " "\012" |grep -v $EMERALDROOT |tr "\012" " "`
+d83 7
+a89 1
+echo "set path = ( $newpath );"
+@

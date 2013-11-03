@@ -1,0 +1,359 @@
+head	1.9;
+access;
+symbols
+	105alpha:1.9
+	104alpha:1.9
+	103alpha:1.9
+	102alpha:1.9
+	101alpha:1.9
+	100alpha:1.9
+	DIKU_0:1.7
+	carlton_start:1.7
+	immel_start:1.3;
+locks; strict;
+
+
+1.9
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.03.11.00.16.24;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.16.21.27.42;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.12.10.17.07.37;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.05.23.16.25.17;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.57.41;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.57.40;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.9
+log
+@Many changes
+@
+text
+@export Seq
+
+const VofT <- immutableVector.of[Tree]
+
+const Seq <- class Seq(Tree)
+  class export operation literal [xln : Integer, v : VofT] -> [r : Seq]
+    const limit <- v.upperbound
+    r <- Seq.create[xln]
+    for i : Integer <- v.lowerbound while i <= limit by i <- i + 1
+      r.rcons[v[i]]
+    end for
+  end literal
+  class export operation singleton[t : Tree] -> [r : Seq]
+    r <- Seq.create[t$ln]
+    r.rcons[t]
+  end singleton
+  class export operation pair[t : Tree, u : Tree] -> [r : Seq]
+    r <- Seq.create[t$ln]
+    r.rcons[t]
+    r.rcons[u]
+  end pair
+  const ln : Integer <- 0
+    var size : Integer <- 1
+    var upb  : Integer <- ~1
+    var space : vot <- vot.create[1]
+
+    export function upperbound -> [r : Integer]
+      r <- upb
+    end upperbound
+
+    export operation copy [how : Integer] -> [r : Tree]
+      r <- seq.create[ln]
+      for j : Integer <- 0 while j <= upb by j <- j + 1
+	begin
+	  const s : Tree <- space[j]
+	  if s == nil then
+	    r.rcons[nil]
+	  else
+	    r.rcons[s.copy[how]]
+	  end if
+	end
+      end for
+    end copy
+
+    operation grow
+      const newsize <- size * 2
+      const newspace <- vot.create[newsize]
+      var i : Integer <- 0
+      loop
+	exit when i >= size
+	newspace[i] <- space[i]
+	i <- i + 1
+      end loop
+      space <- newspace
+      size  <- newsize
+    end grow
+
+    export operation lcons [a : Tree]
+      upb <- upb + 1
+      if upb = size then self.grow end if
+      begin
+	var i : Integer <- upb - 1
+	loop
+	  exit when i < 0
+	  space[i+1] <- space[i]
+	  i <- i - 1
+	end loop
+	space[0] <- a
+      end
+    end lcons
+
+    export operation rcons [a : Tree]
+      upb <- upb + 1
+      if upb = size then self.grow end if
+      space[upb] <- a
+    end rcons
+
+    export operation rappend [a : Tree]
+      if a$isseq then
+	const aupb <- a.upperbound
+	const nupb <- upb + aupb + 1
+	loop
+	  exit when nupb < size
+	  self.grow
+	end loop
+	for i : Integer <- a.lowerbound while i <= aupb by i <- i + 1
+	  upb <- upb + 1
+	  space[upb] <- a[i]
+	end for
+      else
+	upb <- upb + 1
+	if upb = size then self.grow end if
+	space[upb] <- a
+      end if
+    end rappend
+
+    export function getElement [i : Integer] -> [r : Tree]
+      r <- space[i]
+    end getElement
+
+    export operation setElement [i : Integer, r : Tree]
+      space[i] <- r
+    end setElement
+
+    export operation doEnvExports [st : SymbolTable]
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+	const s : Tree <- space[i]
+	if s !== nil then
+	  s.doEnvExports[st]
+	end if
+      end for
+    end doEnvExports
+
+    export operation assignIds [st : SymbolTable]
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+	const s : Tree <- space[i]
+	if s !== nil then
+	  s.assignIds[st]
+	end if
+      end for
+    end assignIds
+  
+    export operation getIsNotManifest -> [r : Boolean]
+      r <- false
+      for i : Integer <- 0 while i <= upb by i <- i + 1
+	const s : Tree <- space[i]
+	if s !== nil and s$isNotManifest then
+	  r <- true
+	  return
+	end if
+      end for
+    end getIsNotManifest
+
+
+  export function getLN -> [r : Integer]
+    r <- ln
+  end getLN
+
+  export function getIsSeq -> [r : Boolean]
+    r <- true
+  end getIsSeq
+
+  export function asString -> [r : String]
+    r <- "a sequence"
+  end asString
+end Seq
+@
+
+
+1.8
+log
+@Make type stuff work
+@
+text
+@d17 5
+@
+
+
+1.7
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@a16 1
+  const vot <- Vector.of[Tree]
+@
+
+
+1.6
+log
+@New class operation singleton
+@
+text
+@d10 1
+a10 1
+      r.rcons[v(i)]
+d31 1
+a31 1
+	  const s : Tree <- space(j)
+d47 1
+a47 1
+	newspace(i) <- space(i)
+d61 1
+a61 1
+	  space(i+1) <- space(i)
+d64 1
+a64 1
+	space(0) <- a
+d71 1
+a71 1
+      space(upb) <- a
+d84 1
+a84 1
+	  space(upb) <- a(i)
+d89 1
+a89 1
+	space(upb) <- a
+d94 1
+a94 1
+      r <- space(i)
+d98 1
+a98 1
+      space(i) <- r
+d103 1
+a103 1
+	const s : Tree <- space(i)
+d112 1
+a112 1
+	const s : Tree <- space(i)
+d122 1
+a122 1
+	const s : Tree <- space(i)
+@
+
+
+1.5
+log
+@Store the AT of exported symbols, do allocation for inlining
+@
+text
+@d13 4
+@
+
+
+1.4
+log
+@Removed all monitors
+@
+text
+@d27 1
+a27 1
+	  const s <- space(j)
+d99 1
+a99 1
+	const s <- space(i)
+d108 1
+a108 1
+	const s <- space(i)
+d118 1
+a118 1
+	const s <- space(i)
+@
+
+
+1.3
+log
+@Improve memory usage
+@
+text
+@a14 1
+  monitor
+d37 1
+a37 1
+    private operation grow
+a125 1
+  end monitor
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@d14 1
+a126 4
+    initially
+      isseq <- true
+    end initially
+  
+d128 8
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+export Seq to "Jekyll"
+d6 1
+a6 1
+  type export operation literal [xln : Integer, v : VofT] -> [r : Seq]
+@

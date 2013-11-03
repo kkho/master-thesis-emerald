@@ -1,0 +1,101 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.01.22.00.05.57;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.28.18;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.2
+log
+@Fix to use <- instead of ==, better tests of vectors
+@
+text
+@
+const Mover <- immutable object mover
+
+  const moverType <- typeobject moverType
+    operation moveTo [ here : Node ]
+  end moverType
+  export function getSignature -> [r : Signature]
+    r <- moverType
+  end getSignature
+  export operation create -> [r : moverType]
+    r <- object aMover
+      export operation moveTo [n : Node]
+	move self to n
+      end moveTo
+    end aMover
+    move r to locate r
+  end create
+end mover
+
+const tmove <- object tmove
+  const nMoves <- 10
+  const myTest <- runtest.create[stdin, stdout, "tmove ("||nMoves.asString||")"]
+  const theNodes : NodeList <- (locate self).getActiveNodes
+  process
+    var c: Character
+    var i : Integer <- 0
+    const myMover <- mover.create
+    var nle : NodeListElement
+    var upb : Integer <- theNodes.upperbound
+    myTest.check[upb - theNodes.lowerbound > 0,
+       "more than 1 active nodes"]
+    loop
+      exit when i >= nMoves
+      nle <-  theNodes(i # (upb + 1))
+      % stdout.PutString["Moving mover to LNN " || nle$LNN.asString || "\^J"]
+      myMover.moveTo[nle$theNode]
+      i <- i + 1
+    end loop
+    myTest.done
+  end process
+end tmove
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+const Mover == immutable object mover
+d4 1
+a4 1
+  const moverType == typeobject moverType
+d20 1
+a20 1
+const tmove == object tmove
+d22 2
+a23 2
+  const myTest == runtest.create[stdin, stdout, "tmove ("||nMoves.asString||")"]
+  const theNodes : NodeList == (locate self).getActiveNodes
+d27 1
+a27 1
+    const myMover == mover.create
+@

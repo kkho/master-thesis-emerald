@@ -1,0 +1,46 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	96.02.05.03.45.44;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@const t <- object t
+  operation readDiary 
+    const inf <- InStream.fromUnix["/faculty/norm/tdiary", "r"]
+    var s, t : String
+    var d : Date
+    loop
+      exit when inf.eos
+      s <- inf.getString
+      s <- s[0, s.length - 1]
+      d, t <- Parser.fromString[s]
+    end loop
+    inf.close
+  end readDiary
+  initially
+    self.readDiary
+  end initially
+end t
+@

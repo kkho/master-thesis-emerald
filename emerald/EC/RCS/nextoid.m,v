@@ -1,0 +1,360 @@
+head	1.13;
+access;
+symbols
+	105alpha:1.13
+	104alpha:1.13
+	103alpha:1.13
+	102alpha:1.13
+	101alpha:1.13
+	100alpha:1.13
+	DIKU_0:1.9
+	carlton_start:1.8
+	immel_start:1.4;
+locks; strict;
+
+
+1.13
+date	95.06.16.17.01.16;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.04.04.05.08.43;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.03.03.05.44.23;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.12.19.07.19.47;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.08.17.16.51.24;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.07.15.20.33.15;	author mueller;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.02.22.56.54;	author mueller;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.10.17.07.20;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.54.44;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.54.43;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.54.41;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.54.40;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.13
+log
+@Change the base id for builtins
+@
+text
+@const nextOID <- immutable object nextOID
+  const howmanyatonce <- 100
+  const myint <- object myint
+    field next : Integer <- 0
+    field limit : Integer <- ~1
+    field filename : String <- nil
+  end myint
+
+  function baseStart -> [r : Integer]
+    if Environment$env$compilingbuiltins then
+      r <- 0x4000
+    elseif Environment$env$compilingcompiler then
+      r <- 0xc0000
+    else
+      r <- 0x100000
+    end if
+  end baseStart
+
+  operation nextOIDBlock -> [r : Integer]
+    if myint$filename == nil then
+      r <- myint$next
+      if r < self.basestart then
+	r <- self.basestart
+      end if
+    else
+      var inf : InStream
+      var outf : OutStream
+      var s : String
+      var root : String
+      var start : Integer
+      
+      begin
+	inf <- InStream.fromUnix[myint$filename, "r"]
+	failure inf <- nil end failure
+      end
+      if inf == nil then
+	start <- self.basestart
+      else
+	s <- inf.getString
+	start <- Integer.literal[s]
+	if start < self.basestart then
+	  start <- self.basestart
+	end if
+	inf.close
+      end if
+      r <- start
+      outf <- OutStream.toUnix[myint$filename, "w"]
+      if outf == nil then
+	const env : EnvironmentType <- Environment$env
+	env.SemanticError[1, "Can't open oid file \"%s\"", {myint$filename}]
+      else
+	outf.putint[start + howmanyatonce, 0]
+	outf.putchar['\n']
+	outf.close
+      end if
+    end if
+    if !Environment$env$compilingBuiltins then
+      ObjectTable.okForNextOID[r]
+    end if
+  end nextOIDBlock
+
+  export operation nextOID -> [r : Integer]
+    if myint$next >= myint$limit then
+      myint$next <- self.nextOIDBlock[]
+      myint$limit <- myint$next + howmanyatonce
+    end if
+    r <- myint$next
+    myint$next <- myint$next + 1
+  end nextOID
+
+  export operation load[fn : String]
+    self.reset
+    myint$filename <- fn || ".oid"
+  end load
+
+  export operation reset
+    myint$next <- 0
+    myint$limit <- ~1
+    myint$filename <- nil
+  end reset
+end nextOID
+
+export nextOID
+@
+
+
+1.12
+log
+@Fix serious GC bugs, add a new builtin
+@
+text
+@d11 1
+a11 1
+      r <- 0x80000
+@
+
+
+1.11
+log
+@Use new streams code
+@
+text
+@d12 2
+@
+
+
+1.10
+log
+@Deal with file open errors more gracefully
+@
+text
+@d30 4
+a33 1
+      inf <- InStream.fromUnix[myint$filename, "r"]
+@
+
+
+1.9
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d43 8
+a50 3
+      outf.putint[start + howmanyatonce, 0]
+      outf.putchar['\n']
+      outf.close
+@
+
+
+1.8
+log
+@added reset operation, fixes long standing bug in which the oid
+file is not read and oids are reused
+@
+text
+@a1 1
+  const oidfn <- "lib/oid"
+d4 3
+a6 2
+      field next : Integer <- 0
+      field limit : Integer <- ~1
+a7 1
+  const basestart <- 0x10000
+d9 8
+d18 5
+a22 10
+    var inf : InStream
+    var outf : OutStream
+    var s : String
+    var root : String
+    var start : Integer
+    
+    primitive "GETROOTDIR" [root] <- []
+    inf <- InStream.fromUnix[root||"/"||oidfn, "r"]
+    if inf == nil then
+      start <- basestart
+d24 16
+a39 4
+      s <- inf.getString
+      start <- Integer.literal[s]
+      if start < basestart then
+	start <- basestart
+d41 5
+a45 1
+      inf.close
+d47 3
+a49 7
+    % O_CREAT | O_WRONLY | O_TRUNC = 01000 + 1 + 02000 
+    r <- start
+    outf <- OutStream.toUnix[root||"/"||oidfn, "w"]
+    % chmod 0666 root||"/"||oidfn
+    outf.putint[start + howmanyatonce, 0]
+    outf.putchar['\n']
+    outf.close
+d61 5
+d69 1
+@
+
+
+1.7
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d37 1
+d46 5
+@
+
+
+1.6
+log
+@from/toUnix calls changed to new syntax
+oid file now found in lib instead of Etc
+@
+text
+@d39 1
+a39 1
+      myint$next <- nextOIDBlock[]
+@
+
+
+1.5
+log
+@Removed all monitors
+@
+text
+@d2 1
+a2 1
+  const oidfn <- "Etc/oid"
+d18 1
+a18 1
+    inf <- InStream.fromUnix[root||"/"||oidfn, 0, 0666]
+d31 2
+a32 1
+    outf <- OutStream.toUnix[root||"/"||oidfn, 03001, 0666]
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@a4 1
+    monitor
+a6 1
+    end monitor
+@
+
+
+1.3
+log
+@Allocate 100 oids at once (to lower I/O)
+@
+text
+@d48 1
+a48 1
+export nextOID to "Jekyll"
+@
+
+
+1.2
+log
+@Got rid of the absolute paths
+@
+text
+@d3 1
+a3 1
+  const howmanyatonce <- 10
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+  const oidfn <- "/usr/norm/jekyll/Etc/oid"
+d16 1
+d19 2
+a20 1
+    inf <- InStream.fromUnix[oidfn, 0, 0666]
+d33 1
+a33 1
+    outf <- OutStream.toUnix[oidfn, 03001, 0666]
+@

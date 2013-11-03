@@ -1,0 +1,357 @@
+head	1.10;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.10
+	103alpha:1.10
+	102alpha:1.10
+	101alpha:1.10
+	100alpha:1.10
+	DIKU_0:1.8
+	carlton_start:1.6;
+locks; strict;
+comment	@# @;
+
+
+1.10
+date	94.12.06.20.12.48;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.06.09.22.16.12;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.03.02.21.16.21;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.02.18.01.07.19;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.02.17.17.19.23;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.10
+log
+@Clean up generating the second things in references
+@
+text
+@const starinvoc <- class Starinvoc (Tree) [xxtarget : Tree, xxopname : Tree, xxargs : Tree]
+    const ln : Integer <- xxtarget$ln
+    field target : Tree <- xxtarget
+    field xopname : Tree <- xxopname
+    field args  : Tree <- xxargs
+    field nress : Integer <- 1
+
+    export operation getIsNotManifest -> [r : Boolean]
+      r <- true
+    end getIsNotManifest
+    export operation setIsNotManifest [r : Boolean]
+      assert r
+    end setIsNotManifest
+    export function upperbound -> [r : Integer]
+      r <- 2
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- target
+      elseif i = 1 then
+	r <- xopname
+      elseif i = 2 then
+	r <- args
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	target <- r
+      elseif i = 1 then
+	xopname <- r
+      elseif i = 2 then
+	args <- r
+      end if
+    end setElement
+
+    export function getnargs -> [r : Integer]
+      if args == nil then
+	r <- 0
+      else
+	r <- args.upperbound + 1
+      end if
+    end getnargs
+
+    export operation copy [i : Integer] -> [newt : Tree]
+      var ntarget, nopname, nargs : Tree
+      if target !== nil then ntarget <- target.copy[i] end if
+      if xopname !== nil then nopname <- xopname.copy[i] end if
+      if args !== nil then nargs <- args.copy[i] end if
+      newt <- starinvoc.create[ln, ntarget, nopname, nargs]
+    end copy
+
+    export operation resolveSymbols [st : SymbolTable, nexp : Integer]
+      nress <- nexp
+      target.resolveSymbols[st, 1]
+      if args !== nil then args.resolveSymbols[st, 1] end if
+    end resolveSymbols
+
+  export operation assignTypes
+    FTree.assignTypes[self]
+  end assignTypes
+
+  function isSelf -> [r : Boolean] 
+    const t <- nameof self$target
+
+    if t = "aselflit" then
+      r <- true
+    elseif t = "asym" then
+      const ts <- view self$target as Sym
+      r <- ts$mySym$isSelf
+    else
+      r <- false
+    end if
+  end isSelf
+
+  export operation typeCheck 
+    % Check that the opname is a string and the argument is a single risa
+    const env <- Environment$env
+
+    if self$nargs != 1 then
+      env.SemanticError[self$ln,
+	"Number of arguments %d incorrect, .* invoke expects 1",
+	{ self$nargs }]
+    end if
+    if self$nress != 1 then
+      env.SemanticError[self$ln,
+	"Number of results %d incorrect, .* invoke returns 1",
+	{ self$nress }]
+    end if
+    begin
+      const actualtype <- view self$args[0].getAT as hasconforms
+      const formaltype <- (view BuiltinLit.findTree[0x1021, nil] as hasInstAT).getInstAT.asType
+  
+      if actualtype == nil then
+	env.ttypeCheck["starinvoc.typecheck on %d, actual type is nil\n", 
+	      { self$ln } ]
+      elseif !actualType.conformsTo[self$ln, formalType] then
+	env.SemanticError[self$ln, 
+	  "Actual #1 to .* invoke does not conform to formal", nil]
+      end if
+      FTree.typeCheck[self]
+    end
+  end typeCheck
+
+  export operation generate [xct : Printable]
+    const bc <- view xct as ByteCode
+
+    var targetType, targetCT : Tree
+    bc.lineNumber[self$ln]
+
+    bc.pushSize[4]
+    self$args.generate[xct]
+    bc.popSize
+    bc.pushSize[8]
+    self$target.generate[xct]
+    bc.popSize
+    bc.pushSize[4]
+    self$xopname.generate[xct]
+    bc.popSize
+    bc.addCode["CALLSTAR"]
+    bc.fetchLiteral[0x1821]
+    bc.addCode["LDLB"]
+    bc.addValue[0, 1]
+    bc.addCode["CREATEVECLIT"]
+    bc.addCode["CALLSTARCLEAN"]
+    bc.finishExpr[4, 0x1821, 0x1621]
+  end generate
+
+  export operation getAT -> [r : Tree]
+    r <- (view BuiltinLit.findTree[0x1021, nil] as hasInstAT).getInstAT.asType
+  end getAT
+
+  export operation getCT -> [r : Tree]
+    r <- (view BuiltinLit.findTree[0x1021, nil] as hasInstCT).getInstCT
+  end getCT
+
+  export function asString -> [r : String]
+    r <- "starinvoc"
+  end asString
+end Starinvoc
+
+export Starinvoc
+@
+
+
+1.9
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d125 1
+a125 1
+    if bc$size == 8 then bc.fetchVariableSecondThing[0x1821, 0x1621] end if
+@
+
+
+1.8
+log
+@First attempt at abcons
+@
+text
+@d2 1
+a56 3
+    initially
+      ln <- target$ln
+    end initially
+@
+
+
+1.7
+log
+@Preparatory work for Ab/Cons
+@
+text
+@a91 1
+      const hasconforms<- typeobject t op conformsTo[Integer, Tree]->[Boolean] end t
+d93 1
+a93 3
+      const hasAsType <- typeobject t op asType->[Tree] end t
+      const hasInstAT <- typeobject t op getInstAT->[Tree] end t
+      const formaltype <- (view (view BuiltinLit.findTree[0x1021, nil] as hasInstAT).getInstAT as hasAsType).asType
+d107 1
+a107 10
+    const bc <- view xct as typeobject T
+	op addCode[String]
+	op addValue [Integer, Integer]
+	op pushSize[Integer]
+	op popSize
+	op getSize -> [Integer]
+	op lineNumber [Integer]
+	op fetchLiteral[Integer]
+	operation fetchVariableSecondThing[Integer, Integer]
+      end T
+d131 1
+a131 4
+    const hasAsType <- typeobject t op asType->[Tree] end t
+    const hasInstAT <- typeobject t op getInstAT->[Tree] end t
+
+    r <- (view (view BuiltinLit.findTree[0x1021, nil] as hasInstAT).getInstAT as hasAsType).asType
+a134 1
+    const hasInstCT <- typeobject t op getInstCT->[Tree] end t
+@
+
+
+1.6
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d118 1
+d139 1
+a139 1
+    if bc$size == 8 then bc.fetchLiteral[0x1821] end if
+@
+
+
+1.5
+log
+@Fix type checking errors
+@
+text
+@d93 1
+a93 1
+      const actualtype <- view self$args(0).getAT as hasconforms
+@
+
+
+1.4
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d94 1
+d96 1
+a96 1
+      const formaltype <- BuiltinLit.findTree[0x1021, nil].getInstAT.asType
+d117 1
+d142 4
+a145 1
+    r <- BuiltinLit.findTree[0x1021, nil].getInstAT.asType
+d149 2
+a150 1
+    r <- BuiltinLit.findTree[0x1021, nil].getInstCT
+@
+
+
+1.3
+log
+@Fix calls to SemanticError
+@
+text
+@d94 1
+d132 2
+a133 2
+    bc.addCode["LDLS"]
+    bc.addValue[0, 2]
+@
+
+
+1.2
+log
+@Implemented more of .* invokes
+@
+text
+@d83 1
+a83 1
+	"Number of arguments %d incorrect, .* invoke expects 1\n",
+d88 1
+a88 1
+	"Number of results %d incorrect, .* invoke returns 1\n",
+d101 1
+a101 1
+	  "Actual #1 to .* invoke does not conform to formal\n", nil]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d130 5
+@

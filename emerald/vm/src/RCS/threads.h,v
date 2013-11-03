@@ -1,0 +1,303 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	2007.06.11.02.35.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Check in current version
+@
+text
+@/*
+ * threads.h
+ */
+
+#ifndef _EMERALD_THREADS_H
+#define _EMERALD_THREADS_H
+
+#ifndef _EMERALD_STORAGE_H
+#include "storage.h"
+#endif
+extern int useThreads;
+
+#define EMERALDFIRSTPORT 0x3ee3
+#define EMERALDPORTSKIP 0x400
+#define EMERALDPORTPROBE(n) ((n) + EMERALDPORTSKIP)
+#ifdef MTHREADS
+
+#include "mthreads.h"
+#ifdef WIN32
+#include <io.h>
+#endif /* not WIN32 */
+#define filesizeofNodeAddr (sizeof(unsigned int) + 2 * sizeof(unsigned short))
+int vmInitThreads(void);
+char *NodeAddrString(NodeAddr);
+extern NodeAddr myid;
+
+#define SameNodeAddrHost(a,b) ((a).ipaddress == (b).ipaddress && (a).port == (b).port)
+#define SameNodeAddr(a,b) ((a).ipaddress == (b).ipaddress && (a).port == (b).port && (a).incarnation == (b).incarnation)
+
+#define vmOpen(a,b,c) open(a,b,c)
+#ifdef WIN32
+#define reax(fd, buf, nbytes) _read(fd, buf, nbytes)
+extern size_t vmRead(int fd, void *buf, size_t nbytes);
+#define writx(fd, buf, nbytes) _write(fd, buf, nbytes)
+extern size_t vmWrite(int fd, void *buf, size_t nbytes);
+#define selecx(fd, r, w, x, t) select(fd, r, w, x, t)
+#else /* not WIN32 */
+
+#define vmRead(fd, buf, nbytes) read(fd, buf, nbytes)
+#define vmWrite(fd, buf, nbytes) write(fd, buf, nbytes)
+#ifndef FAKESELECT
+#define selecx(fd, r, w, x, t) select(fd, r, w, x, t)
+#endif
+#endif /* not WIN32 */
+#define vmClose(a) close(a)
+#define vmSocket(a,b,c) socket(a,b,c)
+#define vmAccept(a,b,c) accept(a,b,c)
+
+#else
+
+typedef int NodeAddr;
+#define filesizeofNodeAddr sizeof(unsigned)
+typedef int semaphore;
+#define vmInitThreads() (-1)
+#define vmCreateThread(b,c) (-1)
+#define vmThreadSleep(a) sleep(a)
+#define vmThreadMSleep(a, b) sleep(a)
+#define SameNodeAddrHost(a,b) (0)
+
+#define vmMain(a,b) main(a,b)
+#define vmOpen(a,b,c) open(a,b,c)
+#define vmRead(a,b,c) read(a,b,c)
+#define vmWrite(a,b,c) write(a,b,c)
+#define vmClose(a) close(a)
+#ifdef WIN32
+#define vmSocket(a,b,c) xxxxsocket(a,b,c)
+#else /* not WIN32 */
+#define vmSocket(a,b,c) socket(a,b,c)
+#endif /* not WIN32 */
+#define vmAccept(a,b,c) accept(a,b,c)
+
+#define WriteNodeAddr(a, b) abort()
+#define ReadNodeAddr(a, b) abort()
+#define NodeAddrString(x) "a thread"
+#endif /* MTHREADS */
+
+#endif /* _EMERALD_THREADS_H */
+
+/* EOF */
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@d14 1
+a14 1
+#define EMERALDPORTSKIP 0x100
+@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@d1 2
+a2 1
+/* threads.h
+d8 3
+a15 1
+extern void GainExclusive(void), LoseExclusive(void);
+d22 1
+a22 3
+#define filesizeofThreadID (sizeof(unsigned int) + 2 * sizeof(unsigned short))
+typedef threadid vmThreadId;
+typedef thread vmThread;
+d24 5
+a28 15
+int vmCreateThread(void (*fn)(void *), void *arg);
+int vmSuspendThread(void);
+void vmThreadMSleep(int secs , int usecs);
+void vmThreadSleep(int t);
+char *ThreadIdString(vmThreadId);
+#define vmMyThreadId() MTThreadID(MTMe())
+
+#define vmSameThreadHost(a,b) ((a).ipaddress == (b).ipaddress && (a).port == (b).port)
+#define vmSameThread(a,b) ((a).ipaddress == (b).ipaddress && (a).port == (b).port && (a).incarnation == (b).incarnation)
+
+vmThreadId vmStartServerThread(void (*fn)(void *));
+void vmGetServerThread(vmThreadId *t, int addr, int port, int epoch);
+int vmThreadSend(vmThreadId t, void *obuf, int olen);
+int vmThreadReceive(vmThreadId *t, void **buf, int *len);
+extern void WNotUseful(void), WUseful(void);
+d30 1
+a30 1
+#define vmOpen(a,b,c) MTopen(a,b,c)
+a38 1
+#ifdef FAKEREAD
+a39 5
+#else
+#define reax(fd, buf, nbytes) read(fd, buf, nbytes)
+extern ssize_t vmRead(int fd, void *buf, size_t nbytes);
+#endif
+#ifdef FAKEWRITE
+a40 4
+#else
+#define writx(fd, buf, nbytes) write(fd, buf, nbytes)
+extern ssize_t vmWrite(int fd, void *buf, size_t nbytes);
+#endif
+d45 3
+a47 18
+#define vmClose(a) MTclose(a)
+#define vmSocket(a,b,c) MTsocket(a,b,c)
+#define vmAccept(a,b,c) MTaccept(a,b,c)
+
+#if defined(MALLOCPARANOID)
+extern void *vmMalloc(int);
+extern void *vmRealloc(void *, int);
+extern void *vmCalloc(int, int);
+extern void vmFree(void *);
+#else
+#if defined(WIN32MALLOCDEBUG)
+/*
+ * Microsoft C debug malloc.
+ */
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
+a48 9
+#define vmMalloc(a) malloc((a))
+#define vmRealloc(a,b) realloc(a,(b))
+#define vmCalloc(a,b) calloc(a,b)
+#define vmFree(a) (free(a))
+#endif
+#define vmSemP(x) MTSemP(x)
+#define vmSemV(x) MTSemV(x)
+#define vmSemInit(x, y) MTSemInit(x, y)
+#define vmSemFree(x) MTSemFree(x)
+d51 2
+a52 2
+typedef int vmThreadId;
+#define filesizeofThreadID sizeof(unsigned)
+d58 1
+a58 8
+#define vmMyThreadId() (0)
+#define vmSameThreadHost(a,b) (0)
+
+#define vmStartServerThread(a) (-1)
+#define vmGetServerThread(a,b,c,d) 
+#define vmThreadSend(a,b,c,d,e) (-1)
+#define vmThreadReceive(a,b,c) (-1)
+#define vmThreadReply(a,b,c) (-1)
+d72 3
+a74 13
+#define vmMalloc(a) malloc(a)
+#define vmRealloc(a,b) realloc(a,b)
+#define vmCalloc(a,b) calloc(a,b)
+#define vmFree(a) free(a)
+#define WNotUseful()
+#define WUseful()
+#define WriteThreadId(a, b) abort()
+#define ReadThreadId(a, b) abort()
+#define vmSemP(x) abort()
+#define vmSemV(x) abort()
+#define vmSemInit(x, y) abort()
+#define vmSemFree(x) abort()
+#define ThreadIdString(x) "a thread"
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d4 2
+a5 2
+#ifndef _VMTHREADS_H
+#define _VMTHREADS_H
+d12 1
+a12 1
+
+d16 3
+a18 1
+
+a23 1
+int vmActivateThread(vmThread t);
+d37 1
+d40 8
+a47 1
+extern void WNotUseful(void), WUseful(void);
+d63 1
+d74 11
+a84 2
+#define vmMalloc(a) malloc(a)
+#define vmRealloc(a,b) realloc(a,b)
+d91 1
+a91 1
+
+a98 2
+#define vmActivateThread(a) (-1)
+#define vmSuspendThread(a) (-1)
+d115 3
+d119 1
+d133 1
+d137 1
+a137 1
+#endif /* _vmTHREADS_H */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 2
+a11 1
+#define EMERALDPORTPROBE(n) ((n) + 0x100)
+d30 1
+@

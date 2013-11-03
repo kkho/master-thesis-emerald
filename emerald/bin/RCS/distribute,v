@@ -1,0 +1,44 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1
+	DIKU_0:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	93.06.15.19.26.13;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@prepare emerald for distribution
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#! /bin/csh -f
+# prepare emerald for distribution - RECENT CHANGES UNTESTED
+set TARDEST = /tmp/emerald.tar.Z
+
+# Set the right emerald environment
+setenv EMERALDROOT /project3/phoenix
+eval `./setarch`
+
+echo "Establishing the distributed compiler"
+( cd EC; rm -f distCP; cp execCP distCP; emx -C distCP; rm -f execCP; ln -s distCP execCP; make EMCP; compress EMCP; mv -f EMCP.Z distCP; rm -f execCP; ln -s distCP execCP )
+
+echo "Writing the tar file to $TARDEST"
+./maketar | compress > $TARDEST
+@

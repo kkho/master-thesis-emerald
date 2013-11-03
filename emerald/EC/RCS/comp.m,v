@@ -1,0 +1,575 @@
+head	1.19;
+access;
+symbols
+	105alpha:1.18
+	104alpha:1.18
+	103alpha:1.18
+	102alpha:1.18
+	101alpha:1.18
+	100alpha:1.18
+	DIKU_0:1.14
+	carlton_start:1.12
+	immel_start:1.5;
+locks; strict;
+
+
+1.19
+date	2007.06.11.01.34.35;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	96.03.19.22.43.30;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	95.06.22.04.45.16;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	94.08.17.16.50.34;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.10.17.06.52;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.05.19.17.11.13;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.19.12.42.42;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.51.23;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.51.21;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.51.20;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.19
+log
+@Check in current version
+@
+text
+@
+export Comp
+
+const hasLCons <- typeobject hasLCons
+  operation lcons [ Tree ]
+end hasLCons
+
+const comp <- class Comp (Tree) [xxsfname : Tree, xximports : Tree, xxexports : Tree, xxconsts : Tree]
+
+    field st : SymbolTable
+    field sfname  : Tree <- xxsfname
+    field imports : Tree <- xximports
+    field exports : Tree <- xxexports
+    field consts  : Tree <- xxconsts
+    export function upperbound -> [r : Integer]
+      r <- 2
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- imports
+      elseif i = 1 then
+	r <- exports
+      elseif i = 2 then
+	r <- consts
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	imports <- r
+      elseif i = 1 then
+	exports <- r
+      elseif i = 2 then
+	consts <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nsfname, nimports, nexports, nconsts : Tree
+      if sfname !== nil then nsfname <- sfname.copy[i] end if
+      if imports !== nil then nimports <- imports.copy[i] end if
+      if exports !== nil then nexports <- exports.copy[i] end if
+      if consts !== nil then nconsts <- consts.copy[i] end if
+      r <- comp.create[ln, nsfname, nimports, nexports, nconsts]
+    end copy
+    operation iremoveSugar -> [r : Tree]
+      var s : hasLCons
+      var t : Tree
+      var u : Tree
+      if consts == nil then consts <- sseq.create[0] end if
+      s <- view consts as hasLCons
+      u <- builtinlit.create[0, 0x11]
+      t <- builtinlit.create[0, 8]
+      t <- invoc.create[0, t, opname.literal["getstdout"], nil]
+      t <- constdecl.create[0, sym.literal["stdout"], u, t]
+      s.lcons[t]
+      u <- builtinlit.create[0, 0x10]
+      t <- builtinlit.create[0, 8]
+      t <- invoc.create[0, t, opname.literal["getstdin"], nil]
+      t <- constdecl.create[0, sym.literal["stdin"], u, t]
+      s.lcons[t]
+      r <- self
+    end iremoveSugar
+
+    export operation doEnvExports [thest : SymbolTable]
+      if imports !== nil then imports.doEnvExports[thest] end if
+      if exports !== nil then exports.doEnvExports[thest] end if
+      if consts !== nil then consts.doEnvExports[thest] end if
+    end doEnvExports
+
+    export operation assignIDs [thest : SymbolTable]
+      if imports !== nil then imports.assignIDs[thest] end if
+      if exports !== nil then exports.assignIDs[thest] end if
+      if consts !== nil then consts.assignIDs[thest] end if
+    end assignIDs
+
+    export operation doAllocation 
+      var a, b, c : Integer
+      a, b, c <- st.Allocate[0, 0, 0, nil]
+    end doAllocation
+
+  export operation findThingsToGenerate[q : Any]
+    const qt <- view q as aot
+    qt.addUpper[self]
+    FTree.findThingsToGenerate[q, self]
+  end findThingsToGenerate
+
+  export operation generate [ct : Printable]
+    const sfnameashasStr <- view self$sfname as hasStr
+    const ctasct <- view ct as ctcode
+    const ove <- opvectore.create["initially"]
+    const mybc <- bytecode.create[ctasct$literals]
+    const ov <- ctasct$opVec
+    const templ <- Template.create
+    ove$templ <- templ
+
+    ctasct$instanceSize <- self$st$instanceSize
+    % Compilations are not immutable, but they do have a normal data area.
+    ctasct$instanceFlags <- 0x20000000
+    ctasct$filename <- sfnameashasStr.getStr
+    ctasct$name <- "Compilation"
+    ctasct$id <- nextOID.nextOID
+    begin
+      const temp <- Template.create
+      ctasct$templ <- temp
+      self$st.writeTemplate[temp, 'O']
+    end
+
+    % Generate the template
+    self$st.writeTemplate[templ, 'L']
+
+    ov[0] <- ove
+    % Generate the prolog (allocate space for locals)
+    mybc.setLocalSize[st$localSize]
+
+    self$consts.generate[mybc]
+
+    mybc.lineNumber[self$ln]
+    mybc.addCode["QUIT"]
+    mybc.addValue[0, 1]
+    ove$code <- mybc.getString
+    ove$others <- mybc$others
+    begin
+      const lninfo <- mybc.getLNInfo
+      if lninfo !== nil then
+	templ.addLineNumbers[lninfo]
+      end if
+    end
+  end generate
+
+  export operation defineSymbols[pst : SymbolTable]
+    if self$st == nil then
+      self$st <- SymbolTable.create[pst, CComp]
+      self$st$myTree <- self
+    end if
+    FTree.defineSymbols[self$st, self]
+  end defineSymbols
+
+  export operation resolveSymbols [pst : SymbolTable, nexp : Integer]
+    FTree.resolveSymbols[self$st, self, 0]
+  end resolveSymbols
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    r <- self.iremoveSugar[]
+    r <- FTree.removeSugar[r, ob]
+  end removeSugar
+
+  export function asString -> [r : String]
+    r <- "comp"
+  end asString
+
+  export function getName -> [r : Tree]
+    r <- Sym.literal["compilation"]
+  end getName
+  export function getXSetq -> [r : Tree]
+    r <- Seq.literal[0, {}]
+  end getXSetq
+end Comp
+@
+
+
+1.18
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@d149 7
+@
+
+
+1.17
+log
+@Stop using mutable objects with no state, changed the name of instanceFlags
+@
+text
+@d48 1
+a48 1
+      if consts == nil then consts <- seq.create[0] end if
+@
+
+
+1.16
+log
+@Implement unavailable handers
+@
+text
+@d96 2
+a97 1
+    ctasct$instanceTagMask <- 0x20000000
+@
+
+
+1.15
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d111 1
+a111 12
+    begin
+      const localSize : Integer <- self$st$localSize
+      if localSize > 0 then
+	if localSize < 255 * 4 then
+	  mybc.addCode["LINKB"]
+	  mybc.addValue[localSize / 4, 1]
+	else
+	  mybc.addCode["LINK"]
+	  mybc.addValue[localSize, 2]
+	end if
+      end if
+    end
+@
+
+
+1.14
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d47 1
+d50 1
+d53 1
+a53 1
+      t <- constdecl.create[0, sym.literal["stdout"], nil, t]
+d55 1
+d58 1
+a58 1
+      t <- constdecl.create[0, sym.literal["stdin"], nil, t]
+d112 1
+a112 1
+      const localSize <- self$st$localSize
+@
+
+
+1.13
+log
+@First attempt at abcons
+@
+text
+@d59 5
+a63 8
+    export operation doImports 
+      st <- SymbolTable.create[nil, CComp]
+      
+    end doImports
+    export operation doEnvExports [st : SymbolTable]
+      if imports !== nil then imports.doEnvExports[st] end if
+      if exports !== nil then exports.doEnvExports[st] end if
+      if consts !== nil then consts.doEnvExports[st] end if
+d65 5
+a69 4
+    export operation assignIDs [st : SymbolTable]
+      if imports !== nil then imports.assignIDs[st] end if
+      if exports !== nil then exports.assignIDs[st] end if
+      if consts !== nil then consts.assignIDs[st] end if
+d78 1
+a78 1
+    const qt <- view q as Array.of[Tree]
+d139 1
+@
+
+
+1.12
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d86 1
+a86 3
+    const sfnameashasStr <- view self$sfname as typeobject X
+      function getStr -> [String]
+    end X
+@
+
+
+1.11
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d110 1
+a110 1
+    ov(0) <- ove
+@
+
+
+1.10
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d152 1
+a152 1
+    r <- iremoveSugar[]
+@
+
+
+1.9
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d89 1
+a89 9
+    const ctasct <- view ct as typeobject X
+      operation setInstanceSize [Integer]
+      operation setInstanceTagMask [Integer]
+      operation setID [Integer]
+      operation setName [String]
+      operation setFileName [String]
+      operation setTempl[Template]
+      function  getOpVec -> [OpVector]
+    end X
+d91 1
+a91 1
+    const mybc <- bytecode.create
+d115 7
+a121 2
+	mybc.addCode["LINK"]
+	mybc.addValue[localSize, 2]
+@
+
+
+1.8
+log
+@Use nameof rather than asString
+@
+text
+@d51 1
+a51 1
+      t <- constdecl.create[0, sym.literal["stdout", true], nil, t]
+d55 1
+a55 1
+      t <- constdecl.create[0, sym.literal["stdin", true], nil, t]
+d60 1
+a60 1
+      st <- SymbolTable.create[nil, STContext.CComp]
+d145 1
+a145 1
+      self$st <- SymbolTable.create[pst, STContext.CComp]
+@
+
+
+1.7
+log
+@Get rid of return on generate
+@
+text
+@d129 2
+d138 1
+a138 1
+	templ.addLineNumbers[mybc.getLNInfo]
+@
+
+
+1.6
+log
+@Removed all monitors
+@
+text
+@d85 1
+a85 2
+  export operation generate [ct : Printable] -> [rct : Any]
+    var junk : Any
+d128 1
+a128 1
+    junk <- self$consts.generate[mybc]
+@
+
+
+1.5
+log
+@Fix exports of removeSugar
+@
+text
+@a9 1
+  monitor
+a77 1
+  end monitor
+@
+
+
+1.4
+log
+@Type checking
+@
+text
+@d45 1
+a45 1
+    export operation iremoveSugar -> [r : Tree]
+d98 1
+a98 1
+      operation setTemplate[Template]
+d155 1
+a155 1
+  operation removeSugar [ob : Tree] -> [r : Tree]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d87 1
+a87 1
+  export operation generate [ct : Printable] -> [rct : ConcreteType]
+d98 1
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@a0 12
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable, STContext from "Jekyll"
+import opvectore from "Jekyll"
+import bytecode from "Jekyll"
+import opvector from "Jekyll"
+import Seq from "Jekyll"
+import Builtinlit from "Jekyll"
+import Invoc from "Jekyll"
+import Opname from "Jekyll"
+import Constdecl from "Jekyll"
+import Sym from "Jekyll"
+import nextOID from "Jekyll"
+d2 1
+a2 1
+export Comp to "Jekyll"
+d4 1
+a4 1
+const hasLCons <- type hasLCons
+d89 1
+a89 1
+    const sfnameashasStr <- view self$sfname as type X
+d92 1
+a92 1
+    const ctasct <- view ct as type X
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d99 2
+a100 1
+  export operation generate [ct : Printable]
+d142 1
+a142 1
+    self$consts.generate[mybc]
+@

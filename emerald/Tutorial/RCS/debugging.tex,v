@@ -1,0 +1,143 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.2
+date	93.03.25.06.50.27;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.03.22.17.01.58;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Document latest commands
+@
+text
+@\section{Debugging Emerald Programs}
+The Emerald debugger is built into the interpreter.  The interpreter option
+-i enables the interactive debugger.  If execution of the program causes a
+failure, control will be passed to the debugger.  If the -i flag is not
+given, then a stack dump will be printed and the interpreter will exit
+taking all of it's interesting information with it.
+
+If you wish to set breakpoints in your program before it executes, give the
+``-I'' option to the interpreter.  This will place you in the debugger
+before the program gets going, just as if a breakpoint were inserted before
+the first statement.  To run the program, use the continue command.
+
+The debugger commands are:
+\begin{description}
+  \item[where]{}~\\
+    Print out a minimal stack back trace, including only the source file
+    names and line numbers of the operations.
+  \item[dump]{}~\\
+    Print out a maximal stack back trace, including all local variables and
+    parameters at each level as well as the instance variables of the target
+    object at each level.
+  \item[processes]{}~\\
+    Print a description of all of the processes that exist.
+  \item[process {\it id\/}]{}~\\
+    Switch to debugging the process whose id is given (get it using the
+    processes command).
+  \item[q]{}
+  \item[quit]{}~\\
+    Exit emx.
+  \item[c]{}
+  \item[cont]{}
+  \item[continue]{}~\\
+    Continue the interpreter.  If a failure caused entry to the debugger,
+    something strange may happen.
+  \item[p {\it expression\/}]{}
+  \item[print {\it expression\/}]{}~\\
+    Print the value of a variable.  Variables are searched for in the
+    current activation record and in the currently invoked object, and if
+    not found there, the debugger searches down the call stack.
+
+    You can look inside of objects using the operator ``.''.  If x is an
+    identifier, and x has an instance variable named i, then you can print
+    the object refered to by the instance variable i using ``print x.i''.
+  \item[up]{}
+  \item[down]{}~\\
+    Move up (toward older operations) or down (toward more recently called
+    operations) the call stack.
+  \item[info]{}
+  \item[look]{}~\\
+    Print the current activation record and current object.  Just like a one
+    level ``dump''.
+  \item[b {\it filename\/} {\it linenumber\/}]{}
+  \item[stop {\it filename\/} {\it linenumber\/}]{}~\\
+    Set a breakpoint.  If the file name is not given the ``current'' file is
+    assumed.  If the linenumber is not given the current line is assumed.
+  \item[delete {\it filename\/} {\it linenumber\/}]{}~\\
+    Delete a breakpoint.  If the file name is not given the ``current'' file is
+    assumed.  If the linenumber is not given the current line is assumed.
+  \item[n]{}
+  \item[next]{}~\\
+    Set a breakpoint at the next source line and continue.  This command is
+    completely broken, as it does not
+    deal with control flow that bypasses the next source line.  Use
+    this with care - or better yet, fix it.
+  \item[s]{}
+  \item[step]{}~\\
+    Step to the next source line.  This command single steps the interpreter
+    until it moves to executing code from a different source line.
+  \item[S]{}
+  \item[Step]{}~\\
+    Step to the next source line in the same source file.  This command
+    single steps the interpreter 
+    until it moves to executing code from a different source line in the
+    same source file as it is currently in.  In most cases, this allows
+    invocations to be stepped across.
+  \item[bu]{}~\\
+    Set a breakpoint just after the call to the current operation (break up).
+  \item[finish]{}~\\
+    Set a breakpoint just after the call to the current operation (break up)
+    and then continue.  This corresponds exactly to a ``bu'' command
+    followed by a ``continue'', but it is sufficiently common to deserve its
+    own command.
+\end{description}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d35 2
+a36 2
+  \item[p]{}
+  \item[print]{}~\\
+d55 1
+a55 1
+    assumed.
+d58 1
+a58 1
+    assumed.
+d62 2
+a63 2
+    basically broken, as it neither deletes the breakpoint when it is hit,
+    nor deals with control flow that bypasses the next source line.  Use
+d68 15
+a82 1
+    until it moves to executing code from a difference source line.
+@

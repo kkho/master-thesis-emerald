@@ -1,0 +1,781 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.14
+	103alpha:1.14
+	102alpha:1.14
+	101alpha:1.14
+	100alpha:1.14
+	DIKU_0:1.12
+	carlton_start:1.9
+	immel_start:1.5;
+locks; strict;
+
+
+1.14
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.08.17.16.51.51;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.01.12.04.54.04;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.03.01.03.17.36;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.05.27.09.05.05;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.23.16.25.19;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.58.50;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.58.48;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.58.47;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.14
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@const Printable <- typeobject Printable
+  function  asString -> [String]
+end Printable
+
+const ftree <- immutable object ftree
+  const x <- 1
+  export function getString [t : Tree] -> [r : String]
+    if t !== nil then
+      r <- t.asString
+    end if
+  end getString
+  export operation print[s : OutStream, indent : Integer, t : Tree]
+    var child : Tree
+    var limit : Integer <- t.upperbound
+    const zero <- 0
+    s.putstring[t.asString]
+    s.putstring[" @@"]
+    s.putstring[t.getln.asString]
+    s.putchar['\n']
+    if nameof t = "anoblit" then
+      const ob <- view t as hasST
+      if ob$st !== nil then 
+	for i : Integer <- 0 while i < indent + 2 by i <- i + 1
+	  s.putchar[' ']
+	end for
+        ob$st.print[s, indent+2]
+	s.putChar['\n']
+      end if
+    end if
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      for i : Integer <- 0 while i < indent + 2 by i <- i + 1
+	s.putchar[' ']
+      end for
+      s.putint[ch, 2]
+      s.putchar[':']
+      s.putchar[' ']
+      child <- t[ch]
+      if child == nil then
+	s.putstring["nil\n"]
+      else
+	child.print[s, indent+2]
+      end if
+    end for
+  end print
+
+  export operation removeSugar[t : Tree, ob : Tree] -> [r : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	t[ch] <- child.removeSugar[ob]
+      end if
+    end for
+    r <- t
+  end removeSugar
+
+  export operation defineSymbols[thest : SymbolTable, t : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.defineSymbols[thest]
+      end if
+    end for
+  end defineSymbols
+
+  export operation resolveSymbols[thest : SymbolTable, t : Tree, nexp : Integer]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.resolveSymbols[thest, nexp]
+      end if
+    end for
+  end resolveSymbols
+
+  export operation evaluateManifests[t : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.evaluateManifests
+      end if
+    end for
+  end evaluateManifests
+
+  export operation findManifests[t : Tree] -> [changed : Boolean]
+    var child : Tree
+    const limit <- t.upperbound
+%    const stdout <- (locate self).getStdout
+%    stdout.putstring["Doing findmanifests on a "]
+%    stdout.putString[t.asString]
+%    stdout.putString["\n"]
+    changed <- false
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+%	stdout.putstring["Doing findmanifests on child "]
+%	stdout.putInt[ch, 0]
+%	stdout.putString[" of "]
+%	stdout.putString[t.asString]
+%	stdout.putString["\n"]
+	changed <- child.findManifests | changed
+      end if
+    end for
+  end findManifests
+
+  export operation typeCheck[t : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.typeCheck
+      end if
+    end for
+  end typeCheck
+
+  export operation assignTypes[t : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.assignTypes
+      end if
+    end for
+  end assignTypes
+
+  export operation findThingsToGenerate[q : Any, t : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.findThingsToGenerate[q]
+      end if
+    end for
+  end findThingsToGenerate
+
+  export operation generate[ct : Printable, t : Tree]
+    var child : Tree
+    const limit <- t.upperbound
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	child.generate[ct]
+      end if
+    end for
+  end generate
+  
+end ftree
+
+const tree <- class tree [xln : Integer]
+  const field ln : Integer <- xln
+
+  export function getIsSeq -> [r : Boolean]
+    r <- false
+  end getIsSeq
+
+  export function lowerbound -> [r : Integer]
+    r <- 0
+  end lowerbound
+  export function upperbound -> [r : Integer]
+    r <- ~1
+  end upperbound
+  export function getElement [i : Integer] -> [r : Tree]
+  end getElement
+  export operation setElement [i : Integer, r : Tree]
+  end setElement
+  export operation rcons [a : Tree]
+    assert false
+  end rcons
+  export operation rappend [a : Tree]
+    assert false
+  end rappend
+  export function asString -> [r : String]
+    r <- "a tree"
+  end asString
+  export operation print[s : OutStream, indent : Integer]
+    ftree.print[s, indent, self]
+  end print
+  export operation copy [how : Integer] -> [r : Tree]
+    % how = 0 -> delete symbols
+    % how = 1 -> reset  symbols
+    % how = 2 -> copy   symbols
+    assert false
+  end copy
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	self[ch] <- child.removeSugar[ob]
+      end if
+      ch <- ch + 1
+    end loop
+    r <- self
+  end removeSugar
+
+  export operation defineSymbols[thest : SymbolTable]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.defineSymbols[thest]
+      end if
+      ch <- ch + 1
+    end loop
+  end defineSymbols
+
+  export operation resolveSymbols[thest : SymbolTable, nexp : Integer]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.resolveSymbols[thest, nexp]
+      end if
+      ch <- ch + 1
+    end loop
+  end resolveSymbols
+
+  export operation getIsNotManifest -> [r : Boolean]
+    r <- true
+  end getIsNotManifest
+
+  export operation setIsNotManifest [r : Boolean]
+    assert false
+  end setIsNotManifest
+
+  export operation findManifests -> [changed : Boolean]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    changed <- false
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	changed <- child.findManifests | changed
+      end if
+      ch <- ch + 1
+    end loop
+  end findManifests
+
+  export operation evaluateManifests
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.evaluateManifests
+      end if
+      ch <- ch + 1
+    end loop
+  end evaluateManifests
+
+  export operation assignIds [thest : SymbolTable]
+  end assignIds
+
+  export operation doEnvExports[thest : SymbolTable]
+  end doEnvExports
+
+  export operation assignTypes
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.assignTypes
+      end if
+      ch <- ch + 1
+    end loop
+  end assignTypes
+
+  export operation typeCheck
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.typeCheck
+      end if
+      ch <- ch + 1
+    end loop
+  end typeCheck
+
+  export operation getAT -> [r : Tree]
+  end getAT
+
+  export operation getCT -> [r : Tree]
+  end getCT
+
+  export operation findThingsToGenerate[q : Any]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.findThingsToGenerate[q]
+      end if
+      ch <- ch + 1
+    end loop
+  end findThingsToGenerate
+
+  export operation generate[ct : Printable]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child.generate[ct]
+      end if
+      ch <- ch + 1
+    end loop
+  end generate
+  
+  export operation execute -> [r : Tree]
+    r <- nil
+  end execute
+
+  export function asType -> [r : Tree]
+    r <- nil
+  end asType
+
+  export function same [o : Tree] -> [r : Boolean]
+    r <- false
+  end same
+  
+  export operation flatten [ininvoke : Boolean, indecls : Tree] -> [r : Tree, outdecls : Tree]
+    var child : Tree
+    const limit <- self.upperbound
+    var ch : Integer <- 0
+    outdecls <- indecls
+    loop
+      exit when ch > limit
+      child <- self[ch]
+      if child !== nil then
+	child, outdecls <- child.flatten[ininvoke, outdecls]
+	self[ch] <- child
+      end if
+      ch <- ch + 1
+    end loop
+    r <- self
+  end flatten
+end tree
+
+const VoT <- Vector.of[Tree]
+
+export FTree, Tree, VoT
+export Printable
+@
+
+
+1.13
+log
+@Make type stuff work
+@
+text
+@a155 12
+  export operation containsInvoke[t : Tree]  -> [r : Boolean]
+    var child : Tree
+    const limit <- t.upperbound
+    r <- false
+    for ch : Integer <- 0 while ch <= limit by ch <- ch + 1
+      child <- t[ch]
+      if child !== nil then
+	r <- child.containsInvoke 
+	if r then return end if
+      end if
+    end for
+  end containsInvoke
+d353 16
+a368 3
+  export operation containsInvoke -> [r : Boolean]
+    r <- FTree.containsInvoke[self]
+  end containsInvoke
+@
+
+
+1.12
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d370 3
+a372 1
+export FTree, Tree
+@
+
+
+1.11
+log
+@First attempt at abcons
+@
+text
+@d58 1
+a58 1
+  export operation defineSymbols[st : SymbolTable, t : Tree]
+d64 1
+a64 1
+	child.defineSymbols[st]
+d69 1
+a69 1
+  export operation resolveSymbols[st : SymbolTable, t : Tree, nexp : Integer]
+d75 1
+a75 1
+	child.resolveSymbols[st, nexp]
+d220 1
+a220 1
+  export operation defineSymbols[st : SymbolTable]
+d228 1
+a228 1
+	child.defineSymbols[st]
+d234 1
+a234 1
+  export operation resolveSymbols[st : SymbolTable, nexp : Integer]
+d242 1
+a242 1
+	child.resolveSymbols[st, nexp]
+d285 1
+a285 1
+  export operation assignIds [st : SymbolTable]
+d288 1
+a288 1
+  export operation doEnvExports[st : SymbolTable]
+@
+
+
+1.10
+log
+@Fix primitives so that full variables are on the stack when invokes
+happen.
+@
+text
+@d21 1
+a21 1
+      const ob <- view t as typeobject t op getST -> [SymbolTable] end t
+@
+
+
+1.9
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d155 13
+d364 4
+@
+
+
+1.8
+log
+@Make print invoke print on the child rather than using ftree
+@
+text
+@d37 1
+a37 1
+      child <- t(ch)
+d50 1
+a50 1
+      child <- t(ch)
+d52 1
+a52 1
+	t(ch) <- child.removeSugar[ob]
+d62 1
+a62 1
+      child <- t(ch)
+d73 1
+a73 1
+      child <- t(ch)
+d84 1
+a84 1
+      child <- t(ch)
+d100 1
+a100 1
+      child <- t(ch)
+d116 1
+a116 1
+      child <- t(ch)
+d127 1
+a127 1
+      child <- t(ch)
+d138 1
+a138 1
+      child <- t(ch)
+d149 1
+a149 1
+      child <- t(ch)
+d198 1
+a198 1
+      child <- self(ch)
+d200 1
+a200 1
+	self(ch) <- child.removeSugar[ob]
+d213 1
+a213 1
+      child <- self(ch)
+d227 1
+a227 1
+      child <- self(ch)
+d250 1
+a250 1
+      child <- self(ch)
+d264 1
+a264 1
+      child <- self(ch)
+d284 1
+a284 1
+      child <- self(ch)
+d298 1
+a298 1
+      child <- self(ch)
+d318 1
+a318 1
+      child <- self(ch)
+d332 1
+a332 1
+      child <- self(ch)
+@
+
+
+1.7
+log
+@Use nameof rather than asString
+@
+text
+@d41 1
+a41 1
+	print[s, indent+2, child]
+@
+
+
+1.6
+log
+@Get rid of return on generate
+@
+text
+@d15 1
+d17 2
+d20 1
+a20 1
+    if t.asString = "oblit" then
+@
+
+
+1.5
+log
+@Dont use ftree for most ops
+@
+text
+@d142 1
+a142 1
+  export operation generate[ct : Printable, t : Tree] -> [rct : Any]
+a143 1
+    var junk : Any
+d148 1
+a148 1
+	junk <- child.generate[ct]
+d323 1
+a323 1
+  export operation generate[ct : Printable] -> [rct : Any]
+d331 1
+a331 1
+	rct <- child.generate[ct]
+@
+
+
+1.4
+log
+@Improve memory usage
+@
+text
+@d191 12
+a202 1
+    r <- ftree.removeSugar[self, ob]
+d206 11
+a216 1
+    ftree.defineSymbols[st, self]
+d220 11
+a230 1
+    ftree.resolveSymbols[st, self, nexp]
+d242 12
+a253 1
+    changed <- ftree.findManifests[self]
+d257 11
+a267 1
+    ftree.evaluateManifests[self]
+d277 11
+a287 1
+    ftree.assignTypes[self]
+d291 11
+a301 1
+    ftree.typeCheck[self]
+d311 11
+a321 1
+    FTree.findThingsToGenerate[q, self]
+d325 11
+a335 1
+    const junk <- ftree.generate[ct, self]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@a0 5
+
+const hasST <- typeobject hasST
+  function getST -> [SymbolTable]
+end hasST
+
+d157 4
+a160 3
+  monitor
+    field isseq : Boolean <- false
+  end monitor
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@a0 1
+import SymbolTable from "Jekyll"
+d2 1
+a2 1
+const hasST <- type hasST
+d6 1
+a6 1
+const Printable <- type Printable
+d23 1
+a23 1
+      const ob <- view t as type t op getST -> [SymbolTable] end t
+d263 2
+a264 2
+export FTree, Tree to "Jekyll"
+export Printable to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d148 1
+a148 1
+  export operation generate[ct : Printable, t : Tree]
+d150 1
+d155 1
+a155 1
+	child.generate[ct]
+d247 2
+a248 2
+  export operation generate[ct : Printable]
+    ftree.generate[ct, self]
+@

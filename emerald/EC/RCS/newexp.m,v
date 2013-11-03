@@ -1,0 +1,216 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.5
+	carlton_start:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.6
+date	94.10.04.05.33.06;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.02.01.16.46.15;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.12.10.17.07.18;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.09.16.03.57.39;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@Fixed the defintion of getAT and getCT
+@
+text
+@export newexp
+
+const newexp <- class Newexp (Tree) [xxexp : Tree, xxargs : Tree]
+    field exp : Tree <- xxexp
+    field args : Tree <- xxargs
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- exp
+      elseif i = 1 then
+	r <- args
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	exp <- r
+      elseif i = 1 then
+	args <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nexp, nargs : Tree
+      if exp !== nil then nexp <- exp.copy[i] end if
+      if args !== nil then nargs <- args.copy[i] end if
+      r <- newexp.create[ln, nexp, nargs]
+    end copy
+
+  export operation getAT -> [r : Tree]
+    const ct : Tree <- exp.execute
+    if ct !== nil then
+      r <- (view ct as hasInstAT)$instAT
+    end if
+  end getAT
+
+  export operation getCT -> [r : Tree]
+    const ct : Tree <- exp.execute
+    if ct !== nil then
+      r <- (view ct as hasInstCT)$instCT
+    end if
+  end getCT
+
+  export operation generate[xct : Printable]
+    const bc <- view xct as ByteCode
+
+% The order of stuff on the stack for a creation is:
+% NIL
+% arguments for the initially - 8 bytes each
+% Concrete type
+
+    bc.addCode["PUSHNIL"]
+
+    if self$args !== nil then
+      bc.pushSize[8]
+      self$args.generate[xct]
+      bc.popSize
+    end if
+
+    bc.pushSize[4]
+    self$exp.generate[bc]
+    bc.popSize
+%      if self$isVector then
+%	bc.addCode["LDAS"]
+%	bc.addValue[0, 2]
+%	bc.addCode["CREATEVEC"]
+%      else
+%	bc.addCode["CREATE"]
+%      end if
+    bc.addCode["CREATE"]
+    if bc$size != 4 then bc.addCode["PUSHCT"] end if
+  end generate
+
+  export function asString -> [r : String]
+    r <- "newexp"
+  end asString
+end Newexp
+@
+
+
+1.5
+log
+@First attempt at abcons
+@
+text
+@d31 7
+d39 4
+a42 1
+    r <- (view exp as hasInstCT)$instCT
+d44 1
+@
+
+
+1.4
+log
+@Preparatory work for Ab/Cons
+@
+text
+@d32 1
+a32 4
+    const t <- typeobject t
+      function getInstCT -> [Tree]
+    end t
+    r <- (view exp as T)$instCT
+d35 1
+a35 9
+    const bc <- view xct as typeobject T
+      operation addCode[String]
+      operation addValue [Integer, Integer]
+      operation fetchVariableSecondThing[Integer, Integer]
+      operation pushSize [Integer]
+      function  getSize -> [Integer]
+      operation popSize
+      function  asString -> [String]
+    end T
+@
+
+
+1.3
+log
+@Get rid of return on generate
+@
+text
+@d41 1
+a41 1
+      operation fetchLiteral [Integer]
+@
+
+
+1.2
+log
+@Removed all monitors
+@
+text
+@d37 1
+a37 2
+  export operation generate[xct : Printable] -> [rct : None]
+    var junk : Any
+d57 1
+a57 1
+      junk <- self$args.generate[xct]
+d62 1
+a62 1
+    junk <- self$exp.generate[bc]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a3 1
+  monitor
+a29 1
+  end monitor
+d32 4
+a35 1
+    r <- exp$getInstCT
+@

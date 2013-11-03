@@ -1,0 +1,114 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	95.03.15.05.11.56;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.12.20.20.54.05;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.07.23.16.40.03;	author carlton;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.07.23.16.39.50;	author carlton;	state Exp;
+branches;
+next	;
+
+
+desc
+@Original version from norm.
+@
+
+
+1.4
+log
+@Fix macroMf for new ccalls structure
+@
+text
+@#
+# definitions of Emerald
+# global macros
+#
+
+# global definitions
+
+# instead of $(MAKE), use $(EMMAKE) within Makefiles
+EMMAKE = emmake
+
+# some versions of make (notably sgi's and m88k's) use the user's
+# current shell rather than sh to execute commands by default.
+# Twits.
+SHELL = /bin/sh
+
+
+# source for the garbage collector lives here
+GCDIR = $(EMERALDROOT)/gc
+
+# source for the emerald daemon lives here
+EMDDIR = $(EMERALDROOT)/emd
+
+# source for the ccalls lives here
+CCALLSDIR = $(EMERALDROOT)/ccalls
+
+# lib material; includes live here, and libraries live in architecture
+# specific subdirectories of here
+EMLIBDIR = $(EMERALDROOT)/lib
+
+# defaults.  May be overridden in architecture specific macroMakefiles
+
+# ranlib
+RANLIB = ranlib
+
+# awk
+AWK = awk
+
+# sed
+SED = sed
+
+all:
+@
+
+
+1.3
+log
+@Finalized merge with Mark Immels version
+@
+text
+@d40 2
+@
+
+
+1.2
+log
+@Added SED=sed line.
+@
+text
+@d20 3
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d35 2
+@

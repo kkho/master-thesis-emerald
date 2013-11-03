@@ -1,0 +1,760 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.14
+	103alpha:1.14
+	102alpha:1.14
+	101alpha:1.14
+	100alpha:1.14
+	DIKU_0:1.11
+	carlton_start:1.10
+	immel_start:1.5;
+locks; strict;
+
+
+1.14
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.08.17.16.50.39;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.03.11.00.13.54;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.12.04.13.21;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.10.17.06.59;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.04.06.19.37.58;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.18.12.05.19;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.52.34;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.52.33;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.52.31;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.14
+log
+@Many changes
+@
+text
+@
+export Enumlit
+
+const enumlit <- class Enumlit (OTree) [xxname : Tree, xxsyms : Tree]
+    field codeOID : Integer
+    field id : Integer
+    field name : Tree <- xxname
+    field syms : Tree <- xxsyms
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- name
+      elseif i = 1 then
+	r <- syms
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	name <- r
+      elseif i = 1 then
+	syms <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nname, nsyms : Tree
+      if name !== nil then nname <- name.copy[i] end if
+      if syms !== nil then nsyms <- syms.copy[i] end if
+      r <- enumlit.create[ln, nname, nsyms]
+    end copy
+
+    operation iremoveSugar -> [r : Tree]
+      const it <- Environment$env$ITable
+      var t, u : Tree
+      const cmpnames <- {
+	opname.literal["<"],
+	opname.literal["<="],
+	opname.literal["="],
+	opname.literal["!="],
+	opname.literal[">"],
+	opname.literal[">="] : Ident }
+      var theclass : XClass
+      var ops, creators, theparams : Tree
+      const createname <- opname.literal["create"]
+      const namesym <- view name as Sym
+      const nameid  <- namesym$id
+      const meid    <- it.Lookup["me", 999]
+      
+      creators <- seq.create[ln]
+      
+      ops <- seq.create[ln]
+      ops.rcons[nil]
+      ops.rcons[nil]
+      ops.rcons[nil]
+      % build first 
+      begin
+	const zero <- Literal.IntegerL[ln, "0"]
+	t <- seq.singleton[zero]
+	u  <- invoc.create[ln, selflit.create[ln], createname, t]
+	creators.rcons[sugar.doAnOp[
+	  opname.literal["first"], nil, Sym.create[ln, nameid], nil, u, true]]
+      end
+      % build last
+      begin
+	const limit <- Literal.IntegerL[ln, syms.upperbound.asString]
+	t <- seq.singleton[limit]
+	u <- invoc.create[ln, selflit.create[ln], createname, t]
+	creators.rcons[sugar.doAnOp[
+	  opname.literal["last"], nil, Sym.create[ln, nameid], nil, u, true]]
+      end
+
+      theparams <- Seq.create[ln]
+      theparams.rcons[param.create[ln, 
+	Sym.create[ln, meid],
+	Sym.create[ln, it.Lookup["integer", 999]]]]
+
+      % do the creation operations
+      for i : Integer <- 0 while i <= syms.upperbound by i <- i + 1
+	const s <- view syms[i] as Sym
+	const sid <- s$id
+	const sname : String <- sid.asString
+	var cre : Tree
+	t <- seq.singleton[Literal.IntegerL[ln, i.asString]]
+	cre <- invoc.create[ln, selflit.create[ln], opname.literal["create"],t]
+	creators.rcons[sugar.doAnOp[
+	  OpName.Literal[sname], nil, Sym.create[ln, nameid], nil, cre, true]]
+      end for
+
+      % that takes care of the creator, now do the instances
+      % build ord
+      ops.rcons[sugar.doAnOp[
+	opname.Literal["ord"], 
+	nil, 
+	Sym.create[ln, it.Lookup["integer", 999]],
+	nil,
+	Sym.create[ln, meid], true]]
+
+      for i : Integer <- 0 while i < 6 by i <- i + 1
+	const argid <- it.Lookup["a", 999]
+	const resid <- it.Lookup["r", 999]
+	var arg, res, sig, ord, eq, ass, body : Tree
+	var def : OpDef
+	arg <- Sym.create[ln, argid]
+	arg <- param.create[ln, arg, Sym.create[ln, nameid]]
+	res <- Sym.create[ln, resid]
+	res <- param.create[ln, res, Sym.create[ln, it.Lookup["boolean", 999]]]
+	t <- seq.singleton[arg]
+	arg <- t
+	t <- seq.singleton[res]
+	res <- t
+	sig <- opsig.create[ln, cmpnames[i], arg, res, nil]
+	ord <- invoc.create[ln, 
+	  Sym.create[ln, argid],
+	  OpName.Literal["ord"],
+	  nil]
+	t <- seq.singleton[ord]
+	ord <- t
+	eq  <- invoc.create[ln,
+	  Sym.create[ln, meid],
+	  cmpnames[i],
+	  ord]
+	t <- seq.singleton[Sym.create[ln, resid]]
+	u <- seq.singleton[eq]
+	ass <- assignstat.create[ln, t, u]
+	t <- sseq.singleton[ass]
+	body<- block.create[ln, t, nil, nil]
+	def <- OpDef.create[ln, sig, body]
+	def$isExported <- true
+	ops.rcons[def]
+      end for
+
+      % build succ
+      begin
+	const resid <- it.Lookup["r", 999]
+	var res, sig, lss, ast, sub, cre, ass, body : Tree
+	var def : OpDef
+	res <- Sym.create[ln, resid]
+	res <- param.create[ln, res, Sym.create[ln, nameid]]
+	t <- seq.create[ln]
+	t.rcons[res]
+	res <- t
+	sig <- opsig.create[ln, OpName.Literal["succ"], nil, res, nil]
+	t <- seq.create[ln]
+	t.rcons[Literal.IntegerL[ln, syms.upperbound.asString]]
+	lss <- invoc.create[ln, 
+	  Sym.create[ln, meid],
+	  OpName.Literal["<"], t]
+	ast <- assertstat.create[ln, lss]
+	t <- seq.create[ln] t.rcons[Literal.IntegerL[ln, "1"]]
+	sub <- invoc.create[ln,
+	  Sym.create[ln, meid],
+	  OpName.Literal["+"],
+	  t]
+	t <- seq.create[ln] t.rcons[sub]
+	cre <- invoc.create[ln,
+	  Sym.create[ln, nameid],
+	  Opname.Literal["create"],
+	  t]
+	ass <- assignstat.create[ln,
+	  seq.singleton[Sym.create[ln, resid]],
+	  seq.singleton[cre]]
+	body<- block.create[ln, sseq.literal[ln, { ast, ass : Tree }], nil, nil]
+	def <- OpDef.create[ln, sig, body]
+	def$isExported <- true
+	ops.rcons[def]
+      end
+
+
+      % build pred
+      begin
+	const resid <- it.Lookup["r", 999]
+	var res, gtr, ast, add, cre, sig, ass, body : Tree
+	var def : OpDef
+	res <- Sym.create[ln, resid]
+	res <- param.create[ln, res, Sym.create[ln, nameid]]
+	res <- Seq.literal[ln, {res: Tree }]
+	sig <- opsig.create[ln, OpName.Literal["pred"], nil, res, nil]
+	gtr <- invoc.create[ln, 
+	  Sym.create[ln, meid],
+	  OpName.Literal[">"],
+	  Seq.Literal[ln, { Literal.IntegerL[ln, "0"] : Tree } ]]
+	ast <- assertstat.create[ln,
+	  gtr]
+	add <- invoc.create[ln,
+	  Sym.create[ln, meid],
+	  OpName.Literal["-"],
+	  Seq.Literal[ln, { Literal.IntegerL[ln, "1"]: Tree }]]
+	cre <- invoc.create[ln,
+	  Sym.create[ln, nameid],
+	  Opname.Literal["create"],
+	  Seq.Literal[ln, { add : Tree }]]
+	ass <- assignstat.create[ln,
+	  seq.singleton[Sym.create[ln, resid]],
+	  seq.singleton[cre]]
+	body<- block.create[ln, sseq.literal[ln, { ast, ass : Tree }], nil, nil]
+	def <- OpDef.create[ln, sig, body]
+	def$isExported <- true
+	ops.rcons[def]
+      end
+
+      % build asString
+      begin
+	const resid <- it.Lookup["r", 999]
+	var res, sig, ass, els, ifc, ifs, body : Tree
+	var def : OpDef
+	res <- Sym.create[ln, resid]
+	res <- param.create[ln, res, Sym.create[ln, it.Lookup["string", 999]]]
+	res <- Seq.literal[ln, { res: Tree }]
+	sig <- opsig.create[ln, OpName.Literal["asstring"], nil, res, nil]
+	ass <- assignstat.create[ln,
+	  Seq.Literal[ln, { Sym.create[ln, resid] : Tree}],
+	  Seq.Literal[ln, { Literal.StringL[ln, "an impossible "||nameid.asString] : Tree}]]
+	els <- Seq.create[ln]
+	els.rcons[ass]
+	els <- elseclause.create[ln, els]
+	ifc <- seq.create[ln]
+	for i : Integer <- 0 while i <= syms.upperbound by i <- i + 1
+	  const s <- view syms[i] as Sym
+	  const sid <- s$id
+	  const sname : String <- sid.asString
+	  var eq : Tree
+	  eq <- invoc.create[ln,
+	    Sym.create[ln, meid],
+	    opname.literal["="],
+	    Seq.Literal[ln, {Literal.IntegerL[ln, i.asString] : Tree}]]
+	  t <- seq.create[ln]
+	  t.rcons[Sym.create[ln, resid]]
+	  u <- seq.create[ln]
+	  u.rcons[Literal.StringL[ln, sname]]
+	  ass <- assignstat.create[ln, t, u]
+	  t <- seq.create[ln]
+	  t.rcons[ass]
+	  ifc.rcons[ifclause.create[ln, eq, t]]
+	end for
+	
+	ifs <- ifstat.create[ln, ifc, els]
+	t <- sseq.singleton[ifs]
+	body<- block.create[ln, t, nil, nil]
+	def <- OpDef.create[ln, sig, body]
+	def$isExported <- true
+	ops.rcons[def]
+      end
+
+      r <- xclass.create[ln, 
+	Environment$env$filename,
+	name,
+	nil,		% base
+	theparams,
+	seq.pair[seq.create[creators$ln], creators],	% creators
+	nil,		% decls
+	ops]		% ops
+%     r.print[Environment$env$stdout, 6]
+    end iremoveSugar
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    r <- self.iremoveSugar[]
+    r <- r.removeSugar[ob]
+  end removeSugar
+
+  export function asString -> [r : String]
+    r <- "enumlit"
+  end asString
+end Enumlit
+@
+
+
+1.13
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@d251 1
+a251 1
+	creators,	% creators
+@
+
+
+1.12
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d60 1
+a60 2
+	t <- seq.create[ln]
+	t.rcons[zero]
+d68 1
+a68 2
+	t <- seq.create[ln]
+	t.rcons[limit]
+d85 1
+a85 2
+	t <- seq.create[ln]
+	t.rcons[Literal.IntegerL[ln, i.asString]]
+d109 1
+a109 2
+	t <- seq.create[ln]
+	t.rcons[arg]
+d111 1
+a111 2
+	t <- seq.create[ln]
+	t.rcons[res]
+d118 1
+a118 2
+	t <- seq.create[ln]
+	t.rcons[ord]
+d124 2
+a125 4
+	t <- seq.create[ln]
+	t.rcons[Sym.create[ln, resid]]
+	u <- seq.create[ln]
+	u.rcons[eq]
+d127 1
+a127 2
+	t <- seq.create[ln]
+	t.rcons[ass]
+d162 3
+a164 3
+	  seq.literal[ln, { Sym.create[ln, resid] : Tree }],
+	  seq.literal[ln, { cre : Tree }]]
+	body<- block.create[ln, seq.literal[ln, { ast, ass : Tree }], nil, nil]
+d195 3
+a197 3
+	  seq.literal[ln, { Sym.create[ln, resid] : Tree }],
+	  seq.literal[ln, { cre : Tree }]]
+	body<- block.create[ln, seq.literal[ln, { ast, ass : Tree }], nil, nil]
+d239 1
+a239 2
+	t <- seq.create[ln]
+	t.rcons[ifs]
+@
+
+
+1.11
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d59 1
+a59 1
+	const zero <- Literal.IntegerL["0"]
+d68 1
+a68 1
+	const limit <- Literal.IntegerL[syms.upperbound.asString]
+d85 1
+a85 1
+	const sname <- sid.asString
+d88 1
+a88 1
+	t.rcons[Literal.IntegerL[i.asString]]
+d155 1
+a155 1
+	t.rcons[Literal.IntegerL[syms.upperbound.asString]]
+d160 1
+a160 1
+	t <- seq.create[ln] t.rcons[Literal.IntegerL["1"]]
+d192 1
+a192 1
+	  Seq.Literal[ln, { Literal.IntegerL["0"] : Tree } ]]
+d198 1
+a198 1
+	  Seq.Literal[ln, { Literal.IntegerL["1"]: Tree }]]
+d223 1
+a223 1
+	  Seq.Literal[ln, { Literal.StringL["an impossible "||nameid.asString] : Tree}]]
+d231 1
+a231 1
+	  const sname <- sid.asString
+d236 1
+a236 1
+	    Seq.Literal[ln, {Literal.IntegerL[i.asString] : Tree}]]
+d240 1
+a240 1
+	  u.rcons[Literal.StringL[sname]]
+@
+
+
+1.10
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@d43 1
+a43 1
+	opname.literal[">="] : Tree }
+d59 1
+a59 1
+	const zero <- intlit.create[ln, "0"]
+d64 1
+a64 1
+	  opname.literal["first"], nil, Sym.create[ln, nameid], nil, u]]
+d68 1
+a68 1
+	const limit <- intlit.create[ln, syms.upperbound.asString]
+d73 1
+a73 1
+	  opname.literal["last"], nil, Sym.create[ln, nameid], nil, u]]
+d88 1
+a88 1
+	t.rcons[intlit.create[ln, i.asString]]
+d91 1
+a91 1
+	  OpName.Literal[sname], nil, Sym.create[ln, nameid], nil, cre]]
+d101 1
+a101 1
+	Sym.create[ln, meid]]]
+d155 1
+a155 1
+	t.rcons[IntLit.create[ln, syms.upperbound.asString]]
+d160 1
+a160 1
+	t <- seq.create[ln] t.rcons[IntLit.create[ln, "1"]]
+d192 1
+a192 1
+	  Seq.Literal[ln, { IntLit.create[ln, "0"] : Tree } ]]
+d198 1
+a198 1
+	  Seq.Literal[ln, {IntLit.create[ln, "1"]: Tree }]]
+d223 1
+a223 1
+	  Seq.Literal[ln, { StringLit.create[ln, "an impossible "||nameid.asString] : Tree}]]
+d236 1
+a236 1
+	    Seq.Literal[ln, {intlit.create[ln, i.asString] : Tree}]]
+d240 1
+a240 1
+	  u.rcons[StringLit.create[ln, sname]]
+@
+
+
+1.9
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d83 1
+a83 1
+	const s <- view syms(i) as Sym
+d118 1
+a118 1
+	sig <- opsig.create[ln, cmpnames(i), arg, res, nil]
+d128 1
+a128 1
+	  cmpnames(i),
+d229 1
+a229 1
+	  const s <- view syms(i) as Sym
+@
+
+
+1.8
+log
+@Redefine STContext and STKind, eliminate Symref and Symdef
+@
+text
+@d268 1
+a268 1
+    r <- iremoveSugar[]
+@
+
+
+1.7
+log
+@Fix parsing of operations, initiallies and recoveries
+@
+text
+@d64 1
+a64 1
+	  opname.literal["first"], nil, SymRef.create[ln, nameid], nil, u]]
+d73 1
+a73 1
+	  opname.literal["last"], nil, SymRef.create[ln, nameid], nil, u]]
+d78 2
+a79 2
+	SymDef.create[ln, meid],
+	SymDef.create[ln, it.Lookup["integer", 999]]]]
+d91 1
+a91 1
+	  OpName.Literal[sname], nil, SymRef.create[ln, nameid], nil, cre]]
+d99 1
+a99 1
+	SymRef.create[ln, it.Lookup["integer", 999]],
+d101 1
+a101 1
+	SymRef.create[ln, meid]]]
+d108 4
+a111 4
+	arg <- symdef.create[ln, argid]
+	arg <- param.create[ln, arg, SymRef.create[ln, nameid]]
+	res <- symdef.create[ln, resid]
+	res <- param.create[ln, res, SymRef.create[ln, it.Lookup["boolean", 999]]]
+d120 1
+a120 1
+	  SymRef.create[ln, argid],
+d127 1
+a127 1
+	  SymRef.create[ln, meid],
+d131 1
+a131 1
+	t.rcons[SymRef.create[ln, resid]]
+d148 2
+a149 2
+	res <- symdef.create[ln, resid]
+	res <- param.create[ln, res, SymRef.create[ln, nameid]]
+d157 1
+a157 1
+	  SymRef.create[ln, meid],
+d162 1
+a162 1
+	  SymRef.create[ln, meid],
+d167 1
+a167 1
+	  SymRef.create[ln, nameid],
+d171 1
+a171 1
+	  seq.literal[ln, { SymRef.create[ln, resid] : Tree }],
+d185 2
+a186 2
+	res <- symdef.create[ln, resid]
+	res <- param.create[ln, res, SymRef.create[ln, nameid]]
+d190 1
+a190 1
+	  SymRef.create[ln, meid],
+d196 1
+a196 1
+	  SymRef.create[ln, meid],
+d200 1
+a200 1
+	  SymRef.create[ln, nameid],
+d204 1
+a204 1
+	  seq.literal[ln, { SymRef.create[ln, resid] : Tree }],
+d217 2
+a218 2
+	res <- symdef.create[ln, resid]
+	res <- param.create[ln, res, SymRef.create[ln, it.Lookup["string", 999]]]
+d222 1
+a222 1
+	  Seq.Literal[ln, { SymRef.create[ln, resid] : Tree}],
+d234 1
+a234 1
+	    SymRef.create[ln, meid],
+d238 1
+a238 1
+	  t.rcons[SymRef.create[ln, resid]]
+@
+
+
+1.6
+log
+@Removed all monitors
+@
+text
+@d54 3
+a260 1
+	nil,		% export
+d263 1
+a263 3
+	nil,
+	ops,		% ops
+	nil]		% process
+@
+
+
+1.5
+log
+@Clean up param
+@
+text
+@a4 1
+  monitor
+a265 1
+  end monitor
+@
+
+
+1.4
+log
+@Get rid of objectflags, use otree
+@
+text
+@d77 1
+a77 2
+	SymDef.create[ln, it.Lookup["integer", 999]],
+	nil]]
+d107 1
+a107 1
+	arg <- param.create[ln, arg, SymRef.create[ln, nameid], nil]
+d109 1
+a109 1
+	res <- param.create[ln, res, SymRef.create[ln, it.Lookup["boolean", 999]], nil]
+d147 1
+a147 1
+	res <- param.create[ln, res, SymRef.create[ln, nameid], nil]
+d184 1
+a184 1
+	res <- param.create[ln, res, SymRef.create[ln, nameid], nil]
+d216 1
+a216 1
+	res <- param.create[ln, res, SymRef.create[ln, it.Lookup["string", 999]], nil]
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d4 1
+a4 1
+const enumlit <- class Enumlit (Tree) [xxname : Tree, xxsyms : Tree]
+a5 1
+    field f : ObjectFlags <- ObjectFlags.create
+@
+
+
+1.2
+log
+@Removed unnecessary virtuals
+@
+text
+@a0 24
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+import ObjectFlags from "Jekyll"
+import Environment from "Jekyll"
+import OpName from "Jekyll"
+import XClass from "Jekyll"
+import SYm from "Jekyll"
+import Seq from "Jekyll"
+import IntLit from "Jekyll"
+import Invoc from "Jekyll"
+import SelfLit from "Jekyll"
+import Sugar from "Jekyll"
+import SymRef from "Jekyll"
+import Param from "Jekyll"
+import SymDef from "Jekyll"
+import OpSIg from "Jekyll"
+import AssignStat from "Jekyll"
+import AssertStat from "Jekyll"
+import Block from "Jekyll"
+import OpDef from "Jekyll"
+import StringLit from "Jekyll"
+import ElseClause from "Jekyll"
+import IfClause from "Jekyll"
+import IfStat from "Jekyll"
+d2 1
+a2 1
+export Enumlit to "Jekyll"
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d290 1
+a290 2
+	nil,		% process
+	nil]		% virtuals
+@

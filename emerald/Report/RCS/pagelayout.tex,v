@@ -1,0 +1,55 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.1;
+locks; strict;
+comment	@% @;
+
+
+1.2
+date	97.01.21.23.48.47;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.26.09;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Many changes to make the Report up to date
+@
+text
+@\marginparwidth 0pt
+\oddsidemargin  0pt
+\evensidemargin  0pt
+\marginparsep 0pt
+
+\topmargin   0pt
+
+\textwidth   6.5 in
+\textheight  8.0 in
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 2
+x ./pagelayout.tex, 139 bytes, 1 tape blocks
+
+@

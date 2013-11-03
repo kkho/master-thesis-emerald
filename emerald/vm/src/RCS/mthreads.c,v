@@ -1,0 +1,2726 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.13.19.53.20;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.09.17.55.17;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@'./vm/src'
+@
+text
+@/*
+ * Copyright (C) Norman C. Hutchinson and the University of British Columbia
+ */
+#pragma warning(disable: 4068)
+#pragma pointer_size long
+#include <sys/types.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+
+#ifdef WIN32
+#  ifdef MSVC40
+#    include <winsock.h>
+#  else
+#    include <winsock2.h>
+#  endif
+#  include <io.h>
+#  include <errno.h>
+#  include <assert.h>
+#  include <errno.h>
+#else /* not WIN32 */
+#  include <unistd.h>
+#  include <sys/socket.h>
+#  if !defined(linux) && !defined(hpux) && !defined(sun4) && !defined(__NeXT__)
+#    include <sys/select.h>
+#  endif
+#  include <sys/uio.h>
+#  include <sys/errno.h>
+   extern int errno;
+#  include <signal.h>
+#  include <netinet/in.h>
+#  include <netinet/tcp.h>
+#  include <netdb.h>
+#endif /* not WIN32 */
+
+#pragma pointer_size short
+#include "assert.h"
+
+#include "mthreads.h"
+#include "io.h"
+#include "mqueue.h"
+
+#ifdef WIN32
+extern int gettimeofday(struct timeval *, void *);
+#else /* not WIN32 */
+#ifndef SELECTSIZE_T
+#define SELECTSIZE_T size_t
+#endif
+#ifndef SELECTFD_T
+#define SELECTFD_T fd_set
+#endif
+#ifndef SELECTCONST
+#define SELECTCONST const
+#endif
+
+#ifndef FAKEREAD
+#define reax(fd, buf, nbytes) read(fd, buf, nbytes)
+#else
+extern int reax(int fd, void *buf, int nbytes);
+#endif
+#ifndef FAKEWRITE
+#define writx(fd, buf, nbytes) write(fd, buf, nbytes)
+#else
+extern int writx(int fd, const void *buf, int nbytes);
+#endif
+#ifndef FAKESELECT
+#define selecx(fd, r, w, x, t) select(fd, r, w, x, t)
+#else
+extern int selecx(SELECTSIZE_T fd, SELECTFD_T *r, SELECTFD_T *w, SELECTFD_T *x, SELECTCONST struct timeval *t);
+#endif
+
+
+#define MAXOTHERS 128
+static int nothers;
+struct other {
+  NodeAddr id;
+  int s;
+} others[MAXOTHERS], cache;
+
+MQueue incoming, deferred;
+
+/*
+ * Forward declarations.
+ */
+static void setupReader(struct other *ri);
+
+#ifdef MTDEBUG
+#define TRACE(level, stuff) if (level <= MTdebuglevel) printf stuff
+int MTdebuglevel = 99;
+#else
+#define TRACE(level, stuff)
+#endif
+
+extern int checkSameUser;
+
+void MTPoll(void);
+
+static void (*mter)(void);
+
+void MTRegisterExitRoutine(void (*r)(void))
+{
+  assert(!mter);
+  mter = r;
+}
+
+static void callExitRoutines(void)
+{
+  if (mter) mter();
+}
+
+static void pipeHandler(int signalnumber)
+{
+}
+
+static void intrHandler(int signalnumber)
+{
+  callExitRoutines();
+  exit(1);
+}
+
+#endif /* WIN32 */
+
+ssize_t MTwrite2(int fd, void *buf1, size_t n1, void *buf2, size_t n2)
+{
+  int res;
+  struct iovec v[2];
+  int howmany = 2;
+  v[0].iov_base = buf1;
+  v[0].iov_len = n1;
+  v[1].iov_base = buf2;
+  v[1].iov_len = n2;
+  TRACE(4, ("write2 on %d for %d+%d bytes\n", fd, n1, n2));
+  if (fd < 0) return -1;
+  while (1) {
+#ifdef WIN32
+    res = send(fd, v[0].iov_base, v[0].iov_len, 0);
+#else
+    res = writev(fd, v, howmany);
+#endif /* WIN32 */
+    TRACE(4, ("write2 wrote %d\n", res));
+    if ((unsigned)res == v[0].iov_len + v[1].iov_len) {
+      res = n1 + n2;
+      break;
+    } else if (res > 0) {
+      /* Only wrote a part, fix up things */
+      if ((unsigned)res < v[0].iov_len) {
+	v[0].iov_len -= res;
+	v[0].iov_base += res;
+      } else {
+	res -= v[0].iov_len;
+	v[0].iov_len = v[1].iov_len - res;
+	v[0].iov_base = v[1].iov_base + res;
+	v[1].iov_base = 0;
+	v[1].iov_len = 0;
+	howmany = 1;
+      }
+    } else {
+      printf("write2 error %d\n", res);
+      perror("write2");
+      break;
+    }
+  }
+  TRACE(4, ("write2 returning %d\n", res));
+  return res;
+}
+
+#if 0
+static int doem(fd_set *fds, MTWhy why)
+{
+  int index, offset, found = 0, which;
+  for (offset = 0, index = 0; offset <= realnfds; offset += 32, index++) {
+    while ((which = ffs(fds->fds_bits[index])) > 0) {
+      found ++;
+      assert(FD_ISSET(offset + which - 1, fds));
+      FD_CLR(offset + which - 1, fds);
+      TRACE(7, ("Found %d ready for %d\n", offset + which - 1, why));
+      if (fdsems[offset + which - 1][why].count < 0) {
+	MTSemV(&fdsems[offset + which - 1][why]);
+      } else {
+	/* This had better be the multi waiter from select */
+	MTSemV(&waitonmulti);
+      }
+    }
+  }
+  return found;
+}
+#endif
+
+#ifdef __linux
+# define sigvec		sigaction
+# define sv_mask	sa_mask
+# define sv_flags	sa_flags
+# define sv_handler	sa_handler
+# define sv_onstack	sa_mask /* ouch, this one really hurts */
+#endif /* __linux */
+
+#ifdef hp700
+#define SIGVEC sigvector
+#else
+#define SIGVEC sigvec
+#endif /* hp700 */
+
+struct header {
+  int length;
+};
+
+NodeAddr myid;
+static int mysocket;
+
+struct nbo {
+  unsigned int ipaddress;
+  unsigned short port, incarnation;
+  int userid;
+};
+
+static NotifyFunction notifyFunction;
+
+void MTRegisterNotify(NotifyFunction f)
+{
+  assert(notifyFunction == 0);
+  notifyFunction = f;
+}
+
+static void nukeother(struct other o)
+{
+  int from, to;
+  TRACE(8, ("Nuking %x.%x (%d)\n", o.id.ipaddress, o.id.port, o.s));
+  for (from = 0, to = 0; from < nothers; from++) {
+    if (others[from].s == o.s) {
+      TRACE(8, ("  Nuking %x.%x (%d)\n", others[from].id.ipaddress, others[from].id.port, others[from].s));
+      /* don't do this one */
+    } else {
+      if (from != to) {
+	others[to++] = others[from];
+      } else {
+	to++;
+      }
+    }
+  }
+  TRACE(7, ("Nothers went from %d to %d\n", nothers, to));
+  nothers = to;
+  cache.id.ipaddress = cache.id.port = cache.s = 0;
+}
+
+int findsocket(NodeAddr *t)
+{
+  int i, addrlen, s;
+  struct sockaddr_in addr;
+  struct other *o, localcopy;
+  struct nbo nbo;
+
+  TRACE(7, ("in find socket for %#x.%4x\n", t->ipaddress, t->port));
+  if (cache.id.ipaddress == t->ipaddress && cache.id.port == t->port && cache.s) {
+    TRACE(8, ("find socket returning %d from cache\n", cache.s));
+    return cache.s;
+  }
+  for (i = 0; i < nothers; i++) {
+    TRACE(9, ("  Looking at %#x.%4x\n", others[i].id.ipaddress, others[i].id.port));
+    if (others[i].id.ipaddress == t->ipaddress && others[i].id.port == t->port) {
+      cache = others[i];
+      TRACE(8, ("find socket returning %d\n", cache.s));
+      return cache.s;
+    }
+  }
+#if defined(WIN32) && defined(SO_SYNCHRONOUS_NONALERT)
+  {
+    int optionValue = SO_SYNCHRONOUS_NONALERT;
+    int err;
+    err = setsockopt(INVALID_SOCKET,
+		     SOL_SOCKET,
+		     SO_OPENTYPE,
+		     (char *)&optionValue,
+		     sizeof(optionValue));
+    if (err != NO_ERROR) {
+      printf("setsockopt: OPENTYPE failed with %d\n", err);
+      abort();
+    }
+  }
+#endif
+  if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) return -1;
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(0);
+  addr.sin_addr.s_addr = 0;
+  if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    perror("findsocket.bind");
+    close(s);
+    return -1;
+  }
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(t->port);
+  addr.sin_addr.s_addr = t->ipaddress;
+  addrlen = sizeof(addr);
+  TRACE(3, ("Trying to connect to %08lx.%04x\n", addr.sin_addr.s_addr, ntohs(addr.sin_port)));
+  if (connect(s, (struct sockaddr *)&addr, addrlen) < 0) {
+#ifdef MTDEBUG
+    if (MTdebuglevel >= 3) perror("findsocket.connect");
+#endif
+    close(s);
+    return -1;
+  }
+  {
+    int on = 1;
+    if (setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof (on)) < 0) {
+      close(s);
+      perror("setsockopt");
+      return -1;
+    }
+  }
+
+  localcopy.id = *t;
+  localcopy.s = s;
+  TRACE(9, ("Inserting %#x.%d -> %d in others\n", t->ipaddress, t->port, localcopy.s));
+  others[nothers++] = localcopy;
+  {
+    nbo.ipaddress = myid.ipaddress;
+    nbo.port = htons(myid.port);
+    nbo.incarnation = htons(myid.incarnation);
+    nbo.userid = htonl(getuid());
+    if (writeToSocketN(localcopy.s, &nbo, sizeof(nbo)) != sizeof(nbo) ||
+	readFromSocketN(localcopy.s, &nbo, sizeof(nbo)) != sizeof(nbo)) {
+      TRACE(0, ("Couldn't exchange incarnation info\n"));
+      close(localcopy.s);
+      nothers--;
+      return -1;
+    } else if(checkSameUser && getuid() != ntohl(nbo.userid)) {
+      fprintf(stderr, "Permission denied - user mismatch local %d != remote %d\n", (int)getuid(), ntohl(nbo.userid));
+      close(localcopy.s);
+      nothers--;
+      return -1;
+    }
+    localcopy.id.ipaddress = nbo.ipaddress;
+    localcopy.id.incarnation = ntohs(nbo.incarnation);
+    assert(localcopy.id.port == ntohs(nbo.port));
+    *t = localcopy.id;
+  }
+  o = (struct other *)malloc(sizeof *o);
+  *o = localcopy;
+  setupReader(o);
+  TRACE(8, ("find socket returning new %d\n", localcopy.s));
+  cache = localcopy;
+  return cache.s;
+}
+
+static void callNotifyFunction(NodeAddr id, int comingup)
+{
+  notifyFunction(id, comingup);
+}
+
+typedef struct ReaderState {
+  struct other *ri;
+  readBuffer rb;
+  int readingLength, length;
+} ReaderState;
+
+static void ReaderCB(int sock, EDirection d, void *state)
+{
+  ReaderState *rs = state;
+  int res;
+  void *buffer = 0;
+
+  if (!(res = tryReading(&rs->rb, sock))) return;
+  if (res < 0 || res != rs->rb.goal) {
+    /*
+     * Give up on this socket.
+     */
+    resetHandler(sock, EIO_Read);
+    resetHandler(sock, EIO_Except);
+    close(sock);
+    if (notifyFunction) notifyFunction(rs->ri->id, 0);
+    nukeother(*rs->ri);
+    free(rs->ri);
+    free(rs);
+  } else if (rs->readingLength) {
+    rs->length = ntohl(rs->length);
+    rs->readingLength = 0;
+    if (rs->length > 0) {
+      buffer = malloc(rs->length);
+      setupReadBuffer(&rs->rb, buffer, rs->length, 0, readFromSocket);
+    } else {
+      TRACE(0, ("Negative length %d\n", rs->length));
+    }
+  } else {
+    assert(ntohl(*(int *)rs->rb.buffer) == 0xdeafdeaf);
+    MQueueInsert(incoming, rs->ri->id, rs->length, rs->rb.buffer);
+    setupReadBuffer(&rs->rb, &rs->length, sizeof(rs->length), 0, readFromSocket);
+    rs->readingLength = 1;
+  }
+}
+
+static void setupReader(struct other *ri)
+{
+  ReaderState *rs = (ReaderState *)malloc(sizeof(*rs));
+  rs->ri = ri;
+  rs->readingLength = 1;
+  setupReadBuffer(&rs->rb, &rs->length, sizeof(rs->length), 0, readFromSocket);
+  setHandler(rs->ri->s, ReaderCB, EIO_Read, rs);
+  setHandler(rs->ri->s, ReaderCB, EIO_Except, rs);
+}
+
+void showIncoming(void)
+{
+  MQueuePrint(incoming);
+}
+
+typedef struct {
+  struct other *ri;
+  struct nbo nbo;
+  readBuffer rb;
+} ListenerState;
+  
+static int checkUserOK(int local, int remote)
+{
+  if (checkSameUser && local != remote) {
+      fprintf(stderr, "Permission denied - user mismatch local %d != remote %d\n",
+	      local, remote);
+      return 0;
+  } else {
+    return 1;
+  }
+}
+
+static void ListenerStage2(int sock, EDirection d, void *arg)
+{
+  int res;
+  ListenerState *ls = arg;
+  if (!(res = tryReading(&ls->rb, ls->ri->s))) return;
+  resetHandler(sock, EIO_Read);
+  resetHandler(sock, EIO_Except);
+  if (res != sizeof(ls->nbo) || !checkUserOK(getuid(), ntohl(ls->nbo.userid))) {
+    nukeother(*ls->ri);
+    close(ls->ri->s);
+    free(ls->ri);
+  } else {
+    ls->ri->id.port = ntohs(ls->nbo.port);
+    ls->ri->id.ipaddress = ls->nbo.ipaddress;
+    ls->ri->id.incarnation = ntohs(ls->nbo.incarnation);
+    TRACE(8, ("Inserting %#x.%4x.%4x -> %d in others\n", ls->ri->id.ipaddress, ls->ri->id.port, ls->ri->id.incarnation, ls->ri->s));
+    others[nothers++] = *ls->ri;
+    setupReader(ls->ri);
+    if (notifyFunction) callNotifyFunction(ls->ri->id, 1);
+  }
+  vmFree((char *)ls);
+}
+
+static void ListenerCB(int sock, EDirection d, void *s)
+{
+  int newsocket;
+  struct sockaddr_in addr;
+  int addrlen = sizeof(addr), on = 1;
+  ListenerState *ls = (ListenerState *)malloc(sizeof(*ls));
+
+  newsocket = accept(sock, (struct sockaddr *)&addr, &addrlen);
+  if (newsocket < 0) return;
+  if (setsockopt(newsocket, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof (on)) < 0) {
+    close(newsocket);
+    perror("setsockopt");
+    return;
+  }
+  ls->ri = (struct other *)malloc(sizeof *ls->ri);
+  ls->ri->s = newsocket;
+  ls->ri->id.ipaddress = addr.sin_addr.s_addr;
+  ls->ri->id.port = ntohs(addr.sin_port);
+
+  TRACE(8, ("Inserting %#x.%x -> %d in others\n", ls->ri->id.ipaddress, ls->ri->id.port, ls->ri->s));
+  others[nothers++] = *ls->ri;
+  ls->nbo.ipaddress = myid.ipaddress;
+  ls->nbo.port = htons(myid.port);
+  ls->nbo.incarnation = htons(myid.incarnation);
+  ls->nbo.userid = htonl(getuid());
+  if (send(ls->ri->s, (char *)&ls->nbo, sizeof(ls->nbo), 0) != sizeof(ls->nbo)) {
+    nukeother(*ls->ri);
+    close(ls->ri->s);
+    free(ls->ri);
+    return;
+  }
+  setupReadBuffer(&ls->rb, &ls->nbo, sizeof(ls->nbo), 0, readFromSocket);
+  setHandler(ls->ri->s, ListenerStage2, EIO_Read, ls);
+  setHandler(ls->ri->s, ListenerStage2, EIO_Except, ls);
+}
+
+static void setupListener(int sock)
+{
+  setHandler(sock, ListenerCB, EIO_Read, NULL);
+}
+
+int MTNetStart(unsigned int ipaddress, unsigned short port, unsigned short incarnation)
+{
+  struct sockaddr_in addr;
+  int addrlen, on = 1;
+  char hostname[128];
+#ifdef alpha
+#pragma pointer_size long
+#endif
+  struct hostent *h;
+#ifdef alpha
+#pragma pointer_size short
+#endif
+
+  assert(myid.ipaddress == 0 && myid.port == 0 && myid.incarnation == 0);
+  if ((mysocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    return -1;
+  }
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(port);
+  addr.sin_addr.s_addr = ipaddress;
+  if (bind(mysocket, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    close(mysocket);
+    return -1;
+  }
+  addrlen = sizeof(addr);
+  if (getsockname(mysocket, (struct sockaddr *)&addr, &addrlen) < 0) {
+    close(mysocket);
+    return -1;
+  }
+  TRACE(3, ("NetStart on %#lx.%d\n", addr.sin_addr.s_addr, ntohs(addr.sin_port)));
+  if (listen(mysocket, 5) < 0) {
+    close(mysocket);
+    return -1;
+  }
+  if (setsockopt(mysocket, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof (on)) < 0) {
+    close(mysocket);
+    perror("setsockopt");
+    return -1;
+  }
+  /*
+   * Originally we did this all the time on not windows
+   */
+  if (addr.sin_addr.s_addr == 0) {
+    if (gethostname(hostname, sizeof hostname) < 0) {
+      TRACE(1, ("Can't get my own host name\n"));
+      close(mysocket);
+      return -1;
+    }
+    /* A Hack */
+    if ((h = gethostbyname(hostname)) == 0) {
+      printf("Can't look up my own host name\n");
+      strcpy(hostname, "hutchinson2.home.cs.ubc.ca");
+      if ((h = gethostbyname(hostname)) == 0) {
+		printf("Still can't look up my own host name\n");
+	
+	close(mysocket);
+	return -1;
+      }
+    }
+    memcpy(&addr.sin_addr.s_addr, h->h_addr, sizeof(unsigned int));
+  }
+  myid.ipaddress = addr.sin_addr.s_addr;
+  myid.port = ntohs(addr.sin_port);
+  myid.incarnation = incarnation;
+  TRACE(2, ("Net start on %04x.%04x.%04x\n", myid.ipaddress, myid.port, myid.incarnation));
+  setupListener(mysocket);
+  return 0;
+}
+
+int MTReceive(NodeAddr *senderid, void **rbuf, int *rlen)
+{
+  TRACE(1, ("MTReceive called\n"));
+  MQueueRemove(incoming, senderid, rlen, rbuf);
+  TRACE(2, ("MTReceive returning %d\n", *rlen));
+  return 1;
+}
+
+int MTProd(NodeAddr *receiver)
+{
+  int s = findsocket(receiver);
+  return s;
+}
+
+int MTSend(NodeAddr receiver, void *sbuf, int slen)
+{
+  unsigned int length;
+  int s = findsocket(&receiver), res;
+  extern char *NodeAddrString(NodeAddr);
+  extern int nMessagesSent, nBytesSent;
+
+  nMessagesSent++;
+  nBytesSent += slen;
+
+  TRACE(3, ("Send\n"));
+
+  length = htonl(slen);
+  res = MTwrite2(s, &length, sizeof(length), sbuf, slen);
+  if (res != sizeof(length) + slen) {
+    perror("  mtsend");
+    printf("MTSend to %s, socket %d, for %d bytes returned %d\n",
+	   NodeAddrString(receiver), s, slen + sizeof(length), res);
+    return -1;
+  }
+  TRACE(3, ("Send returning\n"));
+  return 1;
+}
+
+void MTSetDebugLevel(int x)
+{
+#if defined(MTDEBUG)
+  MTdebuglevel = x;
+#endif
+}
+void MTInit()
+{
+#if defined(__svr4__) || defined(__SYSTYPE_SVR4__)
+  struct sigaction action;
+
+  memset(&action, 0, sizeof(action));
+  action.sa_handler = intrHandler;
+  sigaction(SIGINT, &action, NULL);
+  action.sa_handler = pipeHandler;
+  sigaction(SIGPIPE, &action, NULL);
+#else
+  struct sigvec vec;
+  memset(&vec, 0, sizeof(vec));
+
+  vec.sv_handler = intrHandler;
+  SIGVEC(SIGINT, &vec, NULL);
+  vec.sv_handler = pipeHandler;
+  SIGVEC(SIGPIPE, &vec, NULL);
+#endif
+  incoming = MQueueCreate();
+  deferred = MQueueCreate();
+}
+
+#ifdef WIN32
+void perror(const char *msg)
+{
+  printf("%s: %d\n", msg, errno);
+  fflush(stdout);
+}
+#endif /* WIN32 */
+
+void processBoringMessages(void)
+{
+  while (MQueueSize(incoming) == 0) {
+    checkForIO(1);
+  }
+  serveRequest();
+}
+
+@
+
+
+1.4
+log
+@'./vm/src'
+@
+text
+@a40 1
+#define MTINTERNAL
+d42 2
+a46 1
+#define ssize_t size_t
+a73 7
+#if !defined(O_ASYNC) && defined(FASYNC)
+#  define O_ASYNC FASYNC
+#else
+#if !defined(O_ASYNC) && defined(O_NDELAY)
+#define O_ASYNC O_NDELAY
+#endif
+#endif
+d75 8
+a82 6
+#if defined(sun4) || defined(__NeXT__)
+#undef O_NONBLOCK
+#define O_NONBLOCK O_NDELAY
+#undef EAGAIN
+#define EAGAIN EWOULDBLOCK
+#endif
+d84 4
+a87 6
+#if defined(USESIGIO)
+#define MTFDFLAGS (O_NONBLOCK | O_ASYNC)
+#else
+#define MTFDFLAGS O_NONBLOCK
+#endif
+#endif /* not WIN32 */
+a88 2
+static int nThreads, nSysThreads;
+extern int checkSameUser;
+d90 2
+a91 12
+static int MTdebuglevel;
+#endif
+
+#ifndef WIN32
+static thread currp, sleepers, mtready, idleThread;
+static int timeAdvanced, ioCompleted;
+static void StartProc(thread);
+static thread pool[THREADPOOLSIZE];
+static int nfreethreads;
+
+#if defined(sun4sol) || defined(__svr4__) || defined(__SYSTYPE_SVR4__)
+sigset_t disabled_mask;
+d93 1
+a93 1
+unsigned long disabled_mask = sigmask(SIGIO) | sigmask(SIGALRM);
+d96 1
+a96 110
+#define MAXTHINGSTOFREE 10
+static int nthingstofree;
+static void *thingstofree[MAXTHINGSTOFREE];
+#define FREETHINGSTOFREE \
+    while (nthingstofree > 0) { \
+      free(thingstofree[--nthingstofree]); \
+    }
+
+void mtprintf(char *a, ...)
+{
+  va_list ap;
+  va_start(ap, a);
+  vfprintf(stdout, a, ap);
+  va_end(ap);
+}
+
+void MTCheckStackOverflow(void)
+{
+  if (C_StacksGrowDown) {
+    if (*(unsigned int *)currp->stackbase != 0xdeadbeef ||
+	*(unsigned int *)(currp->stackbase + 4) != 0xfeedface) {
+      TRACE(0, ("Stack overflow: Process %#x, running func %#x at prio %d\n",
+		(unsigned int)currp, (unsigned int)currp->proc, 
+		currp->priority));
+      assert(0);
+    }
+  } else {
+    if (*(unsigned int *)(currp->stackbase + currp->stackSize - 4) != 0xdeadbeef ||
+	*(unsigned int *)(currp->stackbase + currp->stackSize - 8) != 0xfeedface) {
+      TRACE(0, ("Stack overflow: Process %#x, running func %#x at prio %d\n",
+		(unsigned int)currp, (unsigned int)currp->proc, currp->priority));
+      assert(0);
+    }
+  }
+}
+
+/*
+ * Remove a thread from the head of the queue, and return it.  Die a
+ * horrible death if the queue is empty.
+ */
+static thread QRemove(thread *qp)
+{
+  thread t = *qp;
+  if (t->next == t) {
+    /* This was the only element */
+    *qp = 0;
+  } else {
+    *qp = t->next;
+    (*qp)->prev = t->prev;
+    t->prev->next = *qp;
+  }
+  t->prev = t->next = 0;
+  return t;
+}
+
+#define RQRemove() QRemove(&mtready)
+
+/*
+ * Insert in priority order
+ */
+static void PQInsert(thread *qp, thread n)
+{
+  thread first = *qp, t = first;
+  if (first == 0) {
+    *qp = n;
+    n->prev = n->next = n;
+    return;
+  }
+  while (n->priority >= t->priority) {
+    if ((t = t->next) == first) {
+      break;
+    }
+  }
+  /* Insert in front of t */
+  n->prev = t->prev;
+  n->next = t;
+  t->prev = n;
+  n->prev->next = n;
+  if (n->priority < first->priority) *qp = n;
+}
+
+/*
+ * Insert before element *qp.  If *qp is the head of the queue, then this
+ * inserts at the end.
+ */
+static void QInsert(thread *qp, thread n)
+{
+  thread first = *qp;
+  if (first == 0) {
+    *qp = n;
+    n->prev = n->next = n;
+    return;
+  }
+  /* Insert at the end: in front of first */
+  n->prev = first->prev;
+  n->next = first;
+  first->prev = n;
+  n->prev->next = n;
+}
+
+#define RQInsert(n) PQInsert(&mtready, n)
+#ifdef MTPARANOID
+void ReturnToProc(thread t)
+{
+  assert(t->deadbeef == 0xdeadbeef);
+  assert(t->feedface == 0xfeedface);
+  MTCheckStackOverflow();
+  returnToProc((thread)&t->savearea);
+}
+#endif
+a99 130
+static void schedule(void)
+{
+  MTPoll();
+  if (currp == idleThread || saveProcContext(&currp->savearea)) {
+    TRACE(9, ("Switching from %#x", (unsigned int)currp));
+    currp = RQRemove();
+    TRACE(9, (" to %#x\n", (unsigned int)currp));
+    assert(currp->resume == StartProc || currp->resume == ReturnToProc);
+    currp->resume(currp);
+  }
+}
+#endif /* not WIN32 */
+
+void MTSemInit(semaphore *s, int n)
+{
+  TRACE(13, ("Create semaphore value = %d\n", n));
+#ifdef WIN32
+  *s = CreateSemaphore(NULL, n, 100, NULL);
+  assert(*s != NULL);
+#else
+  s->count = n;
+  s->queue = 0;
+#endif /* not WIN32 */
+  TRACE(14, ("Create semaphore result = %p at %p\n", *s, s));
+}
+
+void MTSemFree(semaphore *s)
+{
+#ifdef WIN32
+  CloseHandle(*s);
+#endif /* WIN32 */
+}
+
+void MTSemP(semaphore *s)
+{
+  TRACE(7, ("SemP on %lx\n", (unsigned long)s));
+#ifdef WIN32
+  WaitForSingleObject(*s, INFINITE);
+#else /* not WIN32 */
+  if (--s->count < 0) {
+    QInsert(&s->queue, currp);
+    schedule();
+  }
+#endif /* not WIN32 */
+  TRACE(7, ("SemP on %lx done\n", (unsigned long)s));
+}
+
+int MTSemValue(semaphore *s)
+{
+  int value = 0;
+#ifdef WIN32
+  int res = WaitForSingleObject(*s, 0);
+  if (res == WAIT_OBJECT_0) {
+    ReleaseSemaphore(*s, 1, &value);
+  } else if (res == WAIT_TIMEOUT) {
+    value = -1;
+  }
+#else
+  value = s->count;
+#endif /* WIN32 */
+  return value;
+}
+
+void MTSemV(semaphore *s)
+{
+  thread nt;
+  TRACE(7, ("SemV on %lx\n", (unsigned long)s));
+#ifdef WIN32
+  ReleaseSemaphore(*s, 1, NULL);
+#else /* not WIN32 */
+  if (++s->count <= 0) {
+    nt = QRemove(&s->queue);
+    RQInsert(nt);
+    if (nt->priority < currp->priority) {
+      RQInsert(currp);
+      schedule();
+    }
+  }
+#endif /* not WIN32 */
+  TRACE(7, ("SemV on %lx done\n", (unsigned long)s));
+}
+
+#if 0
+void MTSemVN(semaphore *s, int n)
+{
+  int doSwitch = 0;
+  thread nt;
+  CTRACE(3, ("SemVn (%d) on %x (count = %d)\n",n,(unsigned int)s, s->count));
+  while (n--) {
+    if (++s->count <= 0) {
+      nt = QRemove(&s->queue);
+      RQInsert(nt);
+      doSwitch = doSwitch || nt->priority < currp->priority;
+    }
+  }
+  if (doSwitch) {
+    RQInsert(currp);
+    schedule();
+  }
+  CTRACE(3, ("SemVn on %x done\n", (unsigned int)s));
+}
+#endif
+
+void MTSemVAll(semaphore *s)
+{
+  TRACE(3, ("SemVAll on %lx\n", (unsigned long)s));
+  {
+#ifdef WIN32
+    LONG previouscount;
+    do {
+      ReleaseSemaphore(*s, 1, &previouscount);
+    } while (previouscount < -1);
+#else /* not WIN32 */
+    int doSwitch = 0;
+    thread nt;
+    while (s->count < 0) {
+      ++s->count;
+      nt = QRemove(&s->queue);
+      RQInsert(nt);
+      doSwitch = doSwitch || nt->priority < currp->priority;
+    }
+    if (doSwitch) {
+      RQInsert(currp);
+      schedule();
+    }
+#endif /* not WIN32 */
+  }
+  TRACE(3, ("SemVAll on %lx done\n", (unsigned long)s));
+}
+
+d113 1
+a113 677
+#ifdef WIN32
+struct stubstuff {
+  void (*proc)(void *);
+  void *arg;
+  int sys;
+};
+
+DWORD WINAPI stub(void *arg)
+{
+  struct stubstuff *ss = arg;
+  ss->proc(ss->arg);
+  if (ss->sys) nSysThreads--;
+  nThreads--;
+  if (nThreads == nSysThreads) {
+    callExitRoutines();
+    exit(0);
+  }
+  free(ss);
+  return 0;
+}
+#else /* not WIN32 */
+static void callNClean(void)
+{
+  TRACE(3, ("Starting process %#x at address %#x\n", (unsigned int)currp, (unsigned int)currp->proc));
+  MTCheckStackOverflow();
+  (*currp->proc)(currp->arg);
+  TRACE(3, ("Killing process %#x\n", (unsigned int)currp));
+  FREETHINGSTOFREE;
+  if (currp->isSys) --nSysThreads;
+  MTCheckStackOverflow();
+
+  if (nthingstofree > MAXTHINGSTOFREE - 1) {
+    abort();
+  }
+  thingstofree[nthingstofree++] = currp->stackbase;
+  freethread(currp);
+  if (--nThreads == nSysThreads) {
+    callExitRoutines();
+    exit(0);
+  }
+  currp = RQRemove();
+  TRACE(9, ("Switching to %#x\n", (unsigned int)currp));
+  currp->resume(currp);
+}
+
+static void StartProc(thread t)
+{
+  assert(currp == t);
+  if (currp != idleThread)
+    t->resume = ReturnToProc;
+  startNewProc(callNClean, t->sp);
+}
+#endif /* not WIN32 */
+
+thread MTCreate(void (*proc)(void *), void *arg, int sys, unsigned priority, unsigned stackSize)
+{
+#ifdef WIN32
+  DWORD id;
+  HANDLE res;
+  struct stubstuff *ss;
+
+#else /* not WIN32 */
+  thread t;
+  FREETHINGSTOFREE;
+#endif /* not WIN32 */
+  TRACE(1, ("Thread create fn = %p\n", proc));
+
+  nThreads++;
+  if (sys) nSysThreads++;
+
+#ifdef WIN32
+  ss = (struct stubstuff *)malloc(sizeof(struct stubstuff));
+  ss->proc = proc;
+  ss->arg = arg;
+  ss->sys = sys;
+#else /* not WIN32 */
+  t = newthread();
+#ifdef MTPARANOID
+  t->deadbeef = 0xdeadbeef;
+  t->feedface = 0xfeedface;
+#endif /* MTPARANOID */
+#endif /* not WIN32 */
+
+#if defined(MTDEBUG)
+  if (MTdebuglevel > 0 && stackSize < 4 * 4096) stackSize = 4 * 4096;
+#endif /* MTDEBUG */
+#ifdef WIN32
+  res = CreateThread(0, stackSize, stub, ss, 0, &id);
+  TRACE(2, ("Thread create returns %#x\n", id));
+  return (thread)id;
+#else /* not WIN32 */
+  t->resume = StartProc;
+  t->proc = proc;
+  t->arg = arg;
+  t->stackbase = (void *)malloc(stackSize + 128);
+  if (C_StacksGrowDown) {
+    t->sp = (unsigned char *)((unsigned)(t->stackbase + stackSize - 64) & ~0x1f);
+    *(unsigned int *)t->stackbase = 0xdeadbeef;
+    *(unsigned int *)(t->stackbase + 4) = 0xfeedface;
+  } else {
+    t->sp = t->stackbase + 64;
+    *(unsigned int *)(t->stackbase + stackSize - 4) = 0xdeadbeef;
+    *(unsigned int *)(t->stackbase + stackSize - 8) = 0xfeedface;
+  }
+  t->stackSize = stackSize;
+  t->isSys = sys;
+  t->priority = priority;
+  RQInsert(t);
+  TRACE(3, ("Creating process %#x at address %#x\n", (unsigned int)t, (unsigned int)t->proc));
+  return t;
+#endif /* WIN32 */
+}
+
+#ifndef WIN32
+static void ScheduleAlarm(struct timeval when)
+{
+  struct itimerval interval;
+  
+  if (when.tv_sec < 0 || when.tv_usec < 0 || (when.tv_sec == 0 && when.tv_usec == 0)) {
+    timeAdvanced = 1;
+    return;
+  }
+  /* clock will reset itself at each expiry to this interval     */
+  interval.it_interval.tv_sec   = 0;
+  interval.it_interval.tv_usec  = 0;
+
+  /* this sets the initial clock interval                        */
+  interval.it_value = when;
+
+  TRACE(3, ("Scheduling alarm for %ld.%06ld seconds\n", when.tv_sec, when.tv_usec));
+  /* now start the timer so that it signals with a SIGALRM at expiration */
+  if (setitimer(ITIMER_REAL, &interval, NULL) < 0) {
+    perror("schedule.setitimer");
+  }
+}
+
+static void CancelAlarm(void)
+{
+  struct itimerval interval;
+
+  interval.it_interval.tv_sec   = 0;
+  interval.it_interval.tv_usec  = 0;
+
+  /* this sets the initial clock interval                        */
+  interval.it_value = interval.it_interval;
+
+  /* now cancel the timer */
+  if (setitimer(ITIMER_REAL, &interval, NULL) < 0) 
+    perror("cancel.setitimer");
+}
+#endif /* not WIN32 */
+
+static inline struct timeval TimeMinus(struct timeval a, struct timeval b)
+{
+  struct timeval r;
+  if (b.tv_usec > a.tv_usec) {
+    r.tv_sec = a.tv_sec - b.tv_sec - 1;
+    r.tv_usec = a.tv_usec + 1000000 - b.tv_usec;
+  } else {
+    r.tv_sec = a.tv_sec - b.tv_sec;
+    r.tv_usec = a.tv_usec - b.tv_usec;
+  }
+  return r;
+}
+
+static inline int Earlier(struct timeval a, struct timeval b)
+{
+  return a.tv_sec < b.tv_sec ||
+    (a.tv_sec == b.tv_sec && a.tv_usec <= b.tv_usec);
+}
+
+void MTSleepUntil(struct timeval when)
+{
+#ifndef WIN32
+  thread prev, t;
+#endif /* not WIN32 */
+  struct timeval now;
+  gettimeofday(&now, 0);
+  TRACE(5, ("Sleeping at %ld.%06ld until %ld.%06ld\n", now.tv_sec, now.tv_usec, when.tv_sec, when.tv_usec));
+  if (Earlier(when, now)) return;
+
+#ifdef WIN32
+  MTMSleep(TimeMinus(when, now));
+#else /* not WIN32 */
+  currp->waketime = when;
+  for (prev = 0, t = sleepers; 
+       t && Earlier(t->waketime, when);
+       prev = t, t = t->next) ;
+  currp->prev = prev;
+  currp->next = t;
+  if (prev) {
+    prev->next = currp;
+  } else {
+    sleepers = currp;
+    ScheduleAlarm(TimeMinus(sleepers->waketime, now));
+  }
+  if (t) {
+    t->prev = currp;
+  }
+  schedule();
+#endif /* not WIN32 */
+  TRACE(6, ("Woke up\n"));
+}
+
+void MTSleep(unsigned seconds)
+{
+  struct timeval t;
+  gettimeofday(&t, 0);
+  t.tv_sec += seconds;
+  MTSleepUntil(t);
+}
+
+void MTMSleep(struct timeval howlong)
+{
+#ifdef WIN32
+  Sleep(howlong.tv_sec * 1000 + howlong.tv_usec / 1000);
+#else /* not WIN32 */
+  struct timeval t;
+  gettimeofday(&t, 0);
+  t.tv_sec += howlong.tv_sec;
+  t.tv_usec += howlong.tv_usec;
+  if (t.tv_usec > 1000000) {
+    t.tv_usec -= 1000000;
+    t.tv_sec += 1;
+  }
+  MTSleepUntil(t);
+#endif /* not WIN32 */
+}
+
+#ifndef WIN32
+static void WakeSleepers(void)
+{
+  thread next;
+  struct timeval now;
+  int didWakeups = 0;
+  
+  gettimeofday(&now, 0);
+  TRACE(3, ("Looking for sleepers at %ld.%06ld\n", now.tv_sec, now.tv_usec));
+  while (sleepers && Earlier(sleepers->waketime, now)) {
+    didWakeups = 1;
+    next = sleepers->next;
+    sleepers->next = sleepers->prev = 0;
+    TRACE(3, ("Waking up %#x at %ld.%06ld\n", (unsigned int)currp, now.tv_sec, now.tv_usec));
+    RQInsert(sleepers);
+    sleepers = next;
+    if (sleepers) sleepers->prev = 0;
+  }
+  if (sleepers) {
+    ScheduleAlarm(TimeMinus(sleepers->waketime, now));
+  } else {
+    CancelAlarm();
+  }
+}
+
+static void pipeHandler(int signalnumber)
+{
+}
+
+static void intrHandler(int signalnumber)
+{
+  TRACE(5, ("got interrupt\n"));
+  callExitRoutines();
+  exit(1);
+}
+
+static void signalHandler(int signalnumber)
+{
+  TRACE(5, ("got signal %d\n", signalnumber));
+  if (signalnumber == SIGALRM) {
+    TRACE(3, ("got sigalrm\n"));
+    timeAdvanced = 1;
+  } else if (signalnumber == SIGIO) {
+    ioCompleted = 1;
+  } else {
+    assert(0);
+  }
+}
+#endif /* WIN32 */
+
+#ifdef WIN32
+#define MAXFDS 1
+static semaphore fdlocks[MAXFDS][2];
+struct iovec {
+	char *iov_base;
+	size_t  iov_len;
+};
+#else /* not WIN32 */
+/*
+ * I/O Stuff:
+ *	Put file descriptors in non-blocking mode
+ *	Let each thread try the I/Os and then wait on a semaphore for the f/d.
+ */
+#define MAXFDS 128
+static struct semaphore fdlocks[MAXFDS][2];
+static struct semaphore fdsems[MAXFDS][3];
+static int fdnwaiters[MAXFDS][3];
+static struct semaphore waitonmulti;
+typedef enum { MTWRead, MTWWrite, MTWExcept } MTWhy;
+static fd_set readfds, writefds, exceptfds;
+static int realnfds;
+
+static inline int max(int x, int y)
+{
+  return x > y ? x : y;
+}
+
+static inline void waiton(int fd, MTWhy why)
+{
+  switch(why) {
+  case MTWRead:
+    ++fdnwaiters[fd][MTWRead];
+    FD_SET(fd, &readfds);
+    MTSemP(&fdsems[fd][MTWRead]);
+    if (--fdnwaiters[fd][MTWRead] == 0) 
+      FD_CLR(fd, &readfds);
+    break;
+  case MTWWrite:
+    ++fdnwaiters[fd][MTWWrite];
+    FD_SET(fd, &writefds);
+    MTSemP(&fdsems[fd][MTWWrite]);
+    if (--fdnwaiters[fd][MTWWrite] == 0) 
+      FD_CLR(fd, &writefds);
+    break;
+  case MTWExcept:
+    ++fdnwaiters[fd][MTWExcept];
+    FD_SET(fd, &exceptfds);
+    MTSemP(&fdsems[fd][MTWExcept]);
+    if (--fdnwaiters[fd][MTWExcept] == 0) 
+      FD_CLR(fd, &exceptfds);
+    break;
+  default:
+    assert(0);
+    break;
+  }
+}
+#endif /* not WIN32 */
+
+#ifndef WIN32
+ssize_t MTread(int fd, void *buf, size_t nbytes)
+{
+  ssize_t res;
+  CTRACE(4, ("read on %d wants %d bytes\n", fd, nbytes));
+  /*
+   * If nbytes is 0, our reader wants to wait until input is available, so
+   *  we need to wait rather than reading.
+   */
+  if (nbytes > 0) {
+    while (1) {
+      MTSemP(&fdlocks[fd][0]);
+      if (fd == 0) MTRegisterFD(fd);
+      res = reax(fd, buf, nbytes);
+      if (fd == 0) MTDeregisterFD(fd);
+      MTSemV(&fdlocks[fd][0]);      
+      if (res < 0 && errno == EAGAIN) {
+	waiton(fd, MTWRead);
+      } else {
+	break;
+      }
+    }
+  } else {
+    waiton(fd, MTWRead);
+    res = 0;
+  }
+  CTRACE(4, ("read returning %d\n", res));
+  return res;
+}
+#endif
+
+size_t MTreadn(int fd, void *buf, size_t nbytes)
+{
+  int res = 0, totalread = 0;
+  TRACE(4, ("readn on %d wants %d bytes\n", fd, nbytes));
+#ifndef WIN32
+  MTSemP(&fdlocks[fd][0]);
+#endif /* WIN32 */
+  while (nbytes > 0) {
+    TRACE(6, ("readn reading\n"));
+#ifdef WIN32
+    res = recv(fd, buf, nbytes, 0);
+#else /* not WIN32 */
+    if (fd == 0) MTRegisterFD(fd);
+    res = reax(fd, buf, nbytes);
+    if (fd == 0) MTDeregisterFD(fd);
+    if (res < 0) {
+      if (errno == EINTR) {
+	printf("EINTR in MTreadn trying for %d got %d\n", nbytes, totalread);
+	continue;
+      } else if (errno == EAGAIN) {
+	waiton(fd, MTWRead);
+	continue;
+      } else {
+	perror("MTreadn");
+	CTRACE(0, ("readn reading on %d into %x for %d bytes \n", fd, buf, nbytes));
+      }
+    }
+#endif /* not WIN32 */
+    TRACE(6, ("readn reading done with %ld\n", res));
+    if (res <= 0) break;
+    nbytes -= res;
+    buf = (void *)((char *)buf + res);
+    totalread += res;
+  }
+#ifndef WIN32
+  MTSemV(&fdlocks[fd][0]);
+#endif /* WIN32 */
+  TRACE(4, ("readn returning %ld\n", totalread > 0 ? totalread : res));
+  return totalread > 0 ? totalread : res;
+}
+
+#ifndef WIN32
+ssize_t MTwrite(int fd, void *buf, size_t nbytes)
+{
+  ssize_t res;
+  CTRACE(4, ("write on %d for %d bytes\n", fd, nbytes));
+  MTSemP(&fdlocks[fd][1]);
+  while ((res = writx(fd, buf, nbytes)) < 0 && errno == EAGAIN) {
+    waiton(fd, MTWWrite);
+  }
+  MTSemV(&fdlocks[fd][1]);
+  CTRACE(4, ("write returning %d\n", res));
+  return res;
+}
+#endif /* WIN32 */
+
+ssize_t MTwriten(int fd, const void *buf, size_t nbytes)
+{
+  int res = 0, totalwrite = 0;
+  TRACE(4, ("writen on %d wants %d bytes\n", fd, nbytes));
+#ifndef WIN32
+  MTSemP(&fdlocks[fd][1]);
+#endif /* not WIN32 */
+  while (nbytes > 0) {
+    TRACE(6, ("writen writing %d\n", nbytes));
+#ifdef WIN32
+    res = send(fd, buf, nbytes, 0);
+#else /* not WIN32 */
+    res = writx(fd, buf, nbytes);
+#endif /* not WIN32 */
+    TRACE(6, ("writen writing done with %ld\n", res));
+#ifndef WIN32
+    if (res < 0 && errno == EAGAIN) {
+      waiton(fd, MTWWrite);
+      continue;
+    }
+#endif /* not WIN32 */
+    if (res <= 0) break;
+    nbytes -= res;
+    buf = (void *)((char *)buf + res);
+    totalwrite += res;
+  }
+  TRACE(4, ("writen returning %ld\n", totalwrite > 0 ? totalwrite : res));
+#ifndef WIN32
+  MTSemV(&fdlocks[fd][1]);
+#endif /* not WIN32 */
+  return totalwrite > 0 ? totalwrite : res;
+}
+
+ssize_t MTwrite2(int fd, void *buf1, size_t n1, void *buf2, size_t n2)
+{
+  int res;
+  struct iovec v[2];
+  int howmany = 2;
+  v[0].iov_base = buf1;
+  v[0].iov_len = n1;
+  v[1].iov_base = buf2;
+  v[1].iov_len = n2;
+  TRACE(4, ("write2 on %d for %d+%d bytes\n", fd, n1, n2));
+  if (fd < 0) return -1;
+#ifndef WIN32
+  MTSemP(&fdlocks[fd][1]);
+#endif /* WIN32 */
+  while (1) {
+#ifdef WIN32
+    res = send(fd, v[0].iov_base, v[0].iov_len, 0);
+#else
+    res = writev(fd, v, howmany);
+#endif /* WIN32 */
+    TRACE(4, ("write2 wrote %d\n", res));
+#ifndef WIN32
+    if (res < 0 && errno == EAGAIN) {
+      waiton(fd, MTWWrite);
+    } else
+#endif /* WIN32 */
+    if ((unsigned)res == v[0].iov_len + v[1].iov_len) {
+      res = n1 + n2;
+      break;
+    } else if (res > 0) {
+      /* Only wrote a part, fix up things */
+      if ((unsigned)res < v[0].iov_len) {
+	v[0].iov_len -= res;
+	v[0].iov_base += res;
+      } else {
+	res -= v[0].iov_len;
+	v[0].iov_len = v[1].iov_len - res;
+	v[0].iov_base = v[1].iov_base + res;
+	v[1].iov_base = 0;
+	v[1].iov_len = 0;
+	howmany = 1;
+      }
+    } else {
+      printf("write2 error %d\n", res);
+      perror("write2");
+      break;
+    }
+  }
+#ifndef WIN32
+  MTSemV(&fdlocks[fd][1]);
+#endif /* WIN32 */
+  TRACE(4, ("write2 returning %ld\n", res));
+  return res;
+}
+
+#ifndef WIN32
+int MTsocket(int domain, int type, int protocol)
+{
+  int res;
+  CTRACE(4, ("socket (%d, %d)\n", domain, type));
+  while ((res = socket(domain, type, protocol)) < 0 && errno == EAGAIN) {
+    /* According to the man page, this cannot happen */
+    assert(0);
+  }
+  if (res >= 0) MTRegisterFD(res);
+  CTRACE(4, ("socket returning %d\n", res));
+  return res;
+}
+
+int MTbind(int sockfd, struct sockaddr *my_addr, int addrlen)
+{
+  int res;
+  CTRACE(4, ("bind %d\n", sockfd));
+  while ((res = bind(sockfd, my_addr, addrlen)) < 0 && errno == EAGAIN) {
+    /* According to the man page, this cannot happen */
+    assert(0);
+  }
+  CTRACE(4, ("bind returning %d\n", res));
+  return res;
+}
+  
+int MTconnect(int sockfd, struct sockaddr *serv_addr, int addrlen)
+{
+  struct sockaddr addr;
+  int res;
+  
+  TRACE(4, ("Connecting to %#x.%d\n", ntohl(((struct sockaddr_in *)serv_addr)->sin_addr.s_addr), ntohs(((struct sockaddr_in *)serv_addr)->sin_port)));
+  if ((res = connect(sockfd, serv_addr, addrlen)) < 0 && errno == EINPROGRESS){
+    TRACE(6, ("Waiting for connection to complete\n"));
+    waiton(sockfd, MTWWrite);
+    TRACE(6, ("Connection completed\n"));
+    addrlen = sizeof(addr);
+    res = getpeername(sockfd, &addr, &addrlen);
+  }
+  TRACE(4, ("connect returning %d\n", res));
+  return res;
+}
+  
+int MTaccept(int sockfd, struct sockaddr *addr, int *addrlen)
+{
+  int res;
+  CTRACE(4, ("accept on %d\n", sockfd));
+  while ((res = accept(sockfd, addr, addrlen)) < 0 && errno == EAGAIN) {
+    waiton(sockfd, MTWRead);
+  }
+  if (res >= 0) MTRegisterFD(res);
+  CTRACE(4, ("accept returning %d\n", res));
+  return res;
+}
+
+int MTlisten(int sockfd, int backlog)
+{
+  int res;
+  CTRACE(4, ("listen on %d with backlog %d\n", sockfd, backlog));
+  while ((res = listen(sockfd, backlog)) < 0 && errno == EAGAIN) {
+    /* This cannot happen */
+    assert(0);
+  }
+  CTRACE(4, ("listen returning %d\n", res));
+  return res;
+}
+  
+int MTopen(const char *pathname, int flags, mode_t mode)
+{
+  int res;
+  CTRACE(4, ("open on %s with flags %#x\n", pathname, flags));
+  while ((res = open(pathname, flags, mode)) < 0 && errno == EAGAIN) {
+    /* This cannot happen */
+    assert(0);
+  }
+  if (res >= 0) MTRegisterFD(res);
+  CTRACE(4, ("open returning %d\n", res));
+  return res;
+}
+  
+int MTclose(int fd)
+{
+  int res;
+  CTRACE(4, ("close on %d", fd));
+  MTDeregisterFD(fd);
+  while ((res = close(fd)) < 0 && errno == EAGAIN) {
+    /* This cannot happen */
+    assert(0);
+  } 
+  CTRACE(4, ("close returning %d\n", res));
+  return res;
+}
+
+int MTshutdown(int fd, int how)
+{
+  int res;
+  CTRACE(4, ("shutdown on %d with how %d\n", fd, how));
+  while ((res = shutdown(fd, how)) < 0 && errno == EAGAIN) {
+    /* This cannot happen */
+    assert(0);
+  }
+  CTRACE(4, ("shutdown returning %d\n", res));
+  return res;
+}
+
+int MTrecv(int s, void *buf, int len, unsigned int flags)
+{
+  int res;
+  CTRACE(4, ("recv on %d wants %d bytes\n", s, len));
+  while ((res = recv(s, buf, len, flags)) < 0 && errno == EAGAIN) {
+    waiton(s, MTWRead);
+  }
+  CTRACE(4, ("recv returning %d\n", res));
+  return res;
+}
+
+int MTrecvfrom(int s, void *buf, int len, unsigned int flags, struct sockaddr *from, int *fromlen)
+{
+  int res;
+  CTRACE(4, ("recvfrom on %d wants %d bytes\n", s, len));
+  while ((res = recvfrom(s, buf, len, flags, from, fromlen)) < 0 && errno == EAGAIN) {
+    waiton(s, MTWRead);
+  }
+  CTRACE(4, ("recvfrom returning %d\n", res));
+  return res;
+}
+
+#if !defined(linux)
+int MTrecvmsg(int s, struct msghdr *msg, unsigned int flags)
+{
+  int res;
+  CTRACE(4, ("recvmsg on %d\n", s));
+  while ((res = recvmsg(s, msg, flags)) < 0 && errno == EAGAIN) {
+    waiton(s, MTWRead);
+  }
+  CTRACE(4, ("recvmsg returning %d\n", res));
+  return res;
+}
+#endif
+
+int MTsend(int s, const void *msg, int len, unsigned int flags)
+{
+  int res;
+  CTRACE(4, ("send on %d for %d bytes\n", s, len));
+  while ((res = send(s, msg, len, flags)) < 0 && errno == EAGAIN) {
+    printf("MTsend waiting for room\n");
+    waiton(s, MTWWrite);
+  }
+  CTRACE(4, ("send returning %d\n", res));
+  return res;
+}
+
+int MTsendto(int s, const void *msg, int len, unsigned int flags, const struct sockaddr *to, int tolen)
+{
+  int res;
+  CTRACE(4, ("sendto on %d for %d bytes\n", s, len));
+  while ((res = sendto(s, msg, len, flags, to, tolen)) < 0 && errno == EAGAIN) {
+    waiton(s, MTWWrite);
+  }
+  CTRACE(4, ("sendto returning %d\n", res));
+  return res;
+}
+
+#if !defined(linux)
+int MTsendmsg(int s, SENDMSGCONST struct msghdr *msg, unsigned int flags)
+a114 7
+  int res;
+  CTRACE(4, ("sendmsg on %d\n", s));
+  while ((res = sendmsg(s, msg, flags)) < 0 && errno == EAGAIN) {
+    waiton(s, MTWWrite);
+  }
+  CTRACE(4, ("sendmsg returning %d\n", res));
+  return res;
+a115 1
+#endif
+d117 1
+a117 5
+#if defined(FASYNC) && !defined(O_ASYNC)
+#define O_ASYNC FASYNC
+#endif
+
+void MTRegisterFD(int fd)
+d119 3
+a121 1
+  int arg;
+d123 1
+a123 18
+  TRACE(7, ("Registering %d\n", fd));
+  assert(fd < MAXFDS);
+  if ((arg = fcntl(fd, F_GETFL)) < 0) {
+    perror("fcntl get");
+    assert(0);
+  }
+  arg |= MTFDFLAGS;
+  if (fcntl(fd, F_SETFL, arg) < 0) {
+    perror("second fcntl");
+  }
+  arg = getpid();
+#if defined(F_SETOWN)
+  if (fcntl(fd, F_SETOWN, arg) < 0) {
+    /* ignore this one */
+  }
+#endif
+  realnfds = max(realnfds, fd + 1);
+}
+d125 1
+a125 1
+void MTDeregisterFD(int fd)
+d127 36
+a162 10
+  int arg;
+
+  TRACE(7, ("Deregistering %d\n", fd));
+  assert(fd < MAXFDS);
+  if ((arg = fcntl(fd, F_GETFL)) < 0) {
+    perror("fcntl get");
+  } else {
+    arg = arg & ~MTFDFLAGS;
+    if (fcntl(fd, F_SETFL, arg) < 0) {
+      perror("fcntl set");
+d165 2
+a166 3
+  FD_CLR(fd, &readfds);
+  FD_CLR(fd, &writefds);
+  FD_CLR(fd, &exceptfds);
+d169 1
+a188 53
+
+
+static void IOComplete(int wait)
+{
+  fd_set lreadfds = readfds, lwritefds = writefds, lexceptfds = exceptfds;
+  struct timeval timeout;
+  int nready;
+  int oldpriority;
+  timeout.tv_sec = timeout.tv_usec = 0;
+  oldpriority = currp->priority;
+  currp->priority = 1;
+  TRACE(8, ("selecting %x %x %x\n", lreadfds.fds_bits[0], lwritefds.fds_bits[0], lexceptfds.fds_bits[0]));
+  if ((nready = selecx(realnfds, (SELECTFD_T *)&lreadfds, (SELECTFD_T *)&lwritefds, (SELECTFD_T *)&lexceptfds, wait ? 0 : &timeout)) < 0) {
+    if (errno == EINTR) goto done;
+    perror("select");
+    assert(0);
+  }
+  if (nready > 0) 
+    nready -= doem(&lreadfds, MTWRead);
+  if (nready > 0) 
+    nready -= doem(&lwritefds, MTWWrite);
+  if (nready > 0) 
+    nready -= doem(&lexceptfds, MTWExcept);
+  assert(nready == 0);
+done:
+  currp->priority = oldpriority;
+}
+
+void MTPoll(void)
+{
+  while (timeAdvanced) {
+    timeAdvanced = 0;
+    WakeSleepers();
+  }
+  if (ioCompleted) {
+    ioCompleted = 0;
+    IOComplete(0);
+  }
+}
+
+static void Idle(void *arg)
+{
+  while (1) {
+    FREETHINGSTOFREE;
+    MTPoll();
+    if (mtready) {
+      RQInsert(currp);
+      schedule();
+    } else {
+#if defined(sun4sol)
+      sigprocmask(SIG_SETMASK, &disabled_mask, 0);
+#else
+      sigsetmask(disabled_mask);
+a189 16
+      MTPoll();
+      if (mtready) {
+	sigsetmask(0);
+	RQInsert(currp);
+	schedule();
+      } else {
+#if defined(USESIGIO)
+	sigpause(0);
+#else
+	sigsetmask(0);
+	IOComplete(1);
+#endif
+      }
+    }
+  }
+}
+a203 126
+#endif /* WIN32 */
+
+/*------------------------------------------------------------------------
+ * MTStart()  --  set up system clock and load the first process
+ *------------------------------------------------------------------------
+ */
+void MTStart()
+{
+#ifdef WIN32
+  /*
+   * This needs to lower my priority, then wait forever.
+   */
+  TRACE(1, ("MTStart waiting forever\n"));
+  while (1) Sleep(1000);
+#else
+
+#if defined(__svr4__) || defined(__SYSTYPE_SVR4__)
+  struct sigaction action;
+
+  sigemptyset(&disabled_mask);
+  sigaddset(&disabled_mask, SIGIO);
+  sigaddset(&disabled_mask, SIGALRM);
+
+  action.sa_handler = signalHandler;
+  action.sa_mask = disabled_mask;
+  action.sa_flags = 0;
+
+  sigaction(SIGALRM, &action, NULL);
+
+  action.sa_handler = signalHandler;
+  action.sa_mask = disabled_mask;
+  action.sa_flags = 0;
+
+  sigaction(SIGIO, &action, NULL);
+
+  action.sa_handler = intrHandler;
+  sigaction(SIGINT, &action, NULL);
+  action.sa_handler = pipeHandler;
+  sigaction(SIGPIPE, &action, NULL);
+#else
+  struct sigvec vec;
+
+  vec.sv_handler = signalHandler;
+  vec.sv_mask = sigmask(SIGIO) | sigmask(SIGALRM);
+  vec.sv_flags = 0;
+
+  if (SIGVEC(SIGALRM, &vec, NULL) < 0) {
+    printf("Can't set up handler for sigalrm\n");
+  }
+
+  vec.sv_handler = signalHandler;
+  vec.sv_mask = sigmask(SIGIO) | sigmask(SIGALRM);
+  vec.sv_flags = 0;
+
+  SIGVEC(SIGIO, &vec, NULL);
+
+  vec.sv_handler = intrHandler;
+  SIGVEC(SIGINT, &vec, NULL);
+  vec.sv_handler = pipeHandler;
+  SIGVEC(SIGPIPE, &vec, NULL);
+#endif
+  /*
+   * NOTE: if, for some reason, you want to use sigset() to register
+   *       handlers, you have to use signal() for sun4 architecture
+   */
+
+#if !defined(IDLESTACKSIZE) || IDLESTACKSIZE < WORKERSTACKSIZE
+#undef IDLESTACKSIZE
+#define IDLESTACKSIZE (32 * 1024)
+#endif
+  idleThread = MTCreate(Idle, 0, 1, -1, IDLESTACKSIZE);
+
+  if (nSysThreads == nThreads) {
+    callExitRoutines();
+  } else {
+    currp = RQRemove();
+    currp->resume(currp);
+  }
+#endif /* WIN32 */
+}
+
+thread MTMe(void)
+{
+#ifdef WIN32
+  DWORD d;
+  int DWORDsize = sizeof(d);
+  d = GetCurrentThreadId();
+  assert(DWORDsize == 4);
+  return (thread)d;
+#else /* not WIN32 */
+  return currp;
+#endif /* not WIN32 */
+}
+
+void MTSuspend(void)
+{
+#ifdef WIN32
+  assert(0);
+#else /* not WIN32 */
+  CTRACE(3, ("Suspend\n"));
+  schedule();
+#endif /* WIN32 */
+}
+
+void MTResume(thread t)
+{
+  CTRACE(3, ("Resuming %#x\n", (unsigned int)t));
+#ifdef WIN32
+  assert(0);
+#else /* not WIN32 */
+  RQInsert(t);
+  if (t->priority < currp->priority) {
+    schedule();
+  }
+#endif /* WIN32 */
+}
+
+#define NINCOMING 64
+typedef struct msgqueue {
+  int length;
+  threadid sender;
+  void *msg;
+} msgqueue;
+static msgqueue incoming[NINCOMING];
+static semaphore formessage, forspace;
+static int nextslot, nextmessage;
+d209 1
+a209 1
+static threadid myid;
+d212 5
+a216 1
+struct nbo { unsigned int ipaddress; unsigned short port, incarnation, userid; };
+a225 7
+#define MAXOTHERS 128
+static int nothers;
+struct other {
+  threadid id;
+  int s;
+} others[MAXOTHERS], cache;
+
+d247 1
+a247 3
+static void Reader(void *s);
+
+int findsocket(threadid *t)
+d281 1
+a282 3
+#else /* not WIN32 */
+  if ((s = MTsocket(AF_INET, SOCK_STREAM, 0)) < 0) return -1;
+#endif /* not WIN32 */
+a286 1
+#ifdef WIN32
+a287 3
+#else /* not WIN32 */
+  if (MTbind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+#endif /* not WIN32 */
+d289 1
+a289 1
+    MTclose(s);
+d297 1
+a297 2
+  TRACE(3, ("Trying to connect to %08x.%04x\n", addr.sin_addr.s_addr, ntohs(addr.sin_port)));
+#ifdef WIN32
+a298 3
+#else /* not WIN32 */
+  if (MTconnect(s, (struct sockaddr *)&addr, addrlen) < 0) {
+#endif /* not WIN32 */
+d302 1
+a302 1
+    MTclose(s);
+d308 1
+a308 1
+      MTclose(s);
+d322 3
+a324 3
+    nbo.userid = htons((short)getuid());
+    if (MTwriten(localcopy.s, &nbo, sizeof(nbo)) != sizeof(nbo) ||
+	MTreadn(localcopy.s, &nbo, sizeof(nbo)) != sizeof(nbo)) {
+d326 1
+a326 1
+      MTclose(localcopy.s);
+d329 3
+a331 3
+    } else if(checkSameUser && getuid() != ntohs(nbo.userid)) {
+      fprintf(stderr, "Permission denied - user mismatch local %d != remote %d\n", (int)getuid(), ntohs(nbo.userid));
+      MTclose(localcopy.s);
+d342 1
+a342 1
+  MTCreate(Reader, o, 1, 4, WORKERSTACKSIZE);
+d348 1
+a348 1
+threadid MTThreadID(thread t)
+d350 1
+a350 1
+  return myid;
+d353 7
+a359 2
+#ifndef WIN32
+void MTYield(void)
+d361 3
+a363 3
+  RQInsert(currp);
+  schedule();
+}  
+d365 26
+a390 7
+void MTSetPriority(int newpriority)
+{
+  int doreschedule =  newpriority > currp->priority;	/* Bigger is lower */
+  currp->priority = newpriority;
+  if (doreschedule) {
+    RQInsert(currp);
+    schedule();
+a392 1
+#endif /* not WIN32 */
+d394 1
+a394 6
+struct CNF {
+  threadid id;
+  int comingup;
+};
+
+static void callNotifyFunctionHelper(void *arg)
+d396 6
+a401 3
+  struct CNF *cnf = arg;
+  notifyFunction(cnf->id, cnf->comingup);
+  free((char *)cnf);
+d404 1
+a404 1
+static void callNotifyFunction(threadid id, int comingup)
+d406 1
+a406 4
+  struct CNF *cnf = malloc(sizeof(struct CNF));
+  cnf->id = id;
+  cnf->comingup = comingup;
+  MTCreate(callNotifyFunctionHelper, (void *)cnf, 1, 4, WORKERSTACKSIZE);
+d409 7
+a415 1
+static void Reader(void *s)
+d417 6
+a422 36
+  struct other *r = s;
+  int sock = (int) r->s, res;
+  void *buffer = 0;
+  int length;
+
+  while (1) {
+    TRACE(4, ("Reader reading on socket %d\n", sock));
+    res = MTreadn(sock, &length, sizeof(length));
+    if (res != sizeof(length)) {
+      if (res > 0) { TRACE(1, ("Read %d bytes on %d\n", res, sock)); }
+      break;
+    }
+    length = ntohl(length);
+    if (length > 0) {
+      GainExclusive();
+#ifdef MALLOCPARANOID
+      buffer = vmMalloc(length);
+#else
+      buffer = malloc(length);
+#endif
+      res = MTreadn(sock, buffer, length);
+      if (res < length) { 
+	TRACE(3, ("Short read on %d\n", sock)); 
+	break;
+      }
+      LoseExclusive();
+      MTSemP(&forspace);
+      incoming[nextslot].sender = r->id;
+      incoming[nextslot].length = length;
+      incoming[nextslot].msg = buffer;
+	  assert(ntohl(*(int *)buffer) == 0xdeafdeaf);
+      nextslot = (nextslot + 1) % NINCOMING;
+      MTSemV(&formessage);
+    } else {
+      TRACE(0, ("Negative length %d\n", length));
+    }
+a423 4
+  MTclose(sock);
+  if (notifyFunction) notifyFunction(r->id, 0);
+  nukeother(*r);
+  free(r);
+d426 1
+a426 1
+void showIncoming(void)
+d428 19
+a446 7
+  int i;
+  printf("nextmessage = %d, nextslot = %d\n", nextmessage, nextslot);
+  i = (nextmessage - 3 + NINCOMING) % NINCOMING;
+  do {
+    printf("incoming[%d] = %d %x %x\n", i, incoming[i].length, (unsigned int)incoming[i].msg, (unsigned int)ntohl(*(int *)incoming[i].msg));
+    i = (i + 1) % NINCOMING;
+  } while (i != (nextslot + 1) % NINCOMING);
+d449 1
+a449 1
+static void Listener(void *s)
+d451 1
+a451 1
+  int sock, newsocket;
+d453 2
+a454 23
+  struct nbo nbo;
+  int addrlen = sizeof(addr);
+  struct other *ri;
+  sock = (int)s;
+  while (1) {
+#ifdef WIN32
+    newsocket = accept(sock, (struct sockaddr *)&addr, &addrlen);
+#else /* not WIN32 */
+    newsocket = MTaccept(sock, (struct sockaddr *)&addr, &addrlen);
+#endif /* not WIN32 */
+    if (newsocket < 0) break;
+    {
+      int on = 1;
+      if (setsockopt(newsocket, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof (on)) < 0) {
+	MTclose(newsocket);
+	perror("setsockopt");
+	continue;
+      }
+    }
+    ri = (struct other *)malloc(sizeof *ri);
+    ri->s = newsocket;
+    ri->id.ipaddress = addr.sin_addr.s_addr;
+    ri->id.port = ntohs(addr.sin_port);
+d456 23
+a478 25
+    TRACE(8, ("Inserting %#x.%x -> %d in others\n", ri->id.ipaddress, ri->id.port, ri->s));
+    others[nothers++] = *ri;
+    nbo.ipaddress = myid.ipaddress;
+    nbo.port = htons(myid.port);
+    nbo.incarnation = htons(myid.incarnation);
+    nbo.userid = htons((short)getuid());
+    if (MTwriten(ri->s, &nbo, sizeof(nbo)) != sizeof(nbo) ||
+	MTreadn(ri->s, &nbo, sizeof(nbo)) != sizeof(nbo)) {
+      nukeother(*ri);
+      MTclose(ri->s);
+      free(ri);
+    } else if(checkSameUser && getuid() != ntohs(nbo.userid)) {
+      fprintf(stderr, "Permission denied - user mismatch local %d != remote %d\n", (int)getuid(), ntohs(nbo.userid));
+      nukeother(*ri);
+      MTclose(ri->s);
+      free(ri);
+    } else {
+      ri->id.port = ntohs(nbo.port);
+      ri->id.ipaddress = nbo.ipaddress;
+      ri->id.incarnation = ntohs(nbo.incarnation);
+      TRACE(8, ("Inserting %#x.%4x.%4x -> %d in others\n", ri->id.ipaddress, ri->id.port, ri->id.incarnation, ri->s));
+      others[nothers++] = *ri;
+      if (notifyFunction) callNotifyFunction(ri->id, 1);
+      MTCreate(Reader, (void *)ri, 1, 4, WORKERSTACKSIZE);
+    }
+d480 8
+d493 1
+a493 1
+  int addrlen;
+a503 1
+#ifdef WIN32
+a504 3
+#else /* not WIN32 */
+  if ((mysocket = MTsocket(AF_INET, SOCK_STREAM, 0)) < 0) {
+#endif /* not WIN32 */
+a510 1
+#ifdef WIN32
+d512 1
+a512 4
+#else /* not WIN32 */
+  if (MTbind(mysocket, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+#endif /* not WIN32 */
+    MTclose(mysocket);
+d517 1
+a517 1
+    MTclose(mysocket);
+d520 1
+a520 2
+  TRACE(3, ("NetStart on %#x.%d\n", addr.sin_addr.s_addr, ntohs(addr.sin_port)));
+#ifdef WIN32
+d522 1
+a522 4
+#else /* not WIN32 */
+  if (MTlisten(mysocket, 5) < 0) {
+#endif /* not WIN32 */
+    MTclose(mysocket);
+d525 4
+a528 7
+  {
+    int on = 1;
+    if (setsockopt(mysocket, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof (on)) < 0) {
+      MTclose(mysocket);
+      perror("setsockopt");
+      return -1;
+    }
+d536 1
+a536 1
+      MTclose(mysocket);
+d546 1
+a546 1
+	MTclose(mysocket);
+d556 1
+a556 1
+  MTCreate(Listener, (void *)mysocket, 1, 5, WORKERSTACKSIZE);
+d560 1
+a560 1
+int MTReceive(threadid *senderid, void **rbuf, int *rlen)
+d563 1
+a563 6
+  MTSemP(&formessage);
+  *senderid = incoming[nextmessage].sender;
+  *rlen = incoming[nextmessage].length;
+  *rbuf = incoming[nextmessage].msg;
+  nextmessage = (nextmessage + 1) % NINCOMING;
+  MTSemV(&forspace);
+d568 1
+a568 1
+int MTProd(threadid *receiver)
+d574 1
+a574 1
+int MTSend(threadid receiver, void *sbuf, int slen)
+d578 6
+a583 1
+  extern char *ThreadIdString(threadid);
+d591 1
+a591 1
+	   ThreadIdString(receiver), s, slen + sizeof(length), res);
+d606 19
+a624 10
+  int i;
+  TRACE(1, ("formessage is %p\n", &formessage));
+  MTSemInit(&formessage, 0);
+  
+  TRACE(1, ("forspace is %p\n", &forspace));
+  MTSemInit(&forspace, NINCOMING);
+  for (i = 0; i < MAXFDS; i++) {
+    MTSemInit(&fdlocks[i][0], 1);
+    MTSemInit(&fdlocks[i][1], 1);
+  }
+d633 1
+d635 1
+a635 58
+void MTPrio(int v)
+{
+  HANDLE me = GetCurrentThread();
+  int res;
+  if (v == -1) {
+    res = SetThreadPriority(me, THREAD_PRIORITY_BELOW_NORMAL);
+    assert(res);
+  } else if (v == 1) {
+    res = SetThreadPriority(me, THREAD_PRIORITY_ABOVE_NORMAL);
+    assert(res);
+  }
+}
+#else /* WIN32 */
+
+#ifdef FAKESELECT
+static inline void addmulti(int fd, MTWhy why)
+{
+  switch(why) {
+  case MTWRead:
+    ++fdnwaiters[fd][MTWRead];
+    FD_SET(fd, &readfds);
+    break;
+  case MTWWrite:
+    ++fdnwaiters[fd][MTWWrite];
+    FD_SET(fd, &writefds);
+    break;
+  case MTWExcept:
+    ++fdnwaiters[fd][MTWExcept];
+    FD_SET(fd, &exceptfds);
+    break;
+  default:
+    assert(0);
+    break;
+  }
+}
+
+static inline void removemulti(int fd, MTWhy why)
+{
+  switch(why) {
+  case MTWRead:
+    if (--fdnwaiters[fd][MTWRead] == 0) 
+      FD_CLR(fd, &readfds);
+    break;
+  case MTWWrite:
+    if (--fdnwaiters[fd][MTWWrite] == 0) 
+      FD_CLR(fd, &writefds);
+    break;
+  case MTWExcept:
+    if (--fdnwaiters[fd][MTWExcept] == 0) 
+      FD_CLR(fd, &exceptfds);
+    break;
+  default:
+    assert(0);
+    break;
+  }
+}
+
+void addallmulti(size_t nfds, fd_set *fds, MTWhy why)
+d637 2
+a638 24
+  int index, offset, found = 0, which, fd;
+  for (offset = 0, index = 0; offset <= nfds; offset += 32, index++) {
+    while ((which = ffs(fds->fds_bits[index])) > 0) {
+      found ++;
+      fd = offset + which - 1;
+      if (fd >= realnfds) realnfds = fd + 1;
+      addmulti(fd, why);
+      assert(FD_ISSET(fd, fds));
+      FD_CLR(fd, fds);
+    }
+  }
+}
+
+void removeallmulti(size_t nfds, fd_set *fds, MTWhy why)
+{
+  int index, offset, found = 0, which, fd;
+  for (offset = 0, index = 0; offset <= nfds; offset += 32, index++) {
+    while ((which = ffs(fds->fds_bits[index])) > 0) {
+      found ++;
+      fd = offset + which - 1;
+      removemulti(fd, why);
+      assert(FD_ISSET(fd, fds));
+      FD_CLR(fd, fds);
+    }
+d640 1
+a642 30
+int select(SELECTSIZE_T nfds, SELECTFD_T *readfds, SELECTFD_T *writefds, SELECTFD_T *exceptfds, SELECTCONST struct timeval *wait)
+{
+  fd_set lreadfds, lwritefds, lexceptfds;
+  if (myid.ipaddress == 0) {
+    return selecx(nfds, readfds, writefds, exceptfds, wait);
+  } else if ((nfds == 0 || nfds == 1) && wait) {
+    TRACE(7, ("select called (%d) %x %x %x (%d.%d)\n", nfds, readfds ? ((fd_set *)readfds)->fds_bits[0] : 0, writefds ? ((fd_set *)writefds)->fds_bits[0] : 0, exceptfds ? ((fd_set *)exceptfds)->fds_bits[0] : 0, wait ? wait->tv_sec : -99, wait ? wait->tv_usec : -99));
+    MTSleepUntil(*wait);
+    return 0;
+  } else {
+    TRACE(7, ("select called (%d) %x %x %x (%d.%d)\n", nfds, readfds ? ((fd_set *)readfds)->fds_bits[0] : 0, writefds ? ((fd_set *)writefds)->fds_bits[0] : 0, exceptfds ? ((fd_set *)exceptfds)->fds_bits[0] : 0, wait ? wait->tv_sec : -99, wait ? wait->tv_usec : -99));
+    if (readfds) memcpy(&lreadfds, readfds, sizeof(lreadfds)); else memset(&lreadfds, 0, sizeof(lreadfds));
+    if (writefds) memcpy(&lwritefds, writefds, sizeof(lwritefds)); else memset(&lwritefds, 0, sizeof(lwritefds));
+    if (exceptfds) memcpy(&lexceptfds, exceptfds, sizeof(lexceptfds)); else memset(&lexceptfds, 0, sizeof(lexceptfds));
+    if (nfds >= 32) nfds = 32;
+    addallmulti(nfds, &lreadfds, MTWRead);
+    addallmulti(nfds, &lwritefds, MTWWrite);
+    addallmulti(nfds, &lexceptfds, MTWExcept);
+    MTSemP(&waitonmulti);
+    if (readfds) memcpy(&lreadfds, readfds, sizeof(lreadfds)); else memset(&lreadfds, 0, sizeof(lreadfds));
+    if (writefds) memcpy(&lwritefds, writefds, sizeof(lwritefds)); else memset(&lwritefds, 0, sizeof(lwritefds));
+    if (exceptfds) memcpy(&lexceptfds, exceptfds, sizeof(lexceptfds)); else memset(&lexceptfds, 0, sizeof(lexceptfds));
+    removeallmulti(nfds, &lreadfds, MTWRead);
+    removeallmulti(nfds, &lwritefds, MTWWrite);
+    removeallmulti(nfds, &lexceptfds, MTWExcept);
+    return selecx(nfds, readfds, writefds, exceptfds, 0);
+  }
+}
+#endif
+#endif /* WIN32 */
+@
+
+
+1.3
+log
+@Checkpoint
+@
+text
+@d6 1
+d8 1
+a9 9
+#include <unistd.h>
+#include <sys/socket.h>
+#if !defined(linux) && !defined(hpux) && !defined(sun4) && !defined(__NeXT__)
+#include <sys/select.h>
+#endif
+#include <sys/uio.h>
+#include <fcntl.h>
+#include <sys/errno.h>
+extern int errno;
+d11 27
+a37 4
+#include <signal.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+d44 4
+d94 1
+d96 1
+d98 5
+a102 1
+static int nThreads, nSysThreads;
+a107 3
+#ifdef MTDEBUG
+static int MTdebuglevel;
+#endif
+d239 1
+d241 1
+a241 1
+void MTSemFree(semaphore *s)
+d243 9
+d254 1
+a254 1
+void MTSemInit(semaphore *s, int n)
+d256 3
+a258 2
+  s->count = n;
+  s->queue = 0;
+d263 4
+a266 1
+  CTRACE(3, ("SemP on %x (count = %d)\n", (unsigned int)s, s->count));
+d271 18
+a288 1
+  CTRACE(3, ("SemP on %x done\n", (unsigned int)s));
+d294 4
+a297 1
+  CTRACE(3, ("SemV on %x (count = %d)\n", (unsigned int)s, s->count));
+d306 2
+a307 1
+  CTRACE(3, ("SemV on %x done\n", (unsigned int)s));
+d310 1
+d329 1
+d333 21
+a353 8
+  int doSwitch = 0;
+  thread nt;
+  CTRACE(3, ("SemVAll on %x (count = %d)\n", (unsigned int)s, s->count));
+  while (s->count < 0) {
+    ++s->count;
+    nt = QRemove(&s->queue);
+    RQInsert(nt);
+    doSwitch = doSwitch || nt->priority < currp->priority;
+d355 1
+a355 5
+  if (doSwitch) {
+    RQInsert(currp);
+    schedule();
+  }
+  TRACE(3, ("SemVAll on %x done\n", (unsigned int)s));
+d371 21
+d423 1
+d427 6
+d435 3
+d440 7
+a447 4
+  stackSize += 0 * 4096;
+#if defined(MTDEBUG)
+  if (MTdebuglevel > 0) stackSize += 4 * 4096;
+#endif
+a448 1
+  if (stackSize < 8192) stackSize = 8192;
+d451 11
+a461 1
+#endif
+d481 1
+d484 1
+d521 1
+d544 1
+d546 1
+d549 1
+a549 1
+  CTRACE(3, ("Sleeping at %d.%06d until %d.%06d\n", now.tv_sec, now.tv_usec, when.tv_sec, when.tv_usec));
+d552 3
+d571 2
+a572 1
+  CTRACE(3, ("Woke up\n"));
+d585 3
+d597 1
+d600 1
+d648 1
+d650 8
+d706 1
+d708 1
+d737 1
+d739 1
+a739 1
+ssize_t MTreadn(int fd, void *buf, size_t nbytes)
+d741 3
+a743 2
+  ssize_t res = 0, totalread = 0;
+  CTRACE(4, ("readn on %d wants %d bytes\n", fd, nbytes));
+d745 1
+d747 4
+a750 1
+    CTRACE(6, ("readn reading on %d into %x for %d bytes \n", fd, buf, nbytes));
+a753 1
+    CTRACE(6, ("readn reading done with %d\n", res));
+d766 2
+d773 1
+d775 2
+a776 1
+  CTRACE(4, ("readn returning %d\n", totalread > 0 ? totalread : res));
+d780 1
+d793 1
+d797 3
+a799 2
+  ssize_t res = 0, totalwrite = 0;
+  CTRACE(4, ("writen on %d wants %d bytes\n", fd, nbytes));
+d801 1
+d803 4
+a806 1
+    CTRACE(6, ("writen writeing\n"));
+d808 3
+a810 1
+    CTRACE(6, ("writen writeing done with %d\n", res));
+d815 1
+d821 2
+d824 1
+a824 1
+  CTRACE(4, ("writen returning %d\n", totalwrite > 0 ? totalwrite : res));
+d830 1
+a830 1
+  ssize_t res;
+d837 3
+a839 2
+  CTRACE(4, ("write2 on %d for %d+%d bytes\n", fd, n1, n2));
+  if (fd < 0 || fd >= MAXFDS) return -1;
+d841 1
+d843 3
+d847 3
+d852 3
+a854 1
+    } else if (res == v[0].iov_len + v[1].iov_len) {
+d859 1
+a859 1
+      if (res < v[0].iov_len) {
+d871 2
+d876 1
+d878 2
+a879 1
+  CTRACE(4, ("write2 returning %d\n", res));
+d883 1
+d1208 1
+d1216 8
+d1274 3
+a1276 2
+#ifndef IDLESTACKSIZE
+#define IDLESTACKSIZE (4 * 4096)
+d1286 1
+d1291 7
+d1299 1
+d1304 3
+d1309 1
+d1315 3
+d1322 1
+d1326 1
+a1326 1
+struct incoming {
+d1330 3
+a1332 2
+} incoming[NINCOMING];
+static semaphore formessage = { 0, 0 }, forspace = { NINCOMING, 0 };
+d1335 4
+a1358 1
+
+d1386 1
+a1386 1
+  struct other *o;
+d1402 16
+d1419 1
+d1424 3
+d1428 1
+d1438 4
+d1443 1
+d1459 4
+a1462 4
+  cache.id = *t;
+  cache.s = s;
+  TRACE(9, ("Inserting %#x.%d -> %d in others\n", t->ipaddress, t->port, cache.s));
+  others[nothers++] = cache;
+d1467 3
+a1469 3
+    nbo.userid = htons(getuid());
+    if (MTwriten(cache.s, &nbo, sizeof(nbo)) != sizeof(nbo) ||
+	MTreadn(cache.s, &nbo, sizeof(nbo)) != sizeof(nbo)) {
+d1471 1
+a1471 1
+      MTclose(cache.s);
+a1472 1
+      memset(&cache, 0, sizeof(cache));
+d1476 1
+a1476 1
+      MTclose(cache.s);
+a1477 1
+      memset(&cache, 0, sizeof(cache));
+d1480 4
+a1483 4
+    cache.id.ipaddress = nbo.ipaddress;
+    cache.id.incarnation = ntohs(nbo.incarnation);
+    assert(cache.id.port == ntohs(nbo.port));
+    *t = cache.id;
+d1486 4
+a1489 3
+  *o = cache;
+  MTCreate(Reader, o, 1, 4, 4 * 4096);
+  TRACE(8, ("find socket returning new %d\n", cache.s));
+d1498 1
+d1514 1
+d1533 1
+a1533 1
+  MTCreate(callNotifyFunctionHelper, (void *)cnf, 1, 4, 4 * 4096);
+d1544 1
+d1552 4
+d1557 1
+d1563 1
+d1568 1
+d1601 3
+d1605 1
+d1625 1
+a1625 1
+    nbo.userid = htons(getuid());
+d1643 1
+a1643 1
+      MTCreate(Reader, (void *)ri, 1, 4, 4 * 4096);
+d1662 3
+d1666 1
+d1673 3
+d1677 1
+d1687 3
+d1691 1
+d1703 4
+a1706 1
+  if (addr.sin_addr.s_addr == 0 || 1) {
+d1712 1
+d1714 8
+a1721 3
+      TRACE(1, ("Can't look up my own host name\n"));
+      MTclose(mysocket);
+      return -1;
+d1728 2
+a1729 1
+  MTCreate(Listener, (void *)mysocket, 1, 5, 4 * 4096);
+d1735 1
+d1742 1
+d1757 2
+d1763 1
+a1763 1
+    printf("MTSend to %s, socket %d, or %d bytes returned %d\n",
+d1767 1
+a1767 1
+  CTRACE(3, ("OSend returning\n"));
+a1776 1
+
+d1791 20
+d1913 1
+@
+
+
+1.2
+log
+@Checkpoint
+@
+text
+@d4 1
+d10 1
+a10 1
+#if !defined(linux) && !defined(hpux) && !defined(sun4)
+d62 1
+a62 1
+#if defined(sun4)
+d217 4
+a505 3
+  MTDeregisterFD(0);
+  MTDeregisterFD(1);
+  MTDeregisterFD(2);
+d529 1
+a529 1
+static struct semaphore fdlocks[MAXFDS][2] = { {{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}},{{1},{1}} };
+d583 1
+d585 1
+d608 1
+d610 1
+a646 7
+#ifdef ASYNCHSTDIN
+ssize_t _write(int fd, const void *buf, size_t nbytes)
+{
+  return MTwriten(fd, buf, nbytes);
+}
+#endif
+
+d855 1
+d921 5
+a925 6
+    assert(0);
+  }
+  arg = arg & ~MTFDFLAGS;
+  if (fcntl(fd, F_SETFL, arg) < 0) {
+    perror("first fcntl");
+    assert(0);
+d1341 12
+a1352 1
+    
+d1410 1
+d1412 1
+d1414 1
+d1416 1
+d1488 2
+a1489 1
+  int s = findsocket(&receiver);
+d1491 7
+a1497 1
+  if (MTwrite2(s, &length, sizeof(length), sbuf, slen) != sizeof(length) + slen) return -1;
+d1508 15
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d383 3
+a385 2
+  if (setitimer(ITIMER_REAL, &interval, NULL) < 0) 
+    perror("setitimer");
+d400 1
+a400 1
+    perror("setitimer");
+d494 4
+d607 4
+a610 1
+      if (errno == EAGAIN) {
+d1064 2
+d1085 2
+d1215 3
+a1217 1
+    perror("findsocket.connect");
+@

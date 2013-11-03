@@ -1,0 +1,650 @@
+head	1.31;
+access;
+symbols
+	105alpha:1.31
+	104alpha:1.31
+	103alpha:1.31
+	102alpha:1.31
+	101alpha:1.31
+	100alpha:1.31
+	DIKU_0:1.22
+	carlton_start:1.17
+	immel_start:1.9;
+locks; strict;
+
+
+1.31
+date	98.03.02.16.38.38;	author norm;	state Exp;
+branches;
+next	1.30;
+
+1.30
+date	98.02.09.18.16.18;	author norm;	state Exp;
+branches;
+next	1.29;
+
+1.29
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.28;
+
+1.28
+date	96.03.28.23.05.29;	author norm;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	95.06.23.22.16.28;	author norm;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	95.06.12.17.28.42;	author norm;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	95.04.04.05.08.43;	author norm;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	94.08.25.16.21.12;	author norm;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	94.08.22.23.43.46;	author norm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	94.08.17.16.50.39;	author norm;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	94.03.02.19.00.09;	author norm;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.06.10.15.51.27;	author norm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.03.21.06.33.03;	author norm;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.02.17.17.18.37;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.12.16.21.27.42;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.11.25.04.43.37;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.29.22.32.00;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.06.19.12.14.41;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.06.03.10.13.43;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.04.07.21.12.21;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.04.07.18.09.23;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.05.17.01.20.06;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.04.22.22.52.42;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.52.41;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.52.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.52.38;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.52.37;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.31
+log
+@'./EC'
+@
+text
+@export Environment, EnvironmentType
+
+const EnvironmentType <- typeobject EnvironmentType
+  function  getFileName -> [Tree]
+  function  getFN -> [String]
+  function  getStdout -> [OutStream]
+  function  getITable -> [IdentTable]
+  function  getNErrors -> [Integer]
+  operation setNErrors [Integer]
+  function  getRoot -> [Tree]
+  operation setRoot [Tree]
+  operation newid -> [Integer]
+  operation error [String]
+  operation errorf [String, RISA]
+  operation Info [Integer, String, RISA]
+  operation Warning [ln: Integer, String, RISA]
+  operation SemanticError [ln: Integer, String, RISA]
+  operation printf [String, RISA]
+  operation pass [String, RISA]
+  operation tassignTypes [String, RISA]
+  function getTraceAssignTypes -> [Boolean]
+  function getOptimizeInvocExecute -> [Boolean]
+  operation ttypeCheck [String, RISA]
+  function  getTraceTypeCheck -> [Boolean]
+  function  getDoTypeCheck -> [Boolean]
+  operation tinline [String, RISA]
+  function getTraceInline -> [Boolean]
+  operation done[Tree]
+  function  getln -> [Integer]
+  operation checkNames [Tree, Tree]
+  operation distribute [TreeMaker, Tree, Tree, Tree] -> [Tree]
+  function  getrootst -> [SymbolTable]
+  function  getExportTree -> [Boolean]
+  function  getExplainNonManifests -> [Boolean]
+  function  getNameSpaceFile -> [String]
+  function  getTraceCode -> [Boolean]
+  function  getTraceEvaluateManifests -> [Boolean]
+  function  getConformTable -> [IIBTable]
+  function  getGenerateDebugInfo -> [Boolean]
+  function  getGenerateBuiltin -> [Boolean]
+  function  getGenerateConcurrent -> [Boolean]
+  function  getExecuteNow -> [Boolean]
+  function  getGenerateATs -> [Boolean]
+  function  getPadByteCodes -> [Boolean]
+  function  getNeedMoreEvaluateManifest -> [Boolean]
+  operation setNeedMoreEvaluateManifest [Boolean]
+  function  getTraceAllocation -> [Boolean]
+  operation tGenerate [String, RISA]
+  operation tAllocation [String, RISA]
+  function  getExternalDirectory -> [Directory]
+  operation setExternalDirectory [Directory]
+  function  getInvoc -> [InvocType]
+  function  getAtlit -> [AtlitType]
+  function  getUseAbCons -> [Boolean]
+  function  getCompilingBuiltins -> [Boolean]
+  function  getCompilingCompiler -> [Boolean]
+  function  getWhy -> [Boolean]
+  operation setWhy [Boolean]
+  function  getWarnShadows -> [Boolean]
+  function  getGenerateViewChecking -> [Boolean]
+  function  getDoingIdsEarly -> [Boolean]
+  function  getDumpEvaluateManifests -> [Boolean]
+  operation scheduleDeferredTypeCheck[t : Tree, aparam : Any, apsym : Any, avalue : Any, i : Integer]
+end EnvironmentType
+
+const Environment <- immutable object Environment
+  export function getSignature -> [r : Signature]
+    r <- EnvironmentType
+  end getSignature
+  export operation getEnv -> [r : EnvironmentType]
+    var a : Any
+    primitive var "GETENV" [a] <- []
+    r <- view a as EnvironmentType
+  end getEnv
+  export operation getPtr [a : Any] -> [r : Integer]
+    primitive  [r] <- [a]
+  end getPtr
+end Environment
+@
+
+
+1.30
+log
+@Cleaned up
+@
+text
+@d63 1
+a63 1
+  operation scheduleDeferredTypeCheck[t : Tree, aparam : Tree, apsym : Symbol, avalue : Tree, i : Integer]
+@
+
+
+1.29
+log
+@Many changes
+@
+text
+@d34 1
+@
+
+
+1.28
+log
+@Flatten invocations to reduce jibberish on the stack
+@
+text
+@d22 1
+@
+
+
+1.27
+log
+@Make type stuff work
+@
+text
+@d60 1
+@
+
+
+1.26
+log
+@Implement defered type checking of manifest invocs
+@
+text
+@d51 1
+@
+
+
+1.25
+log
+@Handle exported mutable objects and getting their ids assigned
+@
+text
+@d59 1
+@
+
+
+1.24
+log
+@Fix serious GC bugs, add a new builtin
+@
+text
+@d58 1
+@
+
+
+1.23
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d53 1
+@
+
+
+1.22
+log
+@Generate code for view as, new bytecode VIEW
+@
+text
+@d1 1
+a1 1
+export Environment
+d3 56
+a59 56
+  const EnvironmentType <- typeobject EnvironmentType
+    function  getFileName -> [Tree]
+    function  getFN -> [String]
+    function  getStdout -> [OutStream]
+    function  getITable -> [IdentTable]
+    function  getNErrors -> [Integer]
+    operation setNErrors [Integer]
+    function  getRoot -> [Tree]
+    operation setRoot [Tree]
+    operation newid -> [Integer]
+    operation error [String]
+    operation errorf [String, RISA]
+    operation Info [Integer, String, RISA]
+    operation Warning [ln: Integer, String, RISA]
+    operation SemanticError [ln: Integer, String, RISA]
+    operation printf [String, RISA]
+    operation pass [String, RISA]
+    operation tassignTypes [String, RISA]
+    function getTraceAssignTypes -> [Boolean]
+    operation ttypeCheck [String, RISA]
+    function  getTraceTypeCheck -> [Boolean]
+    function  getDoTypeCheck -> [Boolean]
+    operation tinline [String, RISA]
+    function getTraceInline -> [Boolean]
+    operation done[Tree]
+    function  getln -> [Integer]
+    operation checkNames [Tree, Tree]
+    operation distribute [TreeMaker, Tree, Tree, Tree] -> [Tree]
+    function  getrootst -> [SymbolTable]
+    function  getExportTree -> [Boolean]
+    function  getNameSpaceFile -> [String]
+    function  getTraceCode -> [Boolean]
+    function  getTraceEvaluateManifests -> [Boolean]
+    function  getConformTable -> [IIBTable]
+    function  getGenerateDebugInfo -> [Boolean]
+    function  getGenerateBuiltin -> [Boolean]
+    function  getGenerateConcurrent -> [Boolean]
+    function  getExecuteNow -> [Boolean]
+    function  getGenerateATs -> [Boolean]
+    function  getPadByteCodes -> [Boolean]
+    function  getNeedMoreEvaluateManifest -> [Boolean]
+    operation setNeedMoreEvaluateManifest [Boolean]
+    function  getTraceAllocation -> [Boolean]
+    operation tGenerate [String, RISA]
+    operation tAllocation [String, RISA]
+    function  getExternalDirectory -> [Directory]
+    operation setExternalDirectory [Directory]
+    function  getInvoc -> [InvocType]
+    function  getUseAbCons -> [Boolean]
+    function  getCompilingBuiltins -> [Boolean]
+    function  getWhy -> [Boolean]
+    operation setWhy [Boolean]
+    function  getWarnShadows -> [Boolean]
+    function  getGenerateViewChecking -> [Boolean]
+  end EnvironmentType
+
+@
+
+
+1.21
+log
+@August 94 Checkpoint II
+@
+text
+@d57 1
+@
+
+
+1.20
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d56 1
+@
+
+
+1.19
+log
+@First attempt at abcons
+@
+text
+@d1 1
+a1 1
+export Environment, TreeMaker
+a2 4
+const TreeMaker <- immutable typeobject TreeMaker
+  operation create[Integer, Tree, Tree, Tree] -> [Tree]
+end TreeMaker
+
+d6 1
+d16 1
+d24 1
+a36 1
+    function  getDoSelfs -> [Boolean]
+d50 2
+a51 1
+    function  getInvoc -> [TreeMaker]
+d53 3
+@
+
+
+1.18
+log
+@Prepare to generate ab/cons and invokes by index
+@
+text
+@a1 1
+export hasId
+a2 4
+const hasId <- typeobject hasId
+  function  getId -> [Ident]
+end hasId
+
+@
+
+
+1.17
+log
+@Implement external dictionary for symbol lookups
+@
+text
+@a50 1
+    function  getUseCalloids -> [Boolean]
+d58 1
+@
+
+
+1.16
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d57 2
+@
+
+
+1.15
+log
+@Clean up trace output
+@
+text
+@d55 1
+@
+
+
+1.14
+log
+@Implement new builtins: ivectorofany, risa
+@
+text
+@d54 2
+@
+
+
+1.13
+log
+@Store the AT of exported symbols, do allocation for inlining
+@
+text
+@d1 1
+a1 1
+export Environment, TreeMaker, RISA
+a10 6
+
+const RISA <- typeobject RISA
+  function lowerbound -> [Integer]
+  function upperbound -> [Integer]
+  function getElement [Integer] -> [Any]
+end RISA
+@
+
+
+1.12
+log
+@Implement change to "new" keyword.
+@
+text
+@d37 1
+@
+
+
+1.11
+log
+@Evaluate manifests in multiple passes
+@
+text
+@d27 1
+a27 1
+    operation new -> [Integer]
+@
+
+
+1.10
+log
+@Solve an incestuous monitor problem in sym with asString
+@
+text
+@d57 2
+@
+
+
+1.9
+log
+@Remove spurious oblit dump on operation not defined errors
+@
+text
+@d38 1
+@
+
+
+1.8
+log
+@Implement calloids
+@
+text
+@d35 1
+@
+
+
+1.7
+log
+@Implement padded bytecodes (operands aligned)
+@
+text
+@d54 1
+@
+
+
+1.6
+log
+@Add generateBuiltin to the exported interface
+@
+text
+@d52 2
+@
+
+
+1.5
+log
+@Made generation of debugging info optional
+@
+text
+@d49 1
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@d48 1
+@
+
+
+1.3
+log
+@New Emerald syntax for primitives
+@
+text
+@d1 2
+a2 5
+import Tree, Ident, Printable, IdentTable from "Jekyll"
+import SymbolTable from "Jekyll"
+import IIBTable from "Jekyll"
+export Environment, TreeMaker, RISA to "Jekyll"
+export hasId to "Jekyll"
+d4 1
+a4 1
+const hasId <- type hasId
+d8 1
+a8 1
+const TreeMaker <- immutable type TreeMaker
+d12 1
+a12 1
+const RISA <- type RISA
+d19 1
+a19 1
+  const EnvironmentType <- type EnvironmentType
+@
+
+
+1.2
+log
+@Implemented executenow
+@
+text
+@d60 1
+a60 1
+    primitive 198 [a] <- []
+d64 1
+a64 1
+    primitive 398 [r] <- [a]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d51 2
+@

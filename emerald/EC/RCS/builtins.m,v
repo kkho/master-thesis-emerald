@@ -1,0 +1,202 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.5
+	carlton_start:1.4
+	immel_start:1.4;
+locks; strict;
+
+
+1.6
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.08.16.14.23.53;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.04.22.22.51.01;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.51.00;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.50.58;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.50.57;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.6
+log
+@Many changes
+@
+text
+@import Tree, FTree, Printable from "Jekyll"
+import Symbol, SymbolTable, STContext, STKind from "Jekyll"
+import Environment from "Jekyll"
+import Builtinlit from "Jekyll"
+export builtins to "Jekyll"
+
+const Builtins <- immutable object Builtins
+  const names <- {
+      "type",
+      "any",
+      "array",
+      "boolean",
+      "character",
+      "condition",
+      "integer",
+      "none",
+      "node",
+      "signature",
+      "real",
+      "string",
+      "vector",
+      "time",
+      "nodelistelement",
+      "nodelist",
+      "instream",
+      "outstream",
+      "immutablevector",
+      "bitchunk",
+      "sequenceofcharacter",
+      "handler",
+      "vectorofchar",
+      "buffer",
+      "concretetype",
+      "copvector",
+      "copvectore",
+      "aopvector",
+      "aopvectore",
+      "aparamlist",
+      "vectorofint" }
+
+  export operation getName [index : Integer] -> [name : String]
+    if 0 <= index and index <= names.upperbound then
+      name <- names(index)
+    end if
+  end getName
+
+  export operation init -> [r : SymbolTable]
+    var ss : Symbol
+    const it <- Environment.getEnv.getITable
+
+    r <- SymbolTable.create[nil, STContext.COutside]
+    for i : Integer <- 0 while i <= names.upperbound by i <- i + 1
+      ss <- r.Define[ln, it.lookup[names(i), 999], STKind.SConst, false]
+      ss$value <- builtinlit.create[0, i]
+    end for
+  end init
+end Builtins
+@
+
+
+1.5
+log
+@New symbol definition.
+@
+text
+@d29 1
+a29 1
+      "risc",
+@
+
+
+1.4
+log
+@type -> typeobject sed
+@
+text
+@d53 1
+a53 1
+      ss <- r.Define[it.lookup[names(i), 999], STKind.SConst, false]
+@
+
+
+1.3
+log
+@Is now defunct
+@
+text
+@d9 1
+a9 1
+      "abstracttype",
+@
+
+
+1.2
+log
+@Implemented Vectorofint
+@
+text
+@d8 39
+a46 1
+  const x <- 1
+a47 32
+    const names <- {
+	"abstracttype",
+	"any",
+	"array",
+	"boolean",
+	"character",
+	"condition",
+	"integer",
+	"none",
+	"node",
+	"signature",
+	"real",
+	"string",
+	"vector",
+	"time",
+	"nodelistelement",
+	"nodelist",
+	"instream",
+	"outstream",
+	"immutablevector",
+	"bitchunk",
+	"risc",
+	"handler",
+	"vectorofchar",
+	"buffer",
+	"concretetype",
+	"copvector",
+	"copvectore",
+	"aopvector",
+	"aopvectore",
+	"aparamlist",
+	"vectorofint" }
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d40 2
+a41 1
+	"aparamlist" }
+@

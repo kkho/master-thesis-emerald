@@ -1,0 +1,69 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	94.08.17.17.01.54;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.21.23.33.58;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.42.17;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compiler/Builtins revision maintenance tool
+@
+
+
+1.3
+log
+@Allow gzipped files (.gz)
+@
+text
+@#!/bin/csh -f
+if ( -r execCP ) then
+    set real = `ls -l execCP | sed -e 's/^.*-> //'`
+    ls -l $real
+else
+    echo There is no current version.
+    ls -l execCP
+endif
+@
+
+
+1.2
+log
+@Cleaned up checking on execCP
+@
+text
+@d7 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+if ( -x execCP ) then
+@

@@ -1,0 +1,126 @@
+head	1.5;
+access;
+symbols
+	105alpha:1.5
+	104alpha:1.5
+	103alpha:1.5
+	102alpha:1.5
+	101alpha:1.5
+	100alpha:1.5
+	DIKU_0:1.4
+	carlton_start:1.3
+	immel_start:1.1;
+locks; strict;
+
+
+1.5
+date	98.02.09.17.55.34;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.06.20.08.15.24;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.22.05.35.46;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.04.00.22.09;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.25.16.57.26;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Input file lists
+@
+
+
+1.5
+log
+@Checkpoint
+@
+text
+@oblit.m
+wherewgt.m
+foutput.m
+siiiatbl.m
+invcache.m
+primstat.m
+invoc.m
+strinvoc.m
+qinvoc.m
+comp.m
+xexport.m
+arg.m
+assertst.m
+elsecls.m
+initdef.m
+recovdef.m
+xclass.m
+selflit.m
+ifclause.m
+ifstat.m
+enumlit.m
+exitstat.m
+exp.m
+@
+
+
+1.4
+log
+@8.3 file names
+@
+text
+@d15 2
+@
+
+
+1.3
+log
+@Export char and bools as well
+@
+text
+@d2 1
+a2 1
+wherewidgit.m
+d4 2
+a5 2
+siiiatable.m
+invoccache.m
+d8 2
+a9 2
+starinvoc.m
+questinvoc.m
+d13 2
+a14 2
+assertstat.m
+elseclause.m
+@
+
+
+1.2
+log
+@catch up on recent changes
+@
+text
+@a13 1
+boollit.m
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 2
+@

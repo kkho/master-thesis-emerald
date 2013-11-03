@@ -1,0 +1,343 @@
+head	1.10;
+access;
+symbols
+	105alpha:1.10
+	104alpha:1.10
+	103alpha:1.10
+	102alpha:1.10
+	101alpha:1.10
+	100alpha:1.10
+	DIKU_0:1.6
+	immel_start:1.2;
+locks; strict;
+
+
+1.10
+date	98.02.09.18.06.45;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.11.23.17.12.36;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.03.15.05.18.25;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.08.25.11.26.22;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.08.17.17.02.23;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.06.16.05.25.31;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.11.25.04.18.49;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.44.29;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.44.26;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.10
+log
+@Cleaned up version
+@
+text
+@% 
+% @@(#)ImmutableVector.m	1.2  3/6/91
+%
+
+const immutableVector <- 
+  immutable object immutableVector builtin 0x1012
+    export function of [ElementType : type] -> [result : NIMVT]
+      forall
+	ElementType
+      where
+	NV <-	immutable typeobject NV builtin 0x1612
+		  function  getElement [Integer] -> [ElementType]
+		    % get the element indexed by index, failing if index 
+		    % out of range.
+		  function  upperbound -> [Integer]
+		    % return the highest valid index, ub.
+		  function  lowerbound -> [Integer]
+		    % return the lowest valid index, always 0.
+		  function  getSlice [Integer, Integer] -> [NV]
+		  function  getElement [Integer, Integer] -> [NV]
+		    % See implementation comment
+		  operation catenate [a : NV] -> [r : NV]
+		    % return a new vector the result of catenating the 
+		    % elements of a to self
+		  operation || [a : NV] -> [r : NV]
+		    % return a new vector the result of catenating the 
+		    % elements of a to self
+		end NV
+      where
+	RIS <-  typeobject RIS
+		  function  getElement [Integer] -> [ElementType]
+		  function  upperbound -> [Integer]
+		  function  lowerbound -> [Integer]
+		end RIS
+      where
+	NIMVT <-immutable typeobject NIMVT
+		  operation create [Integer] -> [NV]
+		  operation literal [RIS] -> [NV]
+		  operation literal [RIS, Integer] -> [NV]
+		  function getSignature -> [Signature]
+		end NIMVT
+
+      result <- 
+	immutable object aNVT 
+
+	  export function getSignature -> [result : Signature]
+	    result <- NV
+	  end getSignature
+
+	  export operation create[length : Integer] -> [result : NV]
+	    result <-
+	      immutable object aNV builtin 0x1412
+		export function  getElement [index : Integer] -> [result : ElementType]
+		  % get the element indexed by index, failing if index 
+		  % out of range.
+		  primitive self "GET" [result] <- [index]
+		end getElement
+		export function  upperbound -> [r : Integer]
+		  % return the highest valid index, ub.
+		  primitive self "UPB" [r] <- []
+		end upperbound
+		export function  lowerbound -> [r : Integer]
+		  % return the lowest valid index, always 1.
+		  primitive "LDIB" 0 [r] <- []
+		end lowerbound
+		export function  getSlice [i1 : Integer, length : Integer] -> [r : NV]
+		  % return a new Vector, a, with lower bound 0, and 
+		  % upper bound length-1, such that for 0 <= i < length:
+		  %     self.getElement[i1+i] == a.getElement[i]
+		  % fail if i1 or i1+length is out of range.
+		  primitive self "GSLICE" [r] <- [i1, length]
+		end getSlice
+		export function  getElement [i1 : Integer, length : Integer] -> [r : NV]
+		  primitive self "GSLICE" [r] <- [i1, length]
+		end getElement
+		export operation catenate [a : NV] -> [r : NV]
+		  % return a new vector the result of catenating the 
+		  % elements of a to self
+		  primitive self "CAT" [r] <- [a]
+		end catenate
+		export operation || [a : NV] -> [r : NV]
+		  % return a new vector the result of catenating the 
+		  % elements of a to self
+		  primitive self "CAT" [r] <- [a]
+		end ||
+	      end aNV
+	  end create
+	  export operation literal[value : RIS, length : Integer] -> [r : NV]
+	    var i	: Integer
+	    var j 	: Integer
+	    var limit	: Integer
+	    var e	: ElementType
+
+	    i <- value.lowerbound
+	    limit <- length - 1
+	    r <- self.create[limit - i + 1]
+	    
+	    j <- 0
+	    loop
+	      exit when i > limit
+	      e <- value[i]
+	      primitive "SET" [] <- [r, j, e]
+	      i <- i + 1
+	      j <- j + 1
+	    end loop
+	  end literal
+	  export operation literal [value : RIS] -> [r : NV]
+	    r <- self.literal[value, value.upperbound + 1]
+	  end literal
+	end aNVT
+    end of
+  end immutableVector
+
+export immutableVector to "Builtins"
+@
+
+
+1.9
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@d25 3
+a40 1
+		  operation literal [RIS, Integer, Integer] -> [NV]
+d81 5
+d88 1
+a88 7
+	  export operation literal [value : RIS, length : Integer] -> [r : NV]
+	    r <- self.literal[value, value.lowerbound, length]
+	  end literal
+	  export operation literal [value : RIS] -> [r : NV]
+	    r <- self.literal[value, value.lowerbound, value.upperbound - value.lowerbound + 1]
+	  end literal
+	  export operation literal[value : RIS, start : Integer, length : Integer] -> [r : NV]
+d94 1
+a94 1
+	    i <- start
+d106 3
+@
+
+
+1.8
+log
+@Root directory creation, some small cleanups
+@
+text
+@d38 1
+d81 7
+a87 1
+	  export operation literal[value : RIS, length : Integer] -> [r : NV]
+d93 1
+a93 1
+	    i <- value.lowerbound
+a104 3
+	  end literal
+	  export operation literal [value : RIS] -> [r : NV]
+	    r <- self.literal[value, value.upperbound + 1]
+@
+
+
+1.7
+log
+@Use LDIB rather than LDIS for lowerbound
+@
+text
+@d36 1
+d80 1
+a80 1
+	  export operation literal[value : RIS] -> [r : NV]
+d87 1
+a87 1
+	    limit <- value.upperbound
+d98 3
+@
+
+
+1.6
+log
+@Cleaned up the naming of {g,s}et{Element,Slice}
+@
+text
+@d60 1
+a60 1
+		  primitive "LDIS" 0 0 [r] <- []
+@
+
+
+1.5
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d5 1
+a5 1
+const immutableVector == 
+d20 1
+d69 3
+@
+
+
+1.4
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@a11 1
+		  operation hiddenSetElement[Integer, ElementType]
+a52 4
+		export operation hiddenSetElement [index : Integer, e : ElementType]
+		  % set the element, failing if index out of range
+		  primitive self "SET" [] <- [index, e]
+		end hiddenSetElement
+d89 1
+a89 1
+	      r.hiddenSetElement[j, e]
+@
+
+
+1.3
+log
+@Rename operation new so it can be a keyword.
+@
+text
+@d93 1
+a93 1
+	      e <- value(i)
+@
+
+
+1.2
+log
+@Hand corrections after typeobject conversion
+@
+text
+@d35 1
+a35 1
+		  operation new [RIS] -> [NV]
+d80 1
+a80 1
+	  export operation new[value : RIS] -> [r : NV]
+d98 1
+a98 1
+	  end new
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)ImmutableVector.m	1.1  3/6/91
+d7 1
+a7 1
+    export function of [ElementType : AbstractType] -> [result : NIMVT]
+d11 1
+a11 1
+	NV <-	immutable type NV builtin 0x1612
+d27 1
+a27 1
+	RIS <-  type RIS
+d33 1
+a33 1
+	NIMVT <-immutable type NIMVT
+@

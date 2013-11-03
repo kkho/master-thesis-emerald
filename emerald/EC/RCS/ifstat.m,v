@@ -1,0 +1,532 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.14
+	103alpha:1.14
+	102alpha:1.14
+	101alpha:1.14
+	100alpha:1.14
+	DIKU_0:1.12
+	carlton_start:1.11
+	immel_start:1.4;
+locks; strict;
+
+
+1.14
+date	98.02.09.17.55.34;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.06.08.15.24.42;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.06.16.05.20.24;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.06.15.15.29.04;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.06.05.07.45.34;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.12.24.18.53.12;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.12.23.15.30.15;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.12.05.03.16;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.12.10.17.07.08;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.05.19.12.37.40;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.53.39;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.53.38;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.53.37;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.14
+log
+@Checkpoint
+@
+text
+@export Ifstat
+
+const voi <- Vector.of[Integer]
+
+const ifstat <- class Ifstat (Tree) [xxifclauses : Tree, xxelseclause : Tree]
+    field ifclauses : Tree <- xxifclauses
+    field elseclause : Tree <- xxelseclause
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- ifclauses
+      elseif i = 1 then
+	r <- elseclause
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	ifclauses <- r
+      elseif i = 1 then
+	elseclause <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nifclauses, nelseclause : Tree
+      if ifclauses !== nil then nifclauses <- ifclauses.copy[i] end if
+      if elseclause !== nil then nelseclause <- elseclause.copy[i] end if
+      r <- ifstat.create[ln, nifclauses, nelseclause]
+    end copy
+    operation useCaseStatement [xct : Printable] -> [result : Boolean]
+      const it <- Environment$env$ITable
+      var min, max : Integer
+      var xsym : Symbol
+      var s : Sym
+      const nArms <- ifclauses.upperbound + 1
+      var values : voi
+      var val : Integer
+      result <- false
+      if nArms <= 3 then return end if
+      values <- voi.create[nArms]
+      for i : Integer <- 0 while i < nArms by i <- i + 1
+	const x <- view ifclauses[i] as ifclause
+	result, xsym, s, min, max, val <- x.shouldUseCase[xsym, min, max]
+	values[i] <- val
+%	Environment$env.printf["Should %d use case = %s\n", {i, result.asString}]
+	exit when !result
+      end for
+%     Environment$env.printf["Should use case = %s\n", {result.asString}]
+      if result then
+	const a <- view xsym$ATinfo as hasID
+	if a == nil then
+	  Environment$env.printf["ifstat.case: AT is nil\n", nil]
+	  result <- false
+	else
+	  Environment$env.pass["ifstat.case: AT is %S %x\n", {a, a$id}]
+	  result <-
+	    (a$id = 0x1606 or a$id = 0x1604) and
+	    (nArms > 2) and
+	    (nArms > 10 or (nArms * 4) > (max - min + 1)) and
+	    (max - min + 1) <= 512 and
+	    (-32768 <= min and max <= 32767)
+	end if
+      end if
+%     Environment$env.printf["Should use case 2 = %s\n", {result.asString}]
+      if result then
+	const bc <- view xct as ByteCode
+	var elseLabel : Integer
+	const endLabel : Integer <- bc.declareLabel
+	const range <- max - min + 1
+	const labels <- voi.create[nArms]
+	const map <- voi.create[range]
+
+	if elseClause !== nil then elseLabel <- bc.declareLabel end if
+	for i : Integer <- 0 while i < range by i <- i + 1
+	  map[i] <- ~1
+	end for
+	for i : Integer <- 0 while i < nArms by i <- i + 1
+	  map[values[i] - min] <- i
+	end for
+%	Environment$env.printf["S is %s\n", { s.asString} ]
+	bc.pushSize[4]
+	s.generate[bc]
+%	Environment$env.printf["Done generating S\n", nil]
+	bc.popSize
+	bc.addCode["CASE"]
+	bc.addValue[min, 2]
+	bc.addValue[max, 2]
+	for i : Integer <- 0 while i < range by i <- i + 1
+	  const which <- map[i]
+	  if which < 0 then
+	    if elseClause == nil then
+	      bc.addLabelReference[endLabel, 2]
+	    else
+	      bc.addLabelReference[elseLabel, 2]
+	    end if
+	  else
+	    const l : Integer <- bc.declareLabel
+	    labels[which] <- l
+	    bc.addLabelReference[l, 2]
+	  end if
+	end for
+	if elseclause == nil then
+	  bc.addLabelReference[endLabel, 2]
+	else
+	  bc.addLabelReference[elseLabel, 2]
+	end if
+	for i : Integer <- 0 while i < nArms by i <- i + 1
+	  const e <- ifclauses[i][1]
+	  bc.defineLabel[labels[i]]
+	  e.generate[xct]
+	  if i != nArms - 1 or elseclause !== nil then
+	    bc.addCode["BR"]
+	    bc.addLabelReference[endLabel, 2]
+	  end if
+	end for
+	if elseclause !== nil then
+	  bc.defineLabel[elseLabel]
+	  elseclause.generate[xct]
+	end if
+	bc.defineLabel[endLabel]
+      end if
+    end useCaseStatement
+
+    export operation generate [xct : Printable]
+      const bc <- view xct as ByteCode
+      if ! self.useCaseStatement[xct] then
+	const endLabel : Integer <- bc.declareLabel
+	for i : Integer <- 0 while i <= ifclauses.upperbound by i <- i + 1
+	  const aclause <- ifclauses[i]
+	  const exp <- aclause[0]
+	  const stats <- aclause[1]
+	  const falseLabel : Integer <- bc.declareLabel
+	  bc.lineNumber[exp$ln]
+	  bc.pushSize[4]
+	  exp.generate[xct]
+	  bc.popSize
+	  if stats == nil then
+	    bc.addCode["BRT"]
+	    bc.addLabelReference[endLabel, 2]
+	  else
+	    bc.addCode["BRF"]
+	    bc.addLabelReference[falseLabel, 2]
+	    stats.generate[xct]
+	    if i != ifclauses.upperbound or elseclause !== nil then
+	      bc.addCode["BR"]
+	      bc.addLabelReference[endLabel, 2]
+	    end if
+	    bc.defineLabel[falseLabel]
+	  end if
+	end for
+	if elseclause !== nil then 
+	  elseclause.generate[xct]
+	end if
+	bc.defineLabel[endLabel]
+      end if
+    end generate
+
+  export function asString -> [r : String]
+    r <- "ifstat"
+  end asString
+end Ifstat
+@
+
+
+1.13
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d62 2
+a63 1
+	    (max - min + 1) <= 512
+@
+
+
+1.12
+log
+@First attempt at abcons
+@
+text
+@d69 1
+a69 1
+	const endLabel <- bc.declareLabel
+d98 1
+a98 1
+	    const l <- bc.declareLabel
+d128 1
+a128 1
+	const endLabel <- bc.declareLabel
+d133 1
+a133 1
+	  const falseLabel <- bc.declareLabel
+@
+
+
+1.11
+log
+@Convert to the new subscript syntax a[b]
+@
+text
+@a3 11
+const BCType <- typeobject T
+  operation declareLabel -> [Integer]
+  operation addLabelReference [label: Integer, size : Integer]
+  operation addCode[String]
+  operation addValue[value : Integer, size : Integer]
+  operation defineLabel[Integer]
+  function  asString -> [String]
+  operation pushSize[Integer]
+  operation popSize
+  op lineNumber[Integer]
+end T
+d52 1
+a52 4
+	const a <- view xsym$ATinfo as typeobject t 
+	  function getId -> [Integer] 
+	  function asString -> [String] 
+	end t
+d57 1
+a57 1
+	  Environment$env.pass["ifstat.case: AT is %s %x\n", {a.asString, a$id}]
+d67 1
+a67 1
+	const bc <- view xct as BCType
+d126 1
+a126 1
+      const bc <- view xct as BCType
+@
+
+
+1.10
+log
+@Eliminate a[b] as shorthand for self.a[b]
+@
+text
+@d55 1
+a55 1
+	const x <- view ifclauses(i) as ifclause
+d57 1
+a57 1
+	values(i) <- val
+d90 1
+a90 1
+	  map(i) <- ~1
+d93 1
+a93 1
+	  map(values(i) - min) <- i
+d104 1
+a104 1
+	  const which <- map(i)
+d113 1
+a113 1
+	    labels(which) <- l
+d123 2
+a124 2
+	  const e <- ifclauses(i)(1)
+	  bc.defineLabel[labels(i)]
+d144 3
+a146 3
+	  const aclause <- ifclauses(i)
+	  const exp <- aclause(0)
+	  const stats <- aclause(1)
+@
+
+
+1.9
+log
+@Byte load/stores, literals on CT basis
+@
+text
+@d141 1
+a141 1
+      if ! useCaseStatement[xct] then
+@
+
+
+1.8
+log
+@Installed experimental bytecodes
+@
+text
+@a124 1
+	  bc.lineNumber[e$ln]
+@
+
+
+1.7
+log
+@Use nameof rather than asString
+@
+text
+@d100 1
+a100 1
+	bc.addCode["NCASE"]
+@
+
+
+1.6
+log
+@Get rid of return on generate
+@
+text
+@d100 1
+a100 1
+	bc.addCode["CASE"]
+d117 4
+a120 4
+	if elseclause !== nil then
+	  bc.lineNumber[elseclause$ln]
+	  bc.defineLabel[elseLabel]
+	  elseclause.generate[xct]
+a121 2
+	bc.addCode["BR"]
+	bc.addLabelReference[endLabel, 2]
+d127 1
+a127 1
+	  if i != nArms - 1 then
+d132 4
+a158 1
+	    bc.lineNumber[stats$ln]
+a167 1
+	  bc.lineNumber[elseclause$ln]
+@
+
+
+1.5
+log
+@Removed all monitors
+@
+text
+@a43 1
+      var junk : Any
+d97 1
+a97 1
+	junk <- s.generate[bc]
+d120 1
+a120 1
+	  junk <- elseclause.generate[xct]
+d128 1
+a128 1
+	  junk <- e.generate[xct]
+d138 1
+a138 2
+    export operation generate [xct : Printable] -> [rct : None]
+      var junk : Any
+d149 1
+a149 1
+	  junk <- exp.generate[xct]
+d158 1
+a158 1
+	    junk <- stats.generate[xct]
+d168 1
+a168 1
+	  junk <- elseclause.generate[xct]
+@
+
+
+1.4
+log
+@Type checking problems
+@
+text
+@a16 1
+  monitor
+d43 1
+a43 1
+    private operation useCaseStatement [xct : Printable] -> [result : Boolean]
+a174 1
+  end monitor
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d13 1
+a13 1
+  op lineNumber
+@
+
+
+1.2
+log
+@Make generate return something (currently nothing interesting)
+@
+text
+@d1 1
+a1 7
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable, Symbol from "Jekyll"
+import Environment from "Jekyll"
+import ATlit from "Jekyll"
+import Ifclause from "Jekyll"
+import Sym from "Jekyll"
+export Ifstat to "Jekyll"
+d4 1
+a4 1
+const BCType <- type T
+d65 1
+a65 1
+	const a <- view xsym$ATinfo as type t 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d51 1
+d105 1
+a105 1
+	s.generate[bc]
+d128 1
+a128 1
+	  elseclause.generate[xct]
+d136 1
+a136 1
+	  e.generate[xct]
+d146 2
+a147 1
+    export operation generate [xct : Printable]
+d158 1
+a158 1
+	  exp.generate[xct]
+d167 1
+a167 1
+	    stats.generate[xct]
+d177 1
+a177 1
+	  elseclause.generate[xct]
+@

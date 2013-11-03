@@ -1,0 +1,279 @@
+head	1.9;
+access;
+symbols
+	105alpha:1.9
+	104alpha:1.9
+	103alpha:1.9
+	102alpha:1.9
+	101alpha:1.9
+	100alpha:1.9
+	DIKU_0:1.6;
+locks; strict;
+comment	@# @;
+
+
+1.9
+date	95.03.29.18.13.13;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.03.03.05.48.52;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.02.16.07.18.23;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.03.01.23.30.32;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.09.28.14.23.39;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.08.12.22.13.48;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.18.00.37.34;	author mueller;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.06.15.20.17.06;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.19.31.25;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@make full tar archive of Emerald on stdout
+@
+
+
+1.9
+log
+@Use allfiles to get the list all in one place
+@
+text
+@#!/bin/csh -f
+# make full tar archive of Emerald on stdout
+cd $EMERALDROOT
+tar cf - `./bin/allfiles -v` | gzip > emfull.tar.gz
+@
+
+
+1.8
+log
+@Major reorganization
+@
+text
+@d4 1
+a4 32
+tar cf - \
+	./Doc/{BinTools,Install,Layout,RCSHowTo,EmeraldStack.eps} \
+	./bin/{changed,*version,regression,make*{tar,zip}} \
+	./bin/{emxx,emc,*/issymlink,emmake,setarch,issymlink*} \
+	./vm/src/{*.[ch],vm.d,Makefile{,.DOS}} ./vm/emd \
+	./emd/*.[ch] \
+	./Builtins/{*.m,Makefile,vec-ed} \
+	./lib/{Builtins,Compiler,Makefile,oid,opoid,macroMf} \
+	./lib/{bcdef,cctab.c,cctab.h,ccdef,jsdef} \
+	./lib/*/macroMf \
+	./ccalls/{CCall.doc,Makefile,misc.h,regexp.h,streams.h} \
+	./ccalls/{misc,regexp,streams}/{Makefile,*.c,*.h} \
+	./Example/{*.m,first.x} \
+	./ExecTest/{*.m,*.in,*.out,b,Makefile} \
+	./FailTest/{*.m,*.exp,Makefile} \
+	./EC/{*.m,input.?,b,t,input.{all,bst},Makefile,MAKETN,reset.bat} \
+	./EC/{em_ecomp.y} \
+	./vmc/{[a-z]*.[ch],Emain.c,Makefile,MAKETN,vmcpar.y,vmclex.l} \
+	./emyacc/{y?.c,dextern,files,yacchead.m,yaccpar.*} \
+	./emyacc/{yyre*,yystart*,Makefile} \
+	./Report/{*.tex,*.bib,*.sty,*.m,*.bst,Makefile} \
+	./bin/RCS \
+	./bin/{setuser,useemerald,forallarch,newarch,rcssync} \
+	./emd/RCS \
+	./Builtins/RCS \
+	./lib/systems \
+	./ccalls/{RCS,*/RCS} \
+	./EC/RCS \
+	./vmc/RCS \
+	./Report/RCS \
+	./X/{RCS,*.m}
+
+@
+
+
+1.7
+log
+@Updated for new file structure
+@
+text
+@d4 1
+a4 1
+tar cof - \
+d6 1
+a6 1
+	./bin/{changed,*version,regression,make*{tar,zip},} \
+d19 2
+a20 1
+	./EC/{*.m,input.?,b,t,input.all,Makefile,MAKETN,reset.bat} \
+d22 1
+a22 1
+	./emyacc/{y?.c,dextern,files,yacc.acts,yacchead.m,yaccpar.*} \
+a26 1
+	./vm/RCS \
+a32 1
+	./emyacc/RCS \
+@
+
+
+1.6
+log
+@Get it more up to date
+@
+text
+@d2 1
+a2 1
+# make full tar archive of Emerald on stdout - RECENT CHANGES UNTESTED
+d5 11
+a15 10
+	./Doc/{BinTools,Install,Layout,RCSHowTo} \
+	./bin/{RCS,changed,distribute,regression,maketar,makefulltar,*version} \
+	./bin/{emxx,emc,xemc,emmake,setarch,setuser,useemerald,forallarch} \
+	./bin/{issymlink*,newarch,rcssync,*/issymlink} \
+	./vm/{RCS,*.[ch],vm.desc,Makefile,builtins.info} \
+	./Builtins/{RCS,*.m,Makefile} \
+	./EC/{RCS,*.m,b,bt,t,input.?,em.ecompiler.y,builtins.info} \
+	./EC/{MAKETOKENNAMES,Makefile} \
+	./lib/{Builtins,Compiler,Makefile,oid,opoid} \
+	./lib/{bytecodedefs,ccall*,macroMakefile,systems,*/macroMakefile} \
+d17 5
+a21 5
+	./ExecTests/{*.m,*.in,*.out,b,Makefile} \
+	./gc/{RCS,*.c,*.h,*.S,Makefile,README} \
+	./vmc/{RCS,[a-z]*.[ch],Emain.c,Makefile,MAKETOKENNAMES} \
+	./vmc/{vmcpar.y,vmclex.l} \
+	./emyacc/{RCS,y?.c,dextern,files,yacchead.m,yaccpar.*} \
+d23 14
+a36 4
+	./Report/{RCS,*.tex,*.bib,*.sty,*.m,Makefile} \
+	./ccalls/{CCall.doc,RCS,*.c,*.h,Makefile,regexp,misc} \
+	./X/{RCS,*.m} \
+	./emd/{*.c,*.h,*.x,Makefile} ./vm/emd
+@
+
+
+1.5
+log
+@Synchronize the two maketar scripts with the current world.
+@
+text
+@d2 1
+a2 1
+# make full source archive of Emerald, including RCS, on stdout
+d9 1
+a9 1
+	./vm/{RCS,*.[ch],vm.desc,Makefile,builtins.info,*/Makefile} \
+d13 2
+a14 2
+	./lib/{Builtins,Compiler,Makefile,oid,opoid,bytecodedefs} \
+	./lib/{ccall*,macroMakefile,systems,*/{macroMakefile,emx}} \
+d24 2
+a25 1
+	./X/{RCS,*.m}
+@
+
+
+1.4
+log
+@Updated for new directory structure
+@
+text
+@d2 1
+a2 1
+# make full tar archive of Emerald on stdout - RECENT CHANGES UNTESTED
+d9 1
+a9 1
+	./vm/{RCS,*.[ch],vm.desc,Makefile,builtins.info} \
+d13 2
+a14 2
+	./lib/{Builtins,Compiler,Makefile,oid,opoid} \
+	./lib/{bytecodedefs,ccall*,macroMakefile,systems,*/macroMakefile} \
+@
+
+
+1.3
+log
+@updated list of files in ./Doc to be included in archive
+@
+text
+@d7 2
+a8 2
+	./bin/{emxx,emc,xemc,emmake,setarch,setuser,useemerald,forallsys} \
+	./bin/{forallsys,issymlink*,newsys,rcssync} \
+d11 2
+a12 2
+	./EC/{RCS,*.m,b,bt,t,input.?,ffs,em.ecompiler.y,builtins.info}
+	./EC/{CP,????CP,MAKETOKENNAMES,Makefile} \
+d14 1
+a14 1
+	./lib/{bytecodedefs,ccall*,macroMakefile,systems} \
+d20 1
+a20 1
+	./emyacc/{RCS,y?.c,dextern,files,yacc.acts,yacchead.m,yaccpar.*} \
+d23 1
+@
+
+
+1.2
+log
+@changes to support new directory structure
+@
+text
+@d5 1
+a5 1
+	./Doc/Install \
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+d5 10
+a14 8
+	./{Install,distribute,maketar,makefulltar} \
+	./Vm/{*.[ch],vm.desc,Makefile,makeMakefile,builtins.info,changed} \
+	./Vm/baseMakefile \
+	./Vm?*/makeMakefile \
+	./Builtins/{*.m,Makefile} \
+	./EC/{*.m,b,t,ffs,em.ecompiler.y,builtins.info,????CP} \
+	./EC/{regression,*version,input.?,MAKETOKENNAMES,Makefile} \
+	./Etc/{CP,Makefile,oid,opoid} \
+d17 4
+a20 4
+	./bin/{emx,emxx,emc} \
+	./gc/{*.c,*.h,*.S,Makefile,README} \
+	./vmc/{[a-z]*.[ch],Emain.c,Makefile,MAKETOKENNAMES,vmcpar.y,vmclex.l} \
+	./emyacc/{y?.c,dextern,files,yacc.acts,yacchead.m,yaccpar.*} \
+d22 1
+a22 2
+	./{Builtins,Vm,gc,EC,emyacc,vmc}/RCS \
+	./Report/*.{tex,bib,sty,m} ./Report/RCS ./Report/Makefile \
+@

@@ -1,0 +1,44 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	96.02.05.03.45.44;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@const texthelper <- immutable object texthelper
+  export operation left [w : Window, s : String, tlx : Integer, bly : Integer, width : Integer]
+    w.text[s, tlx, bly]
+  end left
+  export operation right [w : Window, s : String, tlx : Integer, bly : Integer, width : Integer]
+    const twidth <- w.textWidth[s]
+    w.text[s, tlx + width - twidth, bly]
+  end right
+  export operation center [w : Window, s : String, tlx : Integer, bly : Integer, width : Integer]
+    const twidth <- w.textWidth[s]
+    w.text[s, tlx + (width - twidth)/2, bly]
+  end center
+end texthelper
+
+export texthelper
+@

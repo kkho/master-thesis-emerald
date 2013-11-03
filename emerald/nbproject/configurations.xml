@@ -1,0 +1,3537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="80">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df name="emerald" root=".">
+      <df name="bin">
+        <df name="abcon">
+        </df>
+        <df name="alpha">
+        </df>
+        <df name="alphamt">
+        </df>
+        <df name="alphax">
+        </df>
+        <df name="dec3000">
+        </df>
+        <df name="dec3000mt">
+        </df>
+        <df name="dec3000mtf">
+        </df>
+        <df name="dec3000x">
+        </df>
+        <df name="hp700">
+        </df>
+        <df name="hp700mt">
+        </df>
+        <df name="hp700mtf">
+        </df>
+        <df name="hp700x">
+        </df>
+        <df name="hp700xf">
+        </df>
+        <df name="hp9000s700">
+        </df>
+        <df name="hp9000s700mt">
+        </df>
+        <df name="hp9000s700x">
+        </df>
+        <df name="hp9000s700xf">
+        </df>
+        <df name="i386">
+        </df>
+        <df name="i386Darwin">
+        </df>
+        <df name="i386freebsd">
+        </df>
+        <df name="i386freebsdmt">
+        </df>
+        <df name="i386freebsdmtf">
+        </df>
+        <df name="i386freebsdx">
+        </df>
+        <df name="i386freebsdX">
+        </df>
+        <df name="i386freebsdxf">
+        </df>
+        <df name="i386freebsdxt">
+        </df>
+        <df name="i386linux">
+        </df>
+        <df name="i386linuxmt">
+        </df>
+        <df name="i386linuxmtf">
+        </df>
+        <df name="i386linuxx">
+        </df>
+        <df name="i386linuxxf">
+        </df>
+        <df name="i386mt">
+        </df>
+        <df name="i386mtf">
+        </df>
+        <df name="i386netbsd">
+        </df>
+        <df name="i386netbsdmt">
+        </df>
+        <df name="i386netbsdx">
+        </df>
+        <df name="i386x">
+        </df>
+        <df name="i586">
+        </df>
+        <df name="i586mt">
+        </df>
+        <df name="i586x">
+        </df>
+        <df name="i586xf">
+        </df>
+        <df name="i686">
+        </df>
+        <df name="i686mt">
+        </df>
+        <df name="i686x">
+        </df>
+        <df name="i686xf">
+        </df>
+        <df name="i86pc">
+        </df>
+        <df name="i86pcmt">
+        </df>
+        <df name="i86pcmtf">
+        </df>
+        <df name="i86pcx">
+        </df>
+        <df name="i86pcxf">
+        </df>
+        <df name="ibm">
+        </df>
+        <df name="ibmmt">
+        </df>
+        <df name="ibmmtf">
+        </df>
+        <df name="ibmt">
+        </df>
+        <df name="ibmx">
+        </df>
+        <df name="ibmxf">
+        </df>
+        <df name="next">
+        </df>
+        <df name="nextmt">
+        </df>
+        <df name="nextmtf">
+        </df>
+        <df name="nextx">
+        </df>
+        <df name="RCS">
+        </df>
+        <df name="sgi">
+        </df>
+        <df name="sgimt">
+        </df>
+        <df name="sgimtf">
+        </df>
+        <df name="sgix">
+        </df>
+        <df name="sun4">
+        </df>
+        <df name="sun4mt">
+        </df>
+        <df name="sun4mtf">
+        </df>
+        <df name="sun4sol">
+        </df>
+        <df name="sun4solmt">
+        </df>
+        <df name="sun4solmtf">
+        </df>
+        <df name="sun4solx">
+        </df>
+        <df name="sun4solxf">
+        </df>
+        <df name="sun4x">
+        </df>
+        <df name="sun4xf">
+        </df>
+      </df>
+      <df name="Builtins">
+        <df name="RCS">
+        </df>
+        <in>AOpVec.m</in>
+        <in>AOpVecE.m</in>
+        <in>AParamL.m</in>
+        <in>AType.m</in>
+        <in>Any.m</in>
+        <in>Array.m</in>
+        <in>Bitchunk.m</in>
+        <in>Boolean.m</in>
+        <in>Buffer.m</in>
+        <in>COpVec.m</in>
+        <in>COpVecE.m</in>
+        <in>CType.m</in>
+        <in>Char.m</in>
+        <in>Cond.m</in>
+        <in>Decoder.m</in>
+        <in>Direct.m</in>
+        <in>Group.m</in>
+        <in>GroupBase.m</in>
+        <in>Handler.m</in>
+        <in>IState.m</in>
+        <in>IVOfAny.m</in>
+        <in>IVOfInt.m</in>
+        <in>IVOfStr.m</in>
+        <in>IVec.m</in>
+        <in>InStr.m</in>
+        <in>Integer.m</in>
+        <in>Literal.m</in>
+        <in>NLElem.m</in>
+        <in>Nil.m</in>
+        <in>Node.m</in>
+        <in>NodeL.m</in>
+        <in>OutStr.m</in>
+        <in>RDirect.m</in>
+        <in>RISA.m</in>
+        <in>RISC.m</in>
+        <in>Real.m</in>
+        <in>Sequence.m</in>
+        <in>Signat.m</in>
+        <in>String.m</in>
+        <in>Stub.m</in>
+        <in>Time.m</in>
+        <in>Unix.m</in>
+        <in>VOfAny.m</in>
+        <in>VOfChar.m</in>
+        <in>VOfInt.m</in>
+        <in>VOfStr.m</in>
+        <in>Vec.m</in>
+        <in>new_Integer.m</in>
+        <in>realNode.m</in>
+        <in>xReal.m</in>
+        <in>xxxLiteral.m</in>
+      </df>
+      <df name="ccalls">
+        <df name="bani">
+          <in>bani.c</in>
+          <in>bani.h</in>
+        </df>
+        <df name="emstream">
+          <df name="RCS">
+          </df>
+          <in>emstream.c</in>
+          <in>emstream.h</in>
+        </df>
+        <df name="misc">
+          <in>exit.h</in>
+          <in>hello.c</in>
+          <in>hello.h</in>
+        </df>
+        <df name="misk">
+          <df name="RCS">
+          </df>
+          <in>misk.c</in>
+          <in>misk.h</in>
+        </df>
+        <df name="myristream">
+          <in>myristream.c</in>
+          <in>myristream.h</in>
+        </df>
+        <df name="notreadable">
+          <in>streams.h</in>
+          <in>trandom.h</in>
+          <in>xma.h</in>
+        </df>
+        <df name="rand">
+          <in>rand.c</in>
+          <in>rand.h</in>
+        </df>
+        <df name="regexp">
+          <in>regerror.c</in>
+          <in>regexp.c</in>
+          <in>regexp.h</in>
+          <in>regmagic.h</in>
+          <in>regsub.c</in>
+          <in>timer.c</in>
+          <in>try.c</in>
+        </df>
+        <df name="string">
+          <df name="RCS">
+          </df>
+          <in>string.c</in>
+          <in>string.h</in>
+        </df>
+        <df name="trandom">
+          <in>random.h</in>
+        </df>
+        <df name="xcards">
+          <in>stuff.c</in>
+        </df>
+        <df name="xforms">
+          <df name="RCS">
+          </df>
+          <in>xforms.c</in>
+          <in>xforms.h</in>
+        </df>
+        <df name="xliba">
+          <in>xliba.c</in>
+          <in>xliba.h</in>
+        </df>
+        <df name="xma">
+          <df name="RCS">
+          </df>
+          <in>xma.c</in>
+          <in>xma.h</in>
+        </df>
+        <df name="xta">
+          <in>xta.c</in>
+          <in>xta.h</in>
+        </df>
+        <in>bani.h</in>
+        <in>emstream.h</in>
+        <in>misc.h</in>
+        <in>misk.h</in>
+        <in>myristream.h</in>
+        <in>rand.h</in>
+        <in>regexp.h</in>
+        <in>string.h</in>
+        <in>trandom.h</in>
+        <in>xforms.h</in>
+        <in>xliba.h</in>
+        <in>xma.h</in>
+        <in>xsed.c</in>
+        <in>xta.h</in>
+      </df>
+      <df name="Doc">
+      </df>
+      <df name="EC">
+        <df name="RCS">
+        </df>
+        <in>aabtable.m</in>
+        <in>aatable.m</in>
+        <in>accept.m</in>
+        <in>arg.m</in>
+        <in>assertst.m</in>
+        <in>assignst.m</in>
+        <in>atcode.m</in>
+        <in>atlit.m</in>
+        <in>block.m</in>
+        <in>boollit.m</in>
+        <in>buffer.m</in>
+        <in>builtinl.m</in>
+        <in>builtins.m</in>
+        <in>bytecode.m</in>
+        <in>charlit.m</in>
+        <in>comp.m</in>
+        <in>constdcl.m</in>
+        <in>cp.m</in>
+        <in>cpqueue.m</in>
+        <in>cstring.m</in>
+        <in>ctcode.m</in>
+        <in>eblock.m</in>
+        <in>elsecls.m</in>
+        <in>enumlit.m</in>
+        <in>envtype.m</in>
+        <in>exitstat.m</in>
+        <in>exp.m</in>
+        <in>extdecl.m</in>
+        <in>fielddcl.m</in>
+        <in>fieldsel.m</in>
+        <in>finput.m</in>
+        <in>foutput.m</in>
+        <in>gdtypes.m</in>
+        <in>glblref.m</in>
+        <in>glok.m</in>
+        <in>ident.m</in>
+        <in>ids.m</in>
+        <in>ifclause.m</in>
+        <in>ifstat.m</in>
+        <in>iibtable.m</in>
+        <in>initdef.m</in>
+        <in>intlit.m</in>
+        <in>invcache.m</in>
+        <in>invoc.m</in>
+        <in>iset.m</in>
+        <in>ittable.m</in>
+        <in>jc.m</in>
+        <in>literal.m</in>
+        <in>loopstat.m</in>
+        <in>movestat.m</in>
+        <in>newexp.m</in>
+        <in>newid.m</in>
+        <in>nextoid.m</in>
+        <in>nillit.m</in>
+        <in>objflags.m</in>
+        <in>objtable.m</in>
+        <in>oblit.m</in>
+        <in>onearg.m</in>
+        <in>ontooid.m</in>
+        <in>opdef.m</in>
+        <in>opname.m</in>
+        <in>opsig.m</in>
+        <in>otree.m</in>
+        <in>param.m</in>
+        <in>parse.m</in>
+        <in>parsedef.m</in>
+        <in>primstat.m</in>
+        <in>procdef.m</in>
+        <in>pt.m</in>
+        <in>qinvoc.m</in>
+        <in>reallit.m</in>
+        <in>reclit.m</in>
+        <in>recovdef.m</in>
+        <in>retfail.m</in>
+        <in>retstat.m</in>
+        <in>scan.m</in>
+        <in>scanhead.m</in>
+        <in>scantail.m</in>
+        <in>select.m</in>
+        <in>selflit.m</in>
+        <in>seq.m</in>
+        <in>set.m</in>
+        <in>setq.m</in>
+        <in>signstat.m</in>
+        <in>siiiatbl.m</in>
+        <in>siiitbl.m</in>
+        <in>sitable.m</in>
+        <in>sseq.m</in>
+        <in>sset.m</in>
+        <in>strinvoc.m</in>
+        <in>strlit.m</in>
+        <in>strstrm.m</in>
+        <in>subscrpt.m</in>
+        <in>sugar.m</in>
+        <in>sym.m</in>
+        <in>symbol.m</in>
+        <in>symdef.m</in>
+        <in>symref.m</in>
+        <in>tarr.m</in>
+        <in>tfoo.m</in>
+        <in>tokNames.m</in>
+        <in>tree.m</in>
+        <in>tvec.m</in>
+        <in>unaryexp.m</in>
+        <in>vardecl.m</in>
+        <in>veclit.m</in>
+        <in>waitstat.m</in>
+        <in>wherewgt.m</in>
+        <in>xclass.m</in>
+        <in>xexport.m</in>
+        <in>xfailure.m</in>
+        <in>xunavail.m</in>
+        <in>xview.m</in>
+      </df>
+      <df name="emyacc">
+        <df name="RCS">
+        </df>
+        <in>y1.c</in>
+        <in>y2.c</in>
+        <in>y3.c</in>
+        <in>y4.c</in>
+        <in>yacchead.m</in>
+        <in>yaccpar.c</in>
+        <in>yaccpar.m</in>
+        <in>yaccpar.mod</in>
+        <in>yyredend.h</in>
+        <in>yyredend.m</in>
+        <in>yyredend.mod</in>
+        <in>yyredsta.h</in>
+        <in>yystart1.m</in>
+        <in>yystart1.mod</in>
+        <in>yystart2.m</in>
+        <in>yystart2.mod</in>
+      </df>
+      <df name="Example">
+        <in>Gaggle.m</in>
+        <in>List.m</in>
+        <in>ListFuns.m</in>
+        <in>Spoon.m</in>
+        <in>XList.m</in>
+        <in>abcon.m</in>
+        <in>accept.m</in>
+        <in>all.m</in>
+        <in>anders.m</in>
+        <in>another.m</in>
+        <in>arr.m</in>
+        <in>arraymap.m</in>
+        <in>atest.m</in>
+        <in>bag.m</in>
+        <in>bani.m</in>
+        <in>bbuffer.m</in>
+        <in>black.m</in>
+        <in>blob.m</in>
+        <in>blr.m</in>
+        <in>boring.m</in>
+        <in>break.m</in>
+        <in>breakchain.m</in>
+        <in>breakstypes.m</in>
+        <in>breakstypes0.m</in>
+        <in>brokenmonitor.m</in>
+        <in>brokenset.m</in>
+        <in>bsynch.m</in>
+        <in>btset.m</in>
+        <in>carl1.m</in>
+        <in>carl2.m</in>
+        <in>carl3.m</in>
+        <in>carl4.m</in>
+        <in>catenate.m</in>
+        <in>checkfloat.m</in>
+        <in>class.m</in>
+        <in>console.m</in>
+        <in>conv.m</in>
+        <in>copy.m</in>
+        <in>count.m</in>
+        <in>create0.m</in>
+        <in>create1.m</in>
+        <in>debug.m</in>
+        <in>diein10.m</in>
+        <in>directory.m</in>
+        <in>dmandel.m</in>
+        <in>don.m</in>
+        <in>donothing.m</in>
+        <in>dotoall.m</in>
+        <in>dotoall2.m</in>
+        <in>duska.m</in>
+        <in>duska12.m</in>
+        <in>duska13.m</in>
+        <in>duska15.m</in>
+        <in>duska16.m</in>
+        <in>duska2.m</in>
+        <in>duska8.m</in>
+        <in>duska9.m</in>
+        <in>duska_works.m</in>
+        <in>duskab.m</in>
+        <in>duskaglist.m</in>
+        <in>elisa.m</in>
+        <in>ericclass.m</in>
+        <in>f.m</in>
+        <in>failmove.m</in>
+        <in>fastkilroy.m</in>
+        <in>ff.m</in>
+        <in>fibtest.m</in>
+        <in>findpath.m</in>
+        <in>findpath2.m</in>
+        <in>findpath3.m</in>
+        <in>first.m</in>
+        <in>firstm.m</in>
+        <in>firstp.m</in>
+        <in>foobar.m</in>
+        <in>forward.m</in>
+        <in>foutput.m</in>
+        <in>fs.m</in>
+        <in>funny.m</in>
+        <in>funnychar.m</in>
+        <in>generator.m</in>
+        <in>gg.m</in>
+        <in>ggg.m</in>
+        <in>glist.m</in>
+        <in>glok.m</in>
+        <in>hash.m</in>
+        <in>hello.m</in>
+        <in>id.m</in>
+        <in>id2.m</in>
+        <in>id3.m</in>
+        <in>id4.m</in>
+        <in>id_b.m</in>
+        <in>id_b2.m</in>
+        <in>inc.m</in>
+        <in>ingo.m</in>
+        <in>input.m</in>
+        <in>int.m</in>
+        <in>inv1.m</in>
+        <in>inv2.m</in>
+        <in>invoke.m</in>
+        <in>invokealot.m</in>
+        <in>invokebig.m</in>
+        <in>invokeloop.m</in>
+        <in>invoketons.m</in>
+        <in>jlang.m</in>
+        <in>killall.m</in>
+        <in>kilroy-mini-II.m</in>
+        <in>kilroy-mini.m</in>
+        <in>kilroy.m</in>
+        <in>kilroylots.m</in>
+        <in>library.m</in>
+        <in>literal.m</in>
+        <in>lr.m</in>
+        <in>lr2.m</in>
+        <in>makedistgarbage.m</in>
+        <in>makelots.m</in>
+        <in>makelotsatt.m</in>
+        <in>makelotsveclit.m</in>
+        <in>makestub.m</in>
+        <in>maketons.m</in>
+        <in>maketonsatt.m</in>
+        <in>maketonsoconditions.m</in>
+        <in>maketonsomonitors.m</in>
+        <in>map.m</in>
+        <in>matrix2.m</in>
+        <in>matrix3.m</in>
+        <in>maxname.m</in>
+        <in>mike.m</in>
+        <in>mike2.m</in>
+        <in>morten.m</in>
+        <in>move.m</in>
+        <in>movecond.m</in>
+        <in>movem.m</in>
+        <in>moveme.m</in>
+        <in>movemetons.m</in>
+        <in>movemonitor.m</in>
+        <in>movemulti.m</in>
+        <in>movetons.m</in>
+        <in>nabcon.m</in>
+        <in>nconsole.m</in>
+        <in>ndir.m</in>
+        <in>neil.m</in>
+        <in>netstat.m</in>
+        <in>nfindpath.m</in>
+        <in>nodee.m</in>
+        <in>nshell.m</in>
+        <in>nxf.m</in>
+        <in>oedir.m</in>
+        <in>ofindpath.m</in>
+        <in>part1.m</in>
+        <in>part2.m</in>
+        <in>person.m</in>
+        <in>polyfun.m</in>
+        <in>pound.m</in>
+        <in>primes.m</in>
+        <in>printroot.m</in>
+        <in>printtype.m</in>
+        <in>program10.m</in>
+        <in>propagatefailure.m</in>
+        <in>ptimeit.m</in>
+        <in>qsort.m</in>
+        <in>qsort2.m</in>
+        <in>realtree.m</in>
+        <in>recursiveunavailable.m</in>
+        <in>replication.m</in>
+        <in>revarray.m</in>
+        <in>revarray2.m</in>
+        <in>rinvokealot.m</in>
+        <in>ris.m</in>
+        <in>scramble.m</in>
+        <in>search.m</in>
+        <in>second.m</in>
+        <in>sem.m</in>
+        <in>set.m</in>
+        <in>shared.m</in>
+        <in>shell.m</in>
+        <in>shownodes.m</in>
+        <in>sieve.m</in>
+        <in>signaler.m</in>
+        <in>siiiatable.m</in>
+        <in>sml.m</in>
+        <in>sset.m</in>
+        <in>st.m</in>
+        <in>stack.m</in>
+        <in>stackover.m</in>
+        <in>stackoverfail.m</in>
+        <in>stackoverunavailable.m</in>
+        <in>stacktest.m</in>
+        <in>starvation.m</in>
+        <in>stressInvokeAndMove.m</in>
+        <in>synch.m</in>
+        <in>synchmove.m</in>
+        <in>syntaxerror.m</in>
+        <in>t.m</in>
+        <in>t1.m</in>
+        <in>t2.m</in>
+        <in>ta.m</in>
+        <in>taaa.m</in>
+        <in>tabcon.m</in>
+        <in>tal.m</in>
+        <in>tam.m</in>
+        <in>tand.m</in>
+        <in>target.m</in>
+        <in>tarr.m</in>
+        <in>tarraymove.m</in>
+        <in>tarraytype.m</in>
+        <in>tassert.m</in>
+        <in>tassign.m</in>
+        <in>tasyncstdin.m</in>
+        <in>tat.m</in>
+        <in>tatt.m</in>
+        <in>taxx.m</in>
+        <in>tbadinv.m</in>
+        <in>tbadmove.m</in>
+        <in>tbasictype.m</in>
+        <in>tbbb.m</in>
+        <in>tbc.m</in>
+        <in>tbigvec.m</in>
+        <in>tbitchunk.m</in>
+        <in>tbreak.m</in>
+        <in>tbreakme.m</in>
+        <in>tbuf.m</in>
+        <in>tbuiltin.m</in>
+        <in>tcase.m</in>
+        <in>tcc.m</in>
+        <in>tcg.m</in>
+        <in>tch.m</in>
+        <in>tchar.m</in>
+        <in>tcharlit.m</in>
+        <in>tckp.m</in>
+        <in>tckp1.m</in>
+        <in>tckp2.m</in>
+        <in>tcl.m</in>
+        <in>tcl2.m</in>
+        <in>tclass.m</in>
+        <in>tclosure.m</in>
+        <in>tclr.m</in>
+        <in>tcodeof.m</in>
+        <in>tcond.m</in>
+        <in>tconform.m</in>
+        <in>tconsttype.m</in>
+        <in>tcp.m</in>
+        <in>tcreate.m</in>
+        <in>tct.m</in>
+        <in>tcv.m</in>
+        <in>tcy.m</in>
+        <in>tdeath.m</in>
+        <in>tdecod.m</in>
+        <in>tdelay.m</in>
+        <in>tdi.m</in>
+        <in>tdict.m</in>
+        <in>tdir.m</in>
+        <in>tdotstar.m</in>
+        <in>tdq.m</in>
+        <in>teacher.m</in>
+        <in>telse.m</in>
+        <in>tem.m</in>
+        <in>tenum.m</in>
+        <in>tenum2.m</in>
+        <in>tenv.m</in>
+        <in>teq.m</in>
+        <in>testalloc.m</in>
+        <in>testclause.m</in>
+        <in>testhairy.m</in>
+        <in>testlesshairy.m</in>
+        <in>testlocate.m</in>
+        <in>testparseself.m</in>
+        <in>teststdout.m</in>
+        <in>testunavailable.m</in>
+        <in>testunavailable2.m</in>
+        <in>testunavailable3.m</in>
+        <in>testunavailable4.m</in>
+        <in>tex.m</in>
+        <in>texit.m</in>
+        <in>texp.m</in>
+        <in>textern.m</in>
+        <in>tf.m</in>
+        <in>tfail.m</in>
+        <in>tfailloop.m</in>
+        <in>tfailunavail.m</in>
+        <in>tfenv.m</in>
+        <in>tfield.m</in>
+        <in>tfix.m</in>
+        <in>tfoo.m</in>
+        <in>tfor.m</in>
+        <in>tforeignreturn.m</in>
+        <in>tfs.m</in>
+        <in>tgc.m</in>
+        <in>tgetenv.m</in>
+        <in>thex.m</in>
+        <in>tick.m</in>
+        <in>ticklerinvokebug.m</in>
+        <in>ticklerinvokebug2.m</in>
+        <in>tid.m</in>
+        <in>tif.m</in>
+        <in>tiinline.m</in>
+        <in>timef.m</in>
+        <in>timeinvoke.m</in>
+        <in>timeit.m</in>
+        <in>timemove.m</in>
+        <in>timemove2.m</in>
+        <in>timport.m</in>
+        <in>tin.m</in>
+        <in>tinh.m</in>
+        <in>tinh1.m</in>
+        <in>tinh2.m</in>
+        <in>tinh3.m</in>
+        <in>tinit.m</in>
+        <in>tinline.m</in>
+        <in>tins.m</in>
+        <in>tint.m</in>
+        <in>tinteger.m</in>
+        <in>tintlit.m</in>
+        <in>tinv.m</in>
+        <in>tinvnil.m</in>
+        <in>tinvoke.m</in>
+        <in>tinvoke2.m</in>
+        <in>tinvoke3.m</in>
+        <in>tio.m</in>
+        <in>tisfixed.m</in>
+        <in>tislocal.m</in>
+        <in>tistate.m</in>
+        <in>tiv.m</in>
+        <in>tl.m</in>
+        <in>tload.m</in>
+        <in>tlocal.m</in>
+        <in>tlocate.m</in>
+        <in>tlog.m</in>
+        <in>tlots.m</in>
+        <in>tm.m</in>
+        <in>tm2.m</in>
+        <in>tm3.m</in>
+        <in>tma.m</in>
+        <in>tman.m</in>
+        <in>tmap.m</in>
+        <in>tmi.m</in>
+        <in>tmod.m</in>
+        <in>tmonitor.m</in>
+        <in>tmorph.m</in>
+        <in>tmove.m</in>
+        <in>tmove2.m</in>
+        <in>tmove3.m</in>
+        <in>tmove4.m</in>
+        <in>tmult.m</in>
+        <in>tmulti.m</in>
+        <in>tmulti2.m</in>
+        <in>tmutveclit.m</in>
+        <in>tmv.m</in>
+        <in>tn.m</in>
+        <in>tname.m</in>
+        <in>tncc.m</in>
+        <in>tnf.m</in>
+        <in>tni.m</in>
+        <in>tnil.m</in>
+        <in>tno.m</in>
+        <in>tnone.m</in>
+        <in>tnontype.m</in>
+        <in>tob.m</in>
+        <in>toid.m</in>
+        <in>top.m</in>
+        <in>tops.m</in>
+        <in>tord.m</in>
+        <in>tout.m</in>
+        <in>town.m</in>
+        <in>tparam.m</in>
+        <in>tpause.m</in>
+        <in>tpopen.m</in>
+        <in>tpopenout.m</in>
+        <in>tprintf.m</in>
+        <in>tr.m</in>
+        <in>trandom.m</in>
+        <in>trc.m</in>
+        <in>trd.m</in>
+        <in>treadspeed.m</in>
+        <in>treal.m</in>
+        <in>trec.m</in>
+        <in>tree.m</in>
+        <in>tree2.m</in>
+        <in>tree3.m</in>
+        <in>tremfloat.m</in>
+        <in>trfail.m</in>
+        <in>trivmove.m</in>
+        <in>trread.m</in>
+        <in>trsleep.m</in>
+        <in>trunavail.m</in>
+        <in>ts.m</in>
+        <in>tscope.m</in>
+        <in>tself.m</in>
+        <in>tsem.m</in>
+        <in>tset.m</in>
+        <in>tsetbit.m</in>
+        <in>tsetbits.m</in>
+        <in>tsign.m</in>
+        <in>tsqrt.m</in>
+        <in>tst.m</in>
+        <in>tstack.m</in>
+        <in>tsto.m</in>
+        <in>tstr.m</in>
+        <in>tstring.m</in>
+        <in>tstrlit.m</in>
+        <in>tstrr.m</in>
+        <in>tstrt.m</in>
+        <in>tstrvec.m</in>
+        <in>tsubscript.m</in>
+        <in>tsvl.m</in>
+        <in>tsyntactictype.m</in>
+        <in>tt.m</in>
+        <in>ttat.m</in>
+        <in>ttcp.m</in>
+        <in>tti.m</in>
+        <in>ttime.m</in>
+        <in>ttok.m</in>
+        <in>ttt.m</in>
+        <in>ttype.m</in>
+        <in>ttypeof.m</in>
+        <in>tudir.m</in>
+        <in>tuf.m</in>
+        <in>tugetenv.m</in>
+        <in>tunavail.m</in>
+        <in>tva.m</in>
+        <in>tvar.m</in>
+        <in>tvec.m</in>
+        <in>tvecchar.m</in>
+        <in>tveclit.m</in>
+        <in>tvecsymlit.m</in>
+        <in>tvector.m</in>
+        <in>tvecvec.m</in>
+        <in>tview.m</in>
+        <in>tvv.m</in>
+        <in>tvvv.m</in>
+        <in>twr.m</in>
+        <in>tx.m</in>
+        <in>txforms.m</in>
+        <in>txlib.m</in>
+        <in>txt.m</in>
+        <in>txt2.m</in>
+        <in>txt3.m</in>
+        <in>txx.m</in>
+        <in>txxx.m</in>
+        <in>tyyy.m</in>
+        <in>ufindpath.m</in>
+        <in>unsynch.m</in>
+        <in>vir.m</in>
+        <in>virus.m</in>
+        <in>waiter.m</in>
+        <in>whoami.m</in>
+        <in>wimpymap.m</in>
+        <in>xforms.m</in>
+        <in>xtcp.m</in>
+      </df>
+      <df name="ExecTest">
+        <df name="RCS">
+        </df>
+        <in>runtest.m</in>
+        <in>ta.m</in>
+        <in>taaaa.m</in>
+        <in>tarray.m</in>
+        <in>tbchunk.m</in>
+        <in>tboolean.m</in>
+        <in>tchar.m</in>
+        <in>tclass.m</in>
+        <in>thairy.m</in>
+        <in>tinstr.m</in>
+        <in>tinteger.m</in>
+        <in>tiostr.m</in>
+        <in>tmove.m</in>
+        <in>tnil.m</in>
+        <in>tnode.m</in>
+        <in>toutstr.m</in>
+        <in>treal.m</in>
+        <in>trecord.m</in>
+        <in>tstack.m</in>
+        <in>tstring.m</in>
+        <in>ttime.m</in>
+        <in>ttype.m</in>
+        <in>tv.m</in>
+        <in>tvector.m</in>
+      </df>
+      <df name="FailTest">
+        <in>assign.m</in>
+        <in>builtin1.m</in>
+        <in>class.m</in>
+        <in>conform.m</in>
+        <in>conform2.m</in>
+        <in>conform3.m</in>
+        <in>conform4.m</in>
+        <in>const.m</in>
+        <in>export.m</in>
+        <in>ident1.m</in>
+        <in>ident2.m</in>
+        <in>immut.m</in>
+        <in>lit1.m</in>
+        <in>lit2.m</in>
+        <in>lit3.m</in>
+        <in>lit4.m</in>
+        <in>multi.m</in>
+        <in>multi2.m</in>
+        <in>multi3.m</in>
+        <in>nontype.m</in>
+        <in>old1.m</in>
+        <in>old5.m</in>
+        <in>old6.m</in>
+        <in>ops1.m</in>
+        <in>ops2.m</in>
+        <in>ops3.m</in>
+        <in>ops4.m</in>
+        <in>shadow1.m</in>
+        <in>shadow2.m</in>
+        <in>signal.m</in>
+        <in>stat.m</in>
+        <in>str.m</in>
+        <in>subs.m</in>
+        <in>syn.m</in>
+        <in>tscope.m</in>
+        <in>type1.m</in>
+        <in>type2.m</in>
+        <in>type3.m</in>
+        <in>type4.m</in>
+        <in>type5.m</in>
+        <in>type6.m</in>
+        <in>type7.m</in>
+        <in>type8.m</in>
+        <in>type9.m</in>
+        <in>union.m</in>
+        <in>vec1.m</in>
+        <in>vec2.m</in>
+      </df>
+      <df name="Gaggle">
+        <in>DirGagg.m</in>
+        <in>Gaggle.m</in>
+        <in>LooseDir.m</in>
+        <in>SimpleGaggle.m</in>
+        <in>TimeStamp.m</in>
+        <in>d.m</in>
+        <in>direcg.m</in>
+        <in>directest.m</in>
+        <in>mtest.m</in>
+        <in>poorG.m</in>
+        <in>testloosedir.m</in>
+        <in>tg.m</in>
+        <in>timeloosedir.m</in>
+        <in>timesimplecreate.m</in>
+        <in>timestrictdir.m</in>
+      </df>
+      <df name="Game">
+        <in>XForms.m</in>
+        <in>bag.m</in>
+        <in>event.m</in>
+        <in>player.m</in>
+      </df>
+      <df name="lib">
+        <df name="abcon">
+        </df>
+        <df name="alpha">
+        </df>
+        <df name="alphamt">
+        </df>
+        <df name="alphax">
+        </df>
+        <df name="bani">
+        </df>
+        <df name="dec3000">
+        </df>
+        <df name="dec3000mt">
+        </df>
+        <df name="dec3000mtf">
+        </df>
+        <df name="dec3000x">
+        </df>
+        <df name="dos">
+        </df>
+        <df name="hp700">
+        </df>
+        <df name="hp700mt">
+        </df>
+        <df name="hp700mtf">
+        </df>
+        <df name="hp700x">
+        </df>
+        <df name="hp700xf">
+        </df>
+        <df name="hp9000s700">
+        </df>
+        <df name="hp9000s700mt">
+        </df>
+        <df name="hp9000s700x">
+        </df>
+        <df name="hp9000s700xf">
+        </df>
+        <df name="i386">
+        </df>
+        <df name="i386Darwin">
+        </df>
+        <df name="i386freebsd">
+        </df>
+        <df name="i386freebsdmt">
+        </df>
+        <df name="i386freebsdmtf">
+        </df>
+        <df name="i386freebsdX">
+        </df>
+        <df name="i386freebsdx">
+        </df>
+        <df name="i386freebsdxf">
+        </df>
+        <df name="i386freebsdxt">
+        </df>
+        <df name="i386linux">
+        </df>
+        <df name="i386linuxmt">
+        </df>
+        <df name="i386linuxmtf">
+        </df>
+        <df name="i386linuxx">
+        </df>
+        <df name="i386linuxxf">
+        </df>
+        <df name="i386mt">
+        </df>
+        <df name="i386mtf">
+        </df>
+        <df name="i386netbsd">
+        </df>
+        <df name="i386netbsdmt">
+        </df>
+        <df name="i386netbsdx">
+        </df>
+        <df name="i386x">
+        </df>
+        <df name="i586">
+        </df>
+        <df name="i586x">
+        </df>
+        <df name="i586xf">
+        </df>
+        <df name="i686">
+        </df>
+        <df name="i686mt">
+        </df>
+        <df name="i686x">
+        </df>
+        <df name="i686xf">
+        </df>
+        <df name="i86pc">
+        </df>
+        <df name="i86pcmt">
+        </df>
+        <df name="i86pcmtf">
+        </df>
+        <df name="i86pcx">
+        </df>
+        <df name="i86pcxf">
+        </df>
+        <df name="ibm">
+        </df>
+        <df name="ibmmt">
+        </df>
+        <df name="ibmmtf">
+        </df>
+        <df name="ibmt">
+        </df>
+        <df name="ibmx">
+        </df>
+        <df name="ibmxf">
+        </df>
+        <df name="next">
+        </df>
+        <df name="nextmt">
+        </df>
+        <df name="nextmtf">
+        </df>
+        <df name="nextx">
+        </df>
+        <df name="RCS">
+        </df>
+        <df name="sgi">
+        </df>
+        <df name="sgimt">
+        </df>
+        <df name="sgimtf">
+        </df>
+        <df name="sgix">
+        </df>
+        <df name="sun4">
+        </df>
+        <df name="sun4mt">
+        </df>
+        <df name="sun4mtf">
+        </df>
+        <df name="sun4sol">
+        </df>
+        <df name="sun4solmt">
+        </df>
+        <df name="sun4solmtf">
+        </df>
+        <df name="sun4solx">
+        </df>
+        <df name="sun4solxf">
+        </df>
+        <df name="sun4x">
+        </df>
+        <df name="sun4xf">
+        </df>
+        <df name="x86_64Darwin">
+        </df>
+      </df>
+      <df name="RCS">
+      </df>
+      <df name="Report">
+        <df name="RCS">
+        </df>
+        <in>stack.m</in>
+        <in>stacktest.m</in>
+      </df>
+      <df name="Tutorial">
+        <df name="RCS">
+        </df>
+      </df>
+      <df name="vm">
+        <df name="src">
+          <df name="RCS">
+          </df>
+          <in>array.c</in>
+          <in>array.h</in>
+          <in>assert.h</in>
+          <in>bufstr.c</in>
+          <in>bufstr.h</in>
+          <in>builtins.h</in>
+          <in>call.c</in>
+          <in>call.h</in>
+          <in>cctab.c</in>
+          <in>cctab.h</in>
+          <in>codeptrextra.c</in>
+          <in>codeptrextra.h</in>
+          <in>concurr.h</in>
+          <in>config.h</in>
+          <in>conform.c</in>
+          <in>context.S</in>
+          <in>creation.c</in>
+          <in>creation.h</in>
+          <in>debug.c</in>
+          <in>dist.c</in>
+          <in>dist.h</in>
+          <in>distgc.c</in>
+          <in>env.c</in>
+          <in>error.c</in>
+          <in>error.h</in>
+          <in>extract.h</in>
+          <in>fakecontext.c</in>
+          <in>fakemain.c</in>
+          <in>filestr.c</in>
+          <in>filestr.h</in>
+          <in>gaggle.c</in>
+          <in>gaggle.h</in>
+          <in>gc.c</in>
+          <in>gc.h</in>
+          <in>globals.c</in>
+          <in>globals.h</in>
+          <in>iiiiisc.c</in>
+          <in>iiiiisc.h</in>
+          <in>iisc.c</in>
+          <in>iisc.h</in>
+          <in>iixsc.c</in>
+          <in>iixsc.h</in>
+          <in>ilist.c</in>
+          <in>ilist.h</in>
+          <in>init.h</in>
+          <in>insert.h</in>
+          <in>io.c</in>
+          <in>io.h</in>
+          <in>iosc.c</in>
+          <in>iosc.h</in>
+          <in>iset.c</in>
+          <in>iset.h</in>
+          <in>joveisc.c</in>
+          <in>joveisc.h</in>
+          <in>jsys.c</in>
+          <in>jsys.h</in>
+          <in>jvisc.c</in>
+          <in>jvisc.h</in>
+          <in>locate.c</in>
+          <in>locate.h</in>
+          <in>main.c</in>
+          <in>memory.h</in>
+          <in>misc.c</in>
+          <in>misc.h</in>
+          <in>move.c</in>
+          <in>move.h</in>
+          <in>mqueue.c</in>
+          <in>mqueue.h</in>
+          <in>mthreads.c</in>
+          <in>mthreads.h</in>
+          <in>newdist.c</in>
+          <in>ntoh.h</in>
+          <in>oidtoobj.c</in>
+          <in>oidtoobj.h</in>
+          <in>oisc.c</in>
+          <in>oisc.h</in>
+          <in>ooisc.c</in>
+          <in>ooisc.h</in>
+          <in>otable.c</in>
+          <in>otable.h</in>
+          <in>read.c</in>
+          <in>read.h</in>
+          <in>remote.c</in>
+          <in>remote.h</in>
+          <in>rinvoke.c</in>
+          <in>rinvoke.h</in>
+          <in>sisc.c</in>
+          <in>sisc.h</in>
+          <in>sockstr.c</in>
+          <in>sockstr.h</in>
+          <in>squeue.c</in>
+          <in>squeue.h</in>
+          <in>storage.c</in>
+          <in>storage.h</in>
+          <in>streams.c</in>
+          <in>streams.h</in>
+          <in>strtol.c</in>
+          <in>system.h</in>
+          <in>threads.c</in>
+          <in>threads.h</in>
+          <in>timer.c</in>
+          <in>timer.h</in>
+          <in>trace.c</in>
+          <in>trace.h</in>
+          <in>types.h</in>
+          <in>upcall.c</in>
+          <in>vm.c</in>
+          <in>vm.h</in>
+          <in>vm_exp.h</in>
+          <in>vm_i.h</in>
+          <in>write.c</in>
+          <in>write.h</in>
+          <in>xdr_float.c</in>
+          <in>xsys.c</in>
+          <in>xsys.h</in>
+        </df>
+        <df name="win32">
+        </df>
+      </df>
+      <df name="vmc">
+        <df name="RCS">
+        </df>
+        <in>Emain.c</in>
+        <in>assert.h</in>
+        <in>bc.h</in>
+        <in>defs.h</in>
+        <in>discomp.c</in>
+        <in>iisc.c</in>
+        <in>iisc.h</in>
+        <in>ilist.c</in>
+        <in>ilist.h</in>
+        <in>iset.c</in>
+        <in>iset.h</in>
+        <in>semantic.c</in>
+        <in>sisc.c</in>
+        <in>sisc.h</in>
+        <in>slist.c</in>
+        <in>slist.h</in>
+        <in>strings.c</in>
+        <in>trace.c</in>
+        <in>trace.h</in>
+        <in>vmclex.c</in>
+        <in>vmcpar.c</in>
+        <in>vmcpar.h</in>
+      </df>
+      <df name="X">
+        <df name="RCS">
+        </df>
+        <in>X.m</in>
+        <in>assoc.m</in>
+        <in>date.m</in>
+        <in>parse.m</in>
+        <in>t.m</in>
+        <in>tassoc.m</in>
+        <in>texth.m</in>
+        <in>xapp.m</in>
+        <in>xapp2.m</in>
+        <in>xcal.m</in>
+        <in>xday.m</in>
+        <in>xedit.m</in>
+        <in>xinput.m</in>
+      </df>
+      <df name="XForms">
+        <df name="RCS">
+        </df>
+        <in>Box.m</in>
+        <in>Browser.m</in>
+        <in>Button.m</in>
+        <in>Input.m</in>
+        <in>NXForms.m</in>
+        <in>OXForms.m</in>
+        <in>XForms.m</in>
+        <in>b.m</in>
+        <in>barchart.m</in>
+        <in>coverlay.m</in>
+        <in>drag.m</in>
+        <in>ebiff.m</in>
+        <in>env.m</in>
+        <in>gp.m</in>
+        <in>graph.m</in>
+        <in>graphpaper.m</in>
+        <in>maketons.m</in>
+        <in>map.m</in>
+        <in>mytron.m</in>
+        <in>oldmytron.m</in>
+        <in>overlay.m</in>
+        <in>show.m</in>
+        <in>t.m</in>
+        <in>test.m</in>
+        <in>tick.m</in>
+        <in>tpb.m</in>
+        <in>tron.m</in>
+        <in>tron1.m</in>
+        <in>tt.m</in>
+        <in>txforms.m</in>
+        <in>u.m</in>
+        <in>v.m</in>
+        <in>w.m</in>
+        <in>workingtron.m</in>
+        <in>xcpu.m</in>
+        <in>xcpulinux.m</in>
+        <in>xcpulinuxnew.m</in>
+        <in>xcpunew.m</in>
+        <in>xdisk.m</in>
+        <in>xdisknew.m</in>
+        <in>xforms.m</in>
+        <in>xfree.m</in>
+        <in>xns.m</in>
+        <in>xnsnew.m</in>
+        <in>xxx.m</in>
+        <in>y.m</in>
+        <in>z.m</in>
+      </df>
+      <in>ytab.c</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>configure</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <preprocessorList>
+              <Elem>COUNTBYTECODES=1</Elem>
+              <Elem>DISTRIBUTED=1</Elem>
+              <Elem>HAVE_DIRENT_H=1</Elem>
+              <Elem>HAVE_FCNTL_H=1</Elem>
+              <Elem>HAVE_FTIME=1</Elem>
+              <Elem>HAVE_GETHOSTNAME=1</Elem>
+              <Elem>HAVE_GETTIMEOFDAY=1</Elem>
+              <Elem>HAVE_INTTYPES_H=1</Elem>
+              <Elem>HAVE_LIBL=1</Elem>
+              <Elem>HAVE_LIBM=1</Elem>
+              <Elem>HAVE_MEMORY_H=1</Elem>
+              <Elem>HAVE_MKTIME=1</Elem>
+              <Elem>HAVE_REGCOMP=1</Elem>
+              <Elem>HAVE_SOCKET=1</Elem>
+              <Elem>HAVE_STDINT_H=1</Elem>
+              <Elem>HAVE_STDLIB_H=1</Elem>
+              <Elem>HAVE_STRCSPN=1</Elem>
+              <Elem>HAVE_STRERROR=1</Elem>
+              <Elem>HAVE_STRFTIME=1</Elem>
+              <Elem>HAVE_STRINGS_H=1</Elem>
+              <Elem>HAVE_STRING_H=1</Elem>
+              <Elem>HAVE_SYS_FILE_H=1</Elem>
+              <Elem>HAVE_SYS_STAT_H=1</Elem>
+              <Elem>HAVE_SYS_TIME_H=1</Elem>
+              <Elem>HAVE_SYS_TYPES_H=1</Elem>
+              <Elem>HAVE_UNISTD_H=1</Elem>
+              <Elem>HAVE_VPRINTF=1</Elem>
+              <Elem>PACKAGE="emerald"</Elem>
+              <Elem>PACKAGE_BUGREPORT=""</Elem>
+              <Elem>PACKAGE_NAME=""</Elem>
+              <Elem>PACKAGE_STRING=""</Elem>
+              <Elem>PACKAGE_TARNAME=""</Elem>
+              <Elem>PACKAGE_VERSION=""</Elem>
+              <Elem>RETSIGTYPE=void</Elem>
+              <Elem>SINGLESTEP=1</Elem>
+              <Elem>STDARG_WORKS=1</Elem>
+              <Elem>STDC_HEADERS=1</Elem>
+              <Elem>TIME_WITH_SYS_TIME=1</Elem>
+              <Elem>VERSION="1.06alpha"</Elem>
+              <Elem>YYTEXT_POINTER=1</Elem>
+              <Elem>__REGISTER_PREFIX__=</Elem>
+              <Elem>__USER_LABEL_PREFIX__=</Elem>
+            </preprocessorList>
+          </cTool>
+        </makeTool>
+      </makefileType>
+      <item path="Builtins/AOpVec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/AOpVecE.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/AParamL.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/AType.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Any.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Array.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Bitchunk.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Boolean.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Buffer.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/COpVec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/COpVecE.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/CType.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Char.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Cond.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Decoder.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Direct.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Group.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/GroupBase.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Handler.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/IState.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/IVOfAny.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/IVOfInt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/IVOfStr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/IVec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/InStr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Integer.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Literal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/NLElem.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Nil.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Node.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/NodeL.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/OutStr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/RDirect.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/RISA.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/RISC.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Real.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Sequence.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Signat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/String.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Stub.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Time.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Unix.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/VOfAny.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/VOfChar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/VOfInt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/VOfStr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/Vec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/new_Integer.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/realNode.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/xReal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Builtins/xxxLiteral.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/aabtable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/aatable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/accept.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/arg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/assertst.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/assignst.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/atcode.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/atlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/block.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/boollit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/buffer.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/builtinl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/builtins.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/bytecode.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/charlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/comp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/constdcl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/cp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/cpqueue.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/cstring.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ctcode.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/eblock.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/elsecls.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/enumlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/envtype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/exitstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/exp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/extdecl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/fielddcl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/fieldsel.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/finput.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/foutput.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/gdtypes.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/glblref.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/glok.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ident.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ids.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ifclause.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ifstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/iibtable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/initdef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/intlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/invcache.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/invoc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/iset.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ittable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/jc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/literal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/loopstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/movestat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/newexp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/newid.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/nextoid.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/nillit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/objflags.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/objtable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/oblit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/onearg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/ontooid.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/opdef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/opname.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/opsig.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/otree.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/param.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/parse.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/parsedef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/primstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/procdef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/pt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/qinvoc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/reallit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/reclit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/recovdef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/retfail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/retstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/scan.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/scanhead.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/scantail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/select.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/selflit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/seq.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/set.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/setq.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/signstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/siiiatbl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/siiitbl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/sitable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/sseq.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/sset.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/strinvoc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/strlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/strstrm.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/subscrpt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/sugar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/sym.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/symbol.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/symdef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/symref.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/tarr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/tfoo.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/tokNames.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/tree.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/tvec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/unaryexp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/vardecl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/veclit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/waitstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/wherewgt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/xclass.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/xexport.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/xfailure.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/xunavail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="EC/xview.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/Gaggle.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/List.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ListFuns.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/Spoon.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/XList.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/abcon.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/accept.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/all.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/anders.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/another.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/arr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/arraymap.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/atest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/bag.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/bani.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/bbuffer.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/black.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/blob.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/blr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/boring.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/break.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/breakchain.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/breakstypes.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/breakstypes0.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/brokenmonitor.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/brokenset.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/bsynch.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/btset.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/carl1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/carl2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/carl3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/carl4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/catenate.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/checkfloat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/class.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/console.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/conv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/copy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/create0.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/create1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/debug.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/diein10.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/directory.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/dmandel.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/don.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/donothing.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/dotoall.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/dotoall2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska12.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska13.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska15.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska16.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska8.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska9.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duska_works.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duskab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/duskaglist.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/elisa.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ericclass.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/f.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/failmove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/fastkilroy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ff.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/fibtest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/findpath.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/findpath2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/findpath3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/first.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/firstm.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/firstp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/foobar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/forward.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/foutput.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/fs.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/funny.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/funnychar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/generator.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/gg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ggg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/glist.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/glok.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/hash.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/hello.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/id.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/id2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/id3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/id4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/id_b.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/id_b2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/inc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ingo.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/input.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/int.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/inv1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/inv2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/invoke.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/invokealot.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/invokebig.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/invokeloop.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/invoketons.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/jlang.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/killall.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/kilroy-mini-II.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/kilroy-mini.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/kilroy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/kilroylots.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/library.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/literal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/lr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/lr2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/makedistgarbage.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/makelots.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/makelotsatt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/makelotsveclit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/makestub.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/maketons.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/maketonsatt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/maketonsoconditions.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/maketonsomonitors.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/map.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/matrix2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/matrix3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/maxname.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/mike.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/mike2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/morten.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/move.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/movecond.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/movem.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/moveme.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/movemetons.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/movemonitor.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/movemulti.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/movetons.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/nabcon.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/nconsole.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ndir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/neil.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/netstat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/nfindpath.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/nodee.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/nshell.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/nxf.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/oedir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ofindpath.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/part1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/part2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/person.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/polyfun.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/pound.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/primes.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/printroot.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/printtype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/program10.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/propagatefailure.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ptimeit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/qsort.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/qsort2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/realtree.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/recursiveunavailable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/replication.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/revarray.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/revarray2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/rinvokealot.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ris.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/scramble.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/search.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/second.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/sem.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/set.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/shared.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/shell.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/shownodes.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/sieve.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/signaler.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/siiiatable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/sml.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/sset.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/st.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/stack.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/stackover.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/stackoverfail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/stackoverunavailable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/stacktest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/starvation.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/stressInvokeAndMove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/synch.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/synchmove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/syntaxerror.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/t.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/t1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/t2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ta.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/taaa.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tabcon.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tam.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tand.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/target.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tarr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tarraymove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tarraytype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tassert.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tassign.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tasyncstdin.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tatt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/taxx.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbadinv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbadmove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbasictype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbbb.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbigvec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbitchunk.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbreak.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbreakme.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbuf.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tbuiltin.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcase.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tch.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tchar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcharlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tckp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tckp1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tckp2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcl2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tclass.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tclosure.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tclr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcodeof.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcond.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tconform.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tconsttype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcreate.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tct.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tcy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdeath.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdecod.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdelay.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdi.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdict.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdotstar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tdq.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/teacher.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/telse.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tem.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tenum.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tenum2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tenv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/teq.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testalloc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testclause.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testhairy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testlesshairy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testlocate.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testparseself.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/teststdout.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testunavailable.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testunavailable2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testunavailable3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/testunavailable4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tex.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/texit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/texp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/textern.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tf.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfailloop.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfailunavail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfenv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfield.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfix.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfoo.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfor.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tforeignreturn.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tfs.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tgc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tgetenv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/thex.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tick.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ticklerinvokebug.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ticklerinvokebug2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tid.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tif.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tiinline.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/timef.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/timeinvoke.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/timeit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/timemove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/timemove2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/timport.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tin.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinh.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinh1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinh2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinh3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinline.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tins.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tint.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinteger.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tintlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinvnil.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinvoke.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinvoke2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tinvoke3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tio.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tisfixed.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tislocal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tistate.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tiv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tload.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tlocal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tlocate.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tlog.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tlots.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tm.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tm2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tm3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tma.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tman.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmap.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmi.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmod.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmonitor.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmorph.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmove2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmove3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmove4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmult.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmulti.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmulti2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmutveclit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tmv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tn.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tname.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tncc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tnf.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tni.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tnil.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tno.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tnone.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tnontype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tob.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/toid.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/top.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tops.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tord.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tout.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/town.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tparam.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tpause.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tpopen.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tpopenout.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tprintf.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trandom.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trd.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/treadspeed.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/treal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tree.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tree2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tree3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tremfloat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trfail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trivmove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trread.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trsleep.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/trunavail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ts.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tscope.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tself.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsem.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tset.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsetbit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsetbits.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsign.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsqrt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tst.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstack.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsto.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstring.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstrlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstrr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstrt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tstrvec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsubscript.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsvl.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tsyntactictype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttcp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tti.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttime.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttok.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ttypeof.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tudir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tuf.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tugetenv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tunavail.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tva.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvecchar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tveclit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvecsymlit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvector.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvecvec.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tview.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tvvv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/twr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tx.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txforms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txlib.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txt2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txt3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txx.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/txxx.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/tyyy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/ufindpath.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/unsynch.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/vir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/virus.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/waiter.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/whoami.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/wimpymap.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/xforms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Example/xtcp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/runtest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/ta.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/taaaa.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tarray.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tbchunk.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tboolean.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tchar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tclass.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/thairy.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tinstr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tinteger.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tiostr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tmove.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tnil.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tnode.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/toutstr.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/treal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/trecord.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tstack.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tstring.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/ttime.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/ttype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tv.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ExecTest/tvector.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/assign.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/builtin1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/class.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/conform.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/conform2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/conform3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/conform4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/const.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/export.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/ident1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/ident2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/immut.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/lit1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/lit2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/lit3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/lit4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/multi.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/multi2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/multi3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/nontype.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/old1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/old5.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/old6.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/ops1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/ops2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/ops3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/ops4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/shadow1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/shadow2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/signal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/stat.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/str.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/subs.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/syn.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/tscope.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type3.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type4.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type5.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type6.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type7.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type8.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/type9.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/union.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/vec1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="FailTest/vec2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/DirGagg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/Gaggle.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/LooseDir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/SimpleGaggle.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/TimeStamp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/d.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/direcg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/directest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/mtest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/poorG.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/testloosedir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/tg.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/timeloosedir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/timesimplecreate.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Gaggle/timestrictdir.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Game/XForms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Game/bag.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Game/event.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Game/player.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Report/stack.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="Report/stacktest.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/X.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/assoc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/date.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/parse.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/t.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/tassoc.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/texth.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/xapp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/xapp2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/xcal.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/xday.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/xedit.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="X/xinput.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/Box.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/Browser.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/Button.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/Input.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/NXForms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/OXForms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/XForms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/b.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/barchart.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/coverlay.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/drag.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/ebiff.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/env.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/gp.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/graph.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/graphpaper.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/maketons.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/map.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/mytron.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/oldmytron.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/overlay.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/show.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/t.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/test.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/tick.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/tpb.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/tron.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/tron1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/tt.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/txforms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/u.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/v.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/w.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/workingtron.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xcpu.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xcpulinux.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xcpulinuxnew.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xcpunew.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xdisk.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xdisknew.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xforms.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xfree.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xns.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xnsnew.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/xxx.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/y.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="XForms/z.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/bani.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/bani/bani.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/bani/bani.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/emstream.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/misc.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/misc/exit.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/misc/hello.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/misc/hello.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/misk.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/misk/misk.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/myristream.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/myristream/myristream.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/myristream/myristream.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/notreadable/streams.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/notreadable/trandom.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/notreadable/xma.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/rand.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/regexp.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/regexp/regerror.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/regexp/regexp.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/regexp/regexp.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/regexp/regmagic.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/regexp/regsub.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/regexp/timer.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/regexp/try.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/trandom.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/trandom/random.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xcards/stuff.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/xforms.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xforms/xforms.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/xforms/xforms.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xliba.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xliba/xliba.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/xliba/xliba.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xma.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xma/xma.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/xma/xma.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xsed.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/xta.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="ccalls/xta/xta.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="ccalls/xta/xta.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="emyacc/y1.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/y2.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/y3.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/y4.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yacchead.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yaccpar.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yaccpar.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yaccpar.mod" ex="true" tool="2" flavor="0">
+      </item>
+      <item path="emyacc/yyredend.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="emyacc/yyredend.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yyredend.mod" ex="true" tool="2" flavor="0">
+      </item>
+      <item path="emyacc/yyredsta.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="emyacc/yystart1.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yystart1.mod" ex="true" tool="2" flavor="0">
+      </item>
+      <item path="emyacc/yystart2.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="emyacc/yystart2.mod" ex="true" tool="2" flavor="0">
+      </item>
+      <folder path="emerald/ccalls">
+        <cTool>
+          <incDir>
+            <pElem>ccalls</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="emerald/ccalls/emstream">
+        <cTool>
+          <incDir>
+            <pElem>ccalls/emstream/emstream.c</pElem>
+            <pElem>ccalls/emstream</pElem>
+            <pElem>vm/src</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="emerald/ccalls/misk">
+        <cTool>
+          <incDir>
+            <pElem>ccalls/misk/misk.c</pElem>
+            <pElem>ccalls/misk</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="emerald/ccalls/rand">
+        <cTool>
+          <incDir>
+            <pElem>ccalls/rand/rand.c</pElem>
+            <pElem>vm/src</pElem>
+            <pElem>ccalls/rand</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="emerald/ccalls/string">
+        <cTool>
+          <incDir>
+            <pElem>ccalls/string</pElem>
+            <pElem>vm/src</pElem>
+            <pElem>ccalls/string/string.c</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="emerald/vm">
+        <cTool>
+          <incDir>
+            <pElem>vm/src</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <item path="vm/src/array.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/array.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/bufstr.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/bufstr.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/call.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/call.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/cctab.c" ex="false" tool="0" flavor="0">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/cctab.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/codeptrextra.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/codeptrextra.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/codeptrextra.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/config.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/conform.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/conform.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/context.S" ex="true" tool="4" flavor="0">
+      </item>
+      <item path="vm/src/creation.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/creation.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/debug.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/debug.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/dist.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/dist.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/distgc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/distgc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/env.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/error.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/error.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/fakecontext.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/fakemain.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/filestr.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/filestr.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/gaggle.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/gaggle.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/gc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/gc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/globals.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/globals.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/iiiiisc.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/iiiiisc.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/iisc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/iisc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/iixsc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/iixsc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/ilist.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/ilist.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/io.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/io.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/iosc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/iosc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/iset.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/iset.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/joveisc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/joveisc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/jsys.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/jsys.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/jvisc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/jvisc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/locate.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/locate.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/main.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/main.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/memory.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/misc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/misc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/move.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/move.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/mqueue.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/mqueue.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/mthreads.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/mthreads.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/newdist.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/ntoh.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/oidtoobj.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/oidtoobj.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/oisc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/oisc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/ooisc.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/ooisc.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/otable.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/otable.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/read.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/read.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/remote.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/remote.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/rinvoke.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/rinvoke.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/sisc.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/sisc.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/sockstr.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/sockstr.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/squeue.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/squeue.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/storage.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/storage.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/streams.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/streams.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/strtol.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/threads.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/threads.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vm/src/timer.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/timer.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/trace.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/trace.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/upcall.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/upcall.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/vm.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/vm.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/write.c" ex="false" tool="0" flavor="2">
+        <cTool>
+          <incDir>
+            <pElem>vm/src/write.c</pElem>
+          </incDir>
+        </cTool>
+      </item>
+      <item path="vm/src/xdr_float.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/xsys.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vm/src/xsys.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/Emain.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/assert.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/bc.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/defs.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/discomp.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/iisc.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/iisc.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/ilist.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/ilist.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/iset.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/iset.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/semantic.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/sisc.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/sisc.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/slist.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/slist.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/strings.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/trace.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/trace.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="vmc/vmclex.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/vmcpar.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="vmc/vmcpar.h" ex="true" tool="3" flavor="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>

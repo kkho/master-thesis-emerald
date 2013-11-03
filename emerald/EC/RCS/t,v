@@ -1,0 +1,53 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2
+	carlton_start:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.08.17.16.51.50;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.03.22.45.07;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@needed by ffs
+@
+
+
+1.2
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@set exporttree
+tree.m
+otree.m
+unset exporttree
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a1 1
+unset doselfs
+a3 1
+set doselfs
+@

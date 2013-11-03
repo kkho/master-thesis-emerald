@@ -1,0 +1,176 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	97.01.21.23.49.43;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.03.15.05.12.53;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.06.15.05.35.23;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.15.01.46.48;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald specific make wrapper, which sources appropriate
+definition files before the Makefile
+@
+
+
+1.4
+log
+@Use makefile.depend rather than editing Makefile
+@
+text
+@#!/bin/sh
+#
+# emmake
+#
+# invoke make as usual, but ensure that if we're building in a
+# directory under $EMERALDROOT, any Emerald common definitions
+# are processed first, followed by any architecture specific
+# definitions (allowing them to override the common definitions.)
+# The -v option (which must be first, else it is passed through)
+# will cause emmake to be verbose about exactly what make line is
+# executed.
+#
+
+#
+# domake - make, and echo if appropriate
+#
+domake () {
+  if [ $verbose = 1 ] ; then
+    echo "make $*"
+  fi
+  make $*
+}
+
+#
+# main
+#
+# consume emmake options
+verbose=0
+if [ .$1 = '.-v' ] ; then
+  verbose=1
+  shift
+fi
+
+# if expr >/dev/null `pwd` : .*$EMERALDROOT ; then
+# if true ; then
+  # we're in Emerald-land
+
+  # if there are Emerald common macros, remember to include them
+  if [ -r $EMERALDROOT/lib/macroMf ] ; then
+    commonmakefile="-f $EMERALDROOT/lib/macroMf"
+  fi
+
+  # if there are CCalls common macros, remember to include them
+  if [ -r $EMERALDROOT/lib/ccallsMf ] ; then
+    commonmakefile="$commonmakefile -f $EMERALDROOT/lib/ccallsMf"
+  fi
+
+  # if there are architecture specific macros, remember to include them
+  if [ -r $EMERALDROOT/lib/$EMERALDARCH/macroMf ] ; then
+    archmakefile="-f $EMERALDROOT/lib/$EMERALDARCH/macroMf"
+  fi
+
+  # if there are any -f arguments, don't provide "-f Makefile"
+  for i do
+    if [ $i = '-f' ] ; then
+      domake $commonmakefile $archmakefile $*
+	  exit 
+    fi
+  done
+
+  # simulate make behaviour of searching first for 'makefile'
+  # and then for 'Makefile'
+  if [ -r makefile ] ; then
+    if [ -r makefile.depend ] ; then
+      domake $commonmakefile $archmakefile -f makefile -f makefile.depend $*
+    else
+      domake $commonmakefile $archmakefile -f makefile $*
+    fi
+  else
+    if [ -r Makefile.depend ] ; then
+      domake $commonmakefile $archmakefile -f Makefile -f Makefile.depend $*
+    else
+      domake $commonmakefile $archmakefile -f Makefile $*
+    fi
+  fi
+
+# else
+#   # we're not in Emerald-land
+#   domake $*
+# fi
+
+@
+
+
+1.3
+log
+@Support new ccalls structure
+@
+text
+@d64 5
+a68 1
+    domake $commonmakefile $archmakefile -f makefile $*
+d70 5
+a74 1
+    domake $commonmakefile $archmakefile -f Makefile $*
+@
+
+
+1.2
+log
+@Getting filenames into 8.3 format
+@
+text
+@d34 2
+a35 1
+if expr >/dev/null `pwd` : .*$EMERALDROOT ; then
+d43 5
+d69 4
+a72 4
+else
+  # we're not in Emerald-land
+  domake $*
+fi
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d38 2
+a39 2
+  if [ -r $EMERALDROOT/lib/macroMakefile ] ; then
+    commonmakefile="-f $EMERALDROOT/lib/macroMakefile"
+d43 2
+a44 2
+  if [ -r $EMERALDROOT/lib/$EMERALDARCH/macroMakefile ] ; then
+    archmakefile="-f $EMERALDROOT/lib/$EMERALDARCH/macroMakefile"
+@

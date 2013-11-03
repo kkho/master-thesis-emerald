@@ -1,0 +1,190 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	98.03.02.16.37.40;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.23.16.20.39;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.21.23.59.53;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@'./vm/src'
+@
+text
+@/* comment me!
+ */
+
+#ifndef _EMERALD_READ_H
+#define _EMERALD_READ_H
+
+#include "types.h"
+#include "array.h"
+#include "iisc.h"
+#include "oisc.h"
+#include "iosc.h"
+#include "streams.h"
+#include "dist.h"
+
+/*typedef struct LFE {
+  OID    oid;
+  Object ptr;
+} LFE;
+*/
+#define filesizeofLFE 16
+
+typedef enum Signature {
+  ObjectWithID = 0, 
+  ObjectWithoutID = 1, 
+  Extern = 2, 
+  AbConObj = 3, 
+  MakeObject = 4, 
+  Comment = 5, 
+  SigNone = 6,
+  Stub = 7,
+  VectorStub = 8,
+  SQ = 9,
+  SigError = 10
+  } Signature;
+
+#define NUM_SIGNATURES 10
+#define filesizeofSignature 4
+#define filesizeofObjectDescriptor 4
+extern char signatures[NUM_SIGNATURES + 1][filesizeofSignature];
+
+/*
+ * Here is the structure of a failure handler entry
+ */
+struct FHE {
+  unsigned short blockStart;
+  unsigned short blockEnd;
+  unsigned short handlerStart;
+  unsigned short variableOffset;
+  unsigned int name;
+};
+struct FHC {
+  unsigned short count;
+  char h;
+  char c;
+};
+
+/*
+ * Relocation item descriptor.  This is for missing objects that are later
+ * loaded.  
+ */
+typedef struct relocation {
+  Object o;
+  int offset;
+} Relocation;
+
+extern OISc relocationMap;
+
+typedef struct CheckpointData {
+  array Objects;
+  array MakeObjects;
+  array AbCons;
+  IOSc  Externs;
+} CheckpointData;
+
+extern int  fixLiterals(Code c);
+extern char *findHisTemplate(ConcreteType ct);
+extern void ReadOID(OID *oid, Stream theStream);
+extern Object DoCheckpoint(Stream theFile, char *cpfile);
+extern Object ExtractObjects(Stream theFile, Node srv);
+extern void DoCheckpointFromFile(char *cpfile);
+
+extern void ReadInit(void);
+#endif /* _EMERALD_READ_H */
+@
+
+
+1.2
+log
+@'./vm/src'
+@
+text
+@d13 1
+a13 7
+#ifndef WIN32
+#pragma warning(disable: 4068)
+#pragma pointer_size save
+#pragma pointer_size long
+#include <netinet/in.h>
+#pragma pointer_size restore
+#endif
+d79 1
+a79 1
+extern Object ExtractObjects(Stream theFile, vmThreadId srv);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 2
+#ifndef _READ_H
+#define _READ_H
+d13 2
+d19 1
+d44 1
+a87 29
+static inline void ExtractBits8(Bits8 *theByte, Bits8 *data)
+{
+  *theByte = *data;
+}
+
+static inline void ExtractBits16(Bits16 *theWord, Bits8 *data)
+{
+  *theWord = ntohs(*((Bits16 *) data));
+}
+
+static inline void ExtractBits32(Bits32 *theLong, Bits8 *data)
+{
+  *theLong = ntohl(*((Bits32 *) data));
+}
+
+static inline void ExtractOID(OID *theOID, Bits8 *data)
+{
+  ExtractBits32(&theOID->IPAddress, data);
+  ExtractBits16(&theOID->EmeraldInstance, data + 4);
+  ExtractBits16(&theOID->Epoch, data + 6);
+  ExtractBits32(&theOID->Seq, data + 8);
+}
+
+static inline void ExtractObjectDescriptor(Object theObject, Bits8 *data)
+{
+  unsigned int newflags;
+  ExtractBits32(&newflags, data);
+  theObject->flags = (theObject->flags & ALLBITS) | newflags;
+}
+d89 1
+a89 1
+#endif /* _READ_H */
+@

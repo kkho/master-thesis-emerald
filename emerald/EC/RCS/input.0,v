@@ -1,0 +1,49 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2
+	carlton_start:1.2
+	immel_start:1.1;
+locks; strict;
+
+
+1.2
+date	93.06.04.00.20.49;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.25.16.57.10;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@Input file lists
+@
+
+
+1.2
+log
+@catch up on recent changes
+@
+text
+@ident.m
+symbol.m
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a1 1
+lookupid.m
+@

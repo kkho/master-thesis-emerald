@@ -1,0 +1,93 @@
+head	1.3;
+access;
+symbols
+	105alpha:1.3
+	104alpha:1.3
+	103alpha:1.3
+	102alpha:1.3
+	101alpha:1.3
+	100alpha:1.3
+	DIKU_0:1.2;
+locks; strict;
+comment	@% @;
+
+
+1.3
+date	96.05.06.19.34.09;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.25.16.33.03;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.08.22.10.26.10;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Fixed a typo that messed up the formatting
+@
+text
+@{\small\it\begin{minipage}{\textwidth}\begin{tabbing}
+xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=xxx\=\+\kill%
+\cd{} Define an \tn{Integer} stack creation \kw{object}\\[1.0ex]{}%
+\kw{export} Stack\\[1.0ex]{}%
+\kw{const} Stack \assign{}\+\\*{}%
+  \kw{immutable} \kw{object} Stack\+\\*{}%
+    \kw{const} StackType \assign{}\+\\*{}%
+      \kw{typeobject} StackType\+\\*{}%
+        \kw{operation} Push\/\LB{}n\CO{} \tn{Integer}\/\RB{}\\*{}%
+        \kw{operation} Pop \returns{} \/\LB{}n\CO{} \tn{Integer}\/\RB{}\\*{}%
+        \kw{function} Empty \returns{} \/\LB{}result \CO{} \tn{Boolean}\/\RB{}\-\\*{}%
+      \kw{end} StackType\-\\[1.0ex]{}%
+    \kw{export} \kw{function} getSignature \returns{} \/\LB{}r \CO{} \tn{Signature}\/\RB{}\+\\*{}%
+      r \assign{} StackType\-\\*{}%
+    \kw{end} getSignature\\[1.0ex]{}%
+    \kw{export} \kw{operation} create \returns{} \/\LB{}result \CO{} StackType\/\RB{}\+\\*{}%
+      result \assign{} \+\\*{}%
+        \kw{object} aStack\+\\*{}%
+	  \kw{const} store \assign{} \tn{Array}.of\/\LB{}\tn{Integer}\/\RB{}.empty\\[1.0ex]{}%
+	  \kw{export} \kw{operation} Push\/\LB{}n\CO{} \tn{Integer}\/\RB{}\+\\*{}%
+	    store.addUpper\/\LB{}n\/\RB{}\-\\*{}%
+	  \kw{end} Push\\[1.0ex]{}%
+	  \kw{export} \kw{operation} Pop \returns{} \/\LB{}n\CO{} \tn{Integer}\/\RB{}\+\\*{}%
+	    n \assign{} store.removeUpper\-\\*{}%
+	  \kw{end} Pop\\[1.0ex]{}%
+	  \kw{export} \kw{function} Empty \returns{} \/\LB{}result \CO{} \tn{Boolean}\/\RB{}\+\\*{}%
+	    result \assign{} store.empty\-\\*{}%
+	  \kw{end} Empty\-\\*{}%
+        \kw{end} aStack\-\-\\*{}%
+    \kw{end} create\-\-\\[1.0ex]{}%
+\kw{end} Stack
+\end{tabbing}\end{minipage}}
+@
+
+
+1.2
+log
+@Checkpoint of August 94 updates for DIKU course
+@
+text
+@d26 1
+a26 1
+	  exportfunction Empty \returns{} \/\LB{}result \CO{} \tn{Boolean}\/\RB{}\+\\*{}%
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+x ./stack-prog.tex, 1651 bytes, 4 tape blocks
+@

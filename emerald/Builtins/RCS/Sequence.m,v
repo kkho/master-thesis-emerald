@@ -1,0 +1,53 @@
+head	1.1;
+access;
+symbols
+	105alpha:1.1
+	104alpha:1.1
+	103alpha:1.1
+	102alpha:1.1
+	101alpha:1.1
+	100alpha:1.1;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	98.02.11.20.04.20;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@The builtin sequence type.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@const Sequence <- immutable object Sequence builtin 0x1024
+  const SequenceType <- typeobject SequenceType builtin 0x1624
+    function lowerbound -> [Integer]
+    function upperbound -> [Integer]
+    function getElement [Integer] -> [Any]
+  end SequenceType
+  export function getSignature -> [result : Signature]
+    result <- SequenceType
+  end getSignature
+
+  export function of [T : Type] -> [result : Signature]
+    forall T
+    result <- typeobject aNewSequence
+      function lowerbound -> [Integer]
+      function upperbound -> [Integer]
+      function getElement [Integer] -> [T]
+    end aNewSequence
+  end of
+end Sequence
+
+export Sequence to "Builtins"
+
+
+@

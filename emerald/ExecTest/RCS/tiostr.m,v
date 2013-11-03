@@ -1,0 +1,81 @@
+head	1.2;
+access;
+symbols
+	105alpha:1.2
+	104alpha:1.2
+	103alpha:1.2
+	102alpha:1.2
+	101alpha:1.2
+	100alpha:1.2
+	DIKU_0:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	93.06.01.23.39.05;	author mueller;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.06.01.23.37.33;	author mueller;	state Exp;
+branches;
+next	;
+
+
+desc
+@Emerald compiler test
+@
+
+
+1.2
+log
+@fromUnix/toUnix now take an fopen style string to specify mode
+@
+text
+@const tinoutstream <- object tinoutstream
+  const myTest <- runtest.create[stdin, stdout, "tinoutstream"]
+  initially
+    % each test looks like myTest.check[<boolean expression>, "<same exp>"]
+    const outf <- OutStream.toUnix["tmp", "w"]
+    outf.PutChar['T']
+    outf.PutChar['\^J']
+    outf.PutInt[36, 5]
+    outf.PutChar['\^J']
+    outf.PutString["This is a string.\^J"]
+    outf.Close
+    begin
+      const inf <- InStream.fromUnix["tmp", "r"]
+      mytest.Check[inf !== nil, "inf !== nil"]
+      if inf !== nil then
+	var s : String
+	s <- inf.getString
+	mytest.Check[s = "T\n", "s = \"T\\n\""]
+	s <- inf.getString
+	mytest.Check[s = "   36\n", "s = \"   36\\n\""]
+	s <- inf.getString
+	mytest.Check[s = "This is a string.\n", "s = \"This is a string\\n\""]
+	mytest.Check[inf.eos, "inf.eos"]
+      end if
+    end
+    myTest.done
+  end initially
+end tinoutstream
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+  const myTest == runtest.create[stdin, stdout, "tinoutstream"]
+d5 1
+a5 1
+    const outf <- OutStream.toUnix["tmp", 03001, 0644]
+d13 1
+a13 1
+      const inf <- InStream.fromUnix["tmp", 0, 0]
+@

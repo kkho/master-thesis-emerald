@@ -1,0 +1,167 @@
+head	1.4;
+access;
+symbols
+	105alpha:1.4
+	104alpha:1.4
+	103alpha:1.4
+	102alpha:1.4
+	101alpha:1.4
+	100alpha:1.4
+	DIKU_0:1.4
+	immel_start:1.3;
+locks; strict;
+
+
+1.4
+date	94.06.10.05.21.58;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.04.22.22.59.28;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.59.26;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.59.25;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.4
+log
+@Reinstalled support for monitored objects and conditions
+@
+text
+@export Waitstat
+
+const waitstat <- class Waitstat (Tree) [xxexp : Tree]
+  field exp : Tree <- xxexp
+
+  export function upperbound -> [r : Integer]
+    r <- 0
+  end upperbound
+  export function getElement [i : Integer] -> [r : Tree]
+    if i = 0 then
+      r <- exp
+    end if
+  end getElement
+  export operation setElement [i : Integer, r : Tree]
+    if i = 0 then
+      exp <- r
+    end if
+  end setElement
+  export operation copy [i : Integer] -> [r : Tree]
+    var nexp : Tree <- exp
+    if exp !== nil then nexp <- exp.copy[i] end if
+    r <- waitstat.create[ln, nexp]
+  end copy
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    const realob <- view ob as Monitorable
+    if !realob$isMonitored then
+      Environment.getEnv.SemanticError[ln, "Wait statements must be in monitored objects", nil]
+    end if
+    r <- FTree.removeSugar[self, ob]
+  end removeSugar
+
+  export operation generate [xct : Printable]
+    if Environment$env$generateconcurrent then
+      const bc <- view xct as ByteCode
+      bc.lineNumber[ln]
+      bc.pushSize[4]
+      exp.generate[xct]
+      bc.popSize
+      bc.addCode["CONDWAIT"]
+    end if
+  end generate
+
+  export function asString -> [r : String]
+    r <- "waitstat"
+  end asString
+end Waitstat
+@
+
+
+1.3
+log
+@type -> typeobject sed
+@
+text
+@d4 1
+a4 2
+  monitor
+    field exp : Tree <- xxexp
+d6 18
+a23 19
+    export function upperbound -> [r : Integer]
+      r <- 0
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- exp
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	exp <- r
+      end if
+    end setElement
+    export operation copy [i : Integer] -> [r : Tree]
+      var nexp : Tree <- exp
+      if exp !== nil then nexp <- exp.copy[i] end if
+      r <- waitstat.create[ln, nexp]
+    end copy
+  end monitor
+d25 9
+a33 1
+  export operation generate [xct : Printable] -> [rct : None]
+d35 2
+a36 8
+      var junk : Any
+      const bc <- view xct as typeobject T
+	  op addCode[String]
+	  op pushSize[Integer]
+	  op popSize
+	  op lineNumber[Integer]
+	end T
+      bc.lineNumber[self$ln]
+d38 1
+a38 1
+      junk <- self$exp.generate[xct]
+@
+
+
+1.2
+log
+@Implemented (a first cut at) concurrency
+@
+text
+@d1 1
+a1 3
+import Tree, FTree, Printable from "Jekyll"
+import SymbolTable from "Jekyll"
+export Waitstat to "Jekyll"
+d30 1
+a30 1
+      const bc <- view xct as type T
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d29 17
+@

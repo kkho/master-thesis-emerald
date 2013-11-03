@@ -1,0 +1,192 @@
+head	1.6;
+access;
+symbols
+	105alpha:1.6
+	104alpha:1.6
+	103alpha:1.6
+	102alpha:1.6
+	101alpha:1.6
+	100alpha:1.6
+	DIKU_0:1.4
+	immel_start:1.3;
+locks; strict;
+
+
+1.6
+date	97.01.21.23.51.09;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.03.15.05.18.25;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.08.25.11.26.23;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.06.03.15.09.24;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.13.45.43;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.13.45.41;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.6
+log
+@Cleanup syntax, new ccalls, time fixes
+@
+text
+@% 
+% @@(#)Vector.m	1.2  3/6/91
+%
+const Vector <- 
+  immutable object Vector builtin 0x100c
+    export function of [ElementType : type] -> [result : NVT]
+      forall
+	ElementType
+      where
+	NV <-	typeobject NV builtin 0x160c
+		  function  getElement [Integer] -> [ElementType]
+		    % get the element indexed by index, failing if index 
+		    % out of range.
+		  operation setElement [Integer, ElementType]
+		    % set the element, failing if index out of range
+		  function  upperbound -> [Integer]
+		    % return the highest valid index, ub.
+		  function  lowerbound -> [Integer]
+		    % return the lowest valid index, always 1.
+		  function  getElement [Integer, Integer] -> [NV]
+		  function  getSlice [Integer, Integer] -> [NV]
+		    % See implementation comment
+		end NV
+      where
+	NVT <-	immutable typeobject NVT
+		  operation create [Integer] -> [NV]
+		  function getSignature -> [Signature]
+		end NVT
+
+      result <- 
+	immutable object aNVT 
+	  export function getSignature -> [result : Signature]
+	    result <- NV
+	  end getSignature
+
+	  export operation create[length : Integer] -> [result : NV]
+	    result <-
+	      object aNV builtin 0x140c
+		export function  getElement [index : Integer] -> [result : ElementType]
+		  % get the element indexed by index, failing if index 
+		  % out of range.
+		  primitive self "GET" [result] <- [index]
+		end getElement
+		export operation setElement [index : Integer, e : ElementType]
+		  % set the element, failing if index out of range
+		  primitive self "SET" [] <- [index, e]
+		end setElement
+		export function  upperbound -> [r : Integer]
+		  % return the highest valid index, ub.
+		  primitive self "UPB" [r] <- []
+		end upperbound
+		export function  lowerbound -> [r : Integer]
+		  % return the lowest valid index, always 1.
+		  primitive "LDIB" 0 [r] <- []
+		end lowerbound
+		export function  getElement [i1 : Integer, length : Integer] -> [r : NV]
+		  primitive self "GSLICE" [r] <- [i1, length]
+		end getElement
+		  
+		export function  getSlice [i1 : Integer, length : Integer] -> [r : NV]
+		  % return a new Vector, a, with lower bound 0, and 
+		  % upper bound length-1, such that for 0 <= i < length:
+		  %     self.getElement[i1+i] == a.getElement[i]
+		  % fail if i1 or i1+length is out of range.
+		  primitive self "GSLICE" [r] <- [i1, length]
+		end getSlice
+	      end aNV
+	  end create
+	end aNVT
+    end of
+  end Vector
+
+export Vector to "Builtins"
+@
+
+
+1.5
+log
+@Use LDIB rather than LDIS for lowerbound
+@
+text
+@d4 1
+a4 1
+const Vector == 
+@
+
+
+1.4
+log
+@Cleaned up the naming of {g,s}et{Element,Slice}
+@
+text
+@d54 1
+a54 1
+		  primitive "LDIS" 0 0 [r] <- []
+@
+
+
+1.3
+log
+@Corrected missing export
+@
+text
+@d20 1
+d56 4
+@
+
+
+1.2
+log
+@Hand corrections after typeobject conversion
+@
+text
+@d6 1
+a6 1
+    function of [ElementType : type] -> [result : NVT]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+% @@(#)Vector.m	1.1  3/6/91
+d6 1
+a6 1
+    function of [ElementType : AbstractType] -> [result : NVT]
+d10 1
+a10 1
+	NV <-	type NV builtin 0x160c
+d24 1
+a24 1
+	NVT <-	immutable type NVT
+@

@@ -1,0 +1,705 @@
+head	1.14;
+access;
+symbols
+	105alpha:1.14
+	104alpha:1.14
+	103alpha:1.14
+	102alpha:1.14
+	101alpha:1.14
+	100alpha:1.14
+	DIKU_0:1.9
+	carlton_start:1.8
+	immel_start:1.4;
+locks; strict;
+
+
+1.14
+date	97.01.22.00.03.20;	author norm;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.09.26.15.25.49;	author norm;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.06.23.22.16.28;	author norm;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.12.06.20.12.48;	author norm;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.09.16.21.03.55;	author norm;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.08.17.16.51.53;	author norm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.07.17.06.37.51;	author norm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.03.11.00.15.51;	author norm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.12.10.17.07.49;	author norm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.29.22.32.00;	author norm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.08.03.09.26.39;	author norm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.05.18.12.05.02;	author norm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.04.22.22.59.31;	author norm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.04.22.22.59.30;	author norm;	state Exp;
+branches;
+next	;
+
+
+desc
+@
+@
+
+
+1.14
+log
+@Many changes
+@
+text
+@
+export Wherewidgit, OP_WHERE, OP_SUCHTHAT, OP_FORALL
+
+const OP_WHERE <- 1
+const OP_SUCHTHAT <- 2
+const OP_FORALL <- 3
+
+const wherewidgit <- class Wherewidgit (Tree) [xxsym : Tree, xxop : Integer, xxtype : Tree]
+    field xsym : Tree <- xxsym
+    field xop : Integer <- xxop
+    field xtype  : Tree <- xxtype
+    var st : SymbolTable <- nil
+
+    export function upperbound -> [r : Integer]
+      r <- 1
+    end upperbound
+    export function getElement [i : Integer] -> [r : Tree]
+      if i = 0 then
+	r <- xsym
+      elseif i = 1 then
+	r <- xtype
+      end if
+    end getElement
+    export operation setElement [i : Integer, r : Tree]
+      if i = 0 then
+	xsym <- r
+      elseif i = 1 then
+	xtype <- r
+      end if
+    end setElement
+
+    export operation copy [i : Integer] -> [r : Tree]
+      var nsym, nxtype : Tree
+      if xsym !== nil then nsym <- xsym.copy[i] end if
+      if xop != OP_FORALL then
+	if xtype !== nil then nxtype <- xtype.copy[i] end if
+      end if
+      r <- wherewidgit.create[ln, nsym, xop, nxtype]
+    end copy
+
+  export operation removeSugar [ob : Tree] -> [r : Tree]
+    if xop == OP_FORALL and self$xtype == nil then
+      const tcopy   <- 
+	atlit.create[
+	  self$ln, 
+	  Literal.StringL[0, "junk"],
+	  sym.create[self$ln,
+	    Environment$Env$ITable.Lookup["whocares", 999]], 
+	  seq.create[self$ln]
+	]
+      self$xtype <- tcopy
+    end if
+    r <- FTree.removeSugar[self, ob]
+  end removeSugar
+
+  export operation defineSymbols [thest : SymbolTable]
+    const x <- view self$xsym as Sym
+    var s : Symbol
+    st <- thest
+%
+% This should be 
+%   if xop == OP_FORALL or xop == OP_WHERE then
+% but currently we have foralls where we shouldn't need them in unconstrained
+% type parameters like in Vector, Array, and such.
+    if xop == OP_WHERE then
+      s <- thest.Define[ln, x$id, SConst, false]
+    elseif xop == OP_FORALL then
+      s <- thest.Lookup[ln, x$id, false]
+      if s == nil then
+	s <- thest.Define[ln, x$id, SConst, false]
+      end if
+    end if
+    FTree.defineSymbols[thest, self]
+  end defineSymbols
+
+  export operation resolveSymbols [thest : SymbolTable, nexp : Integer]
+    var sy : Symbol
+
+    self$xsym.resolveSymbols[thest, 0]
+    if self$xtype !== nil then
+      self$xtype.resolveSymbols[thest, 1]
+    end if
+
+    sy <- (view self$xsym as Sym)$mysym
+    if xop == OP_FORALL or xop == OP_SUCHTHAT then
+      sy$isTypeVariable <- true
+      if xop == OP_SUCHTHAT then
+	sy$willHaveConstraint <- true
+      end if
+    end if
+  end resolveSymbols
+
+  export operation getNeedsToBeCompilerExecuted -> [r : Boolean]
+    r <- false % xop = OP_FORALL or xop = OP_SUCHTHAT
+  end getNeedsToBeCompilerExecuted
+
+  export operation evaluateManifests
+    const env <- Environment$env
+    const thesym : Sym <- view self$xsym as Sym
+    const thesymbol <- thesym$mysym
+    if xop = OP_FORALL and theSymbol$value == nil and !thesymbol$willHaveConstraint then
+      const u <- view self$xtype as OTree
+      assert ! thesym$isNotManifest
+      if env$traceevaluatemanifests then
+	env.printf["  Setting the value of the forall on line %d\n", {ln}]
+      end if
+      u$isTypeVariable <- true
+      theSymbol$value <- u
+    elseif xop = OP_SUCHTHAT and theSymbol$value == nil then
+      if thesymbol$hasConstraint then
+	Environment$env.SemanticError[ln, "Symbol %S already has a constraint", { thesymbol$myident } ]
+      end if
+      const t <- self$xtype.execute
+      const thecopy <- view t.copy[0] as OTree
+      thecopy.defineSymbols[st]
+      thecopy.resolveSymbols[st, 1]
+      loop
+	exit when !thecopy.findManifests
+      end loop
+      thecopy.evaluateManifests
+      assert ! thesym$isNotManifest
+      if env$traceevaluatemanifests then
+	env.printf["  Setting the value of the such that on line %d\n", {ln}]
+      end if
+      thecopy$isTypeVariable <- true
+      thesymbol$hasConstraint <- true
+      theSymbol$value <- thecopy
+    elseif xop = OP_WHERE then
+      if thesym$isNotManifest then
+	if env$traceevaluatemanifests then
+	  env.printf["  The where on line %d is not manifest\n", {ln}]
+	end if
+      else
+	assert ! self$xtype$IsNotManifest
+	if env$traceevaluatemanifests then
+	  env.printf["  Setting the value of the where on line %d\n", {ln}]
+	end if
+	if theSymbol$value == nil then
+	  theSymbol$value <- self$xtype.execute
+	  if theSymbol$value == nil then
+	    if env$traceevaluatemanifests then
+	      env.printf["  Setting the value of the where on line %d failed\n", {ln}]
+	    end if
+	  end if
+	end if
+      end if
+    end if
+    if xop = OP_SUCHTHAT then
+      (view theSymbol$value as Tree).evaluateManifests
+    end if
+    % st <- nil
+    FTree.evaluateManifests[self]
+  end evaluateManifests
+
+  export operation assignTypes
+    const ssym <- view self$xsym as Sym
+    const value <- view ssym$mysym$value as Tree
+    if value !== nil then
+      value.assignTypes
+    end if
+    FTree.assignTypes[self]
+  end assignTypes
+      
+    
+  export operation findManifests -> [changed : Boolean]
+    changed <- false
+    if xop = OP_WHERE then
+      if ! self$xsym$isNotManifest and self$xtype$IsNotManifest then
+	self$xsym$isNotManifest <- true
+	changed <- true
+      end if
+    end if
+
+    changed <- FTree.findManifests[self] | changed
+  end findManifests
+
+  export function asString -> [r : String]
+    r <- "wherewidgit"
+  end asString
+end Wherewidgit
+@
+
+
+1.13
+log
+@Make type stuff work
+@
+text
+@d87 3
+d99 3
+a101 2
+    const ssym <- (view self$xsym as Sym)$mysym
+    if xop = OP_FORALL and ssym$value == nil then
+d103 1
+a103 1
+      assert ! self$xsym$isNotManifest
+d108 2
+a109 4
+      ssym$value <- u
+    elseif xop = OP_SUCHTHAT and ssym$value == nil then
+      const thesym : Sym <- view self$xsym as Sym
+      const thesymbol <- thesym$mysym
+d121 1
+a121 1
+      assert ! self$xsym$isNotManifest
+d127 1
+a127 1
+      ssym$value <- thecopy
+d129 1
+a129 1
+      if self$xsym$isNotManifest then
+d138 3
+a140 3
+	if ssym$value == nil then
+	  ssym$value <- self$xtype.execute
+	  if ssym$value == nil then
+d149 1
+a149 1
+      (view ssym$value as Tree).evaluateManifests
+@
+
+
+1.12
+log
+@Implement defered type checking of manifest invocs
+@
+text
+@d42 1
+a42 1
+    if xop == OP_FORALL then
+d80 3
+a82 1
+    self$xtype.resolveSymbols[thest, 1]
+d97 31
+a127 4
+    if ssym$value == nil then
+      if xop = OP_FORALL then
+	const u <- view self$xtype as OTree
+	assert ! self$xsym$isNotManifest
+d129 1
+a129 1
+	  env.printf["  Setting the value of the forall on line %d\n", {ln}]
+d131 2
+a132 12
+	u$isTypeVariable <- true
+	ssym$value <- u
+      elseif xop = OP_SUCHTHAT then
+	const t <- self$xtype.execute
+	const thecopy <- view t.copy[0] as OTree
+	thecopy.defineSymbols[st]
+	thecopy.resolveSymbols[st, 1]
+	loop
+	  exit when !thecopy.findManifests
+	end loop
+	thecopy.evaluateManifests
+	assert ! self$xsym$isNotManifest
+d134 1
+a134 1
+	  env.printf["  Setting the value of the such that on line %d\n", {ln}]
+d136 2
+a137 12
+	thecopy$isTypeVariable <- true
+	ssym$value <- thecopy
+      elseif xop = OP_WHERE then
+	if self$xsym$isNotManifest then
+	  if env$traceevaluatemanifests then
+	    env.printf["  The where on line %d is not manifest\n", {ln}]
+	  end if
+	else
+	  assert ! self$xtype$IsNotManifest
+	  if env$traceevaluatemanifests then
+	    env.printf["  Setting the value of the where on line %d\n", {ln}]
+	  end if
+d139 2
+a140 5
+	    ssym$value <- self$xtype.execute
+	    if ssym$value == nil then
+	      if env$traceevaluatemanifests then
+		env.printf["  Setting the value of the where on line %d failed\n", {ln}]
+	      end if
+d149 1
+a149 1
+    st <- nil
+@
+
+
+1.11
+log
+@Clean up generating the second things in references
+@
+text
+@d89 1
+a89 1
+    r <- xop = OP_FORALL or xop = OP_SUCHTHAT
+@
+
+
+1.10
+log
+@Inserted a number of additional type checks, put line numbers in literals
+@
+text
+@d58 1
+d65 7
+a71 2
+   if xop == OP_WHERE then
+      const s <- thest.Define[ln, x$id, SConst, false]
+@
+
+
+1.9
+log
+@Checkpoint of DIKU August 94 changes
+@
+text
+@d46 1
+a46 1
+	  Literal.StringL["junk"],
+@
+
+
+1.8
+log
+@Check for multiple declarations
+@
+text
+@d2 1
+a2 1
+export Wherewidgit
+d12 2
+d46 1
+a46 1
+	  stringlit.create[self$ln, "junk"],
+d56 1
+a56 1
+  export operation defineSymbols [st : SymbolTable]
+d58 1
+d65 1
+a65 5
+      const s <- st.Define[x$id, SConst, false]
+      if s == nil then
+	Environment.getEnv.SemanticError[ln, "Redefinition of symbol \"%s\"",
+	  { x$id.asString } ]
+      end if
+d67 1
+a67 1
+    FTree.defineSymbols[st, self]
+d70 1
+a70 1
+  export operation resolveSymbols [st : SymbolTable, nexp : Integer]
+d73 2
+a74 2
+    self$xsym.resolveSymbols[st, 0]
+    self$xtype.resolveSymbols[st, 1]
+d82 4
+a85 1
+  
+d88 2
+a89 2
+    const ssym <- view self$xsym as Sym
+    if ssym$mysym$value == nil then
+d97 1
+a97 1
+	ssym$mysym$value <- u
+d100 7
+a106 2
+	const u <- view t.copy[1] as OTree
+	const ssym <- view self$xsym as Sym
+d111 2
+a112 2
+	u$isTypeVariable <- true
+	ssym$mysym$value <- u
+a118 1
+	  const ssym <- (view self$xsym as Sym)$mysym
+d127 1
+a127 1
+		env.printf["  Setting the value of the where on line %d\n", {ln}]
+d134 4
+d141 10
+@
+
+
+1.7
+log
+@Redefined wherewidgits to remove the opname
+@
+text
+@d56 6
+a61 1
+    if xop == OP_FORALL or xop == OP_WHERE then
+d63 4
+@
+
+
+1.6
+log
+@Removed all monitors
+@
+text
+@d4 5
+a8 1
+const wherewidgit <- class Wherewidgit (Tree) [xxsym : Tree, xxop : Tree, xxtype : Tree]
+d10 1
+a10 1
+    field xop : Tree <- xxop
+d13 1
+a13 1
+      r <- 2
+a18 2
+	r <- xop
+      elseif i = 2 then
+a25 2
+	xop <- r
+      elseif i = 2 then
+d31 1
+a31 1
+      var nsym, nxop, nxtype : Tree
+d33 1
+a33 2
+      if xop !== nil then nxop <- xop.copy[i] end if
+      if FTree.getString[xop] !== nil then
+d36 1
+a36 1
+      r <- wherewidgit.create[ln, nsym, nxop, nxtype]
+d40 1
+a40 3
+    const s <- FTree.getString[self$xop]
+    if s == nil then
+      % this is a FORALL
+d45 1
+a45 1
+	  symdef.create[self$ln,
+d56 2
+a57 2
+    if x$isDef then
+      const s <- st.Define[x$id, STKind.SConst, false]
+a62 1
+    const s <- FTree.getString[self$xop]
+d69 1
+a69 1
+    if s == nil then
+a70 3
+    elseif s = "opname (*>)" then
+      % this is a SUCHTHAT
+      sy$isTypeVariable <- true
+a75 1
+    const s <- FTree.getString[self$xop]
+d79 1
+a79 1
+      if s == nil then
+d87 1
+a87 2
+      elseif s = "opname (*>)" then
+	% this is a SUCHTHAT
+d97 1
+a97 2
+      elseif s = "opname (<-)" then
+	% this is a WHERE
+a116 2
+      else
+	assert false
+a122 1
+    const s <- FTree.getString[self$xop]
+d124 1
+a124 6
+    if s == nil then
+      % this is a FORALL
+    elseif s = "opname (*>)" then
+      % this is a SUCHTHAT
+    elseif s = "opname (<-)" then
+      % this is a WHERE
+a128 2
+    else
+      assert false
+@
+
+
+1.5
+log
+@Evaluate manifests in multiple passes
+@
+text
+@a4 1
+  monitor
+a38 1
+  end monitor
+@
+
+
+1.4
+log
+@DIKU changes to support TS.of[Integer, String]
+@
+text
+@d87 5
+a91 23
+    if s == nil then
+      const u <- view self$xtype as OTree
+      const ssym <- view self$xsym as Sym
+      assert ! self$xsym$isNotManifest
+      if env$traceevaluatemanifests then
+	env.printf["  Setting the value of the forall on line %d\n", {ln}]
+      end if
+      u$isTypeVariable <- true
+      ssym$mysym$value <- u
+    elseif s = "opname (*>)" then
+      % this is a SUCHTHAT
+      const t <- self$xtype.execute
+      const u <- view t.copy[1] as OTree
+      const ssym <- view self$xsym as Sym
+      assert ! self$xsym$isNotManifest
+      if env$traceevaluatemanifests then
+	env.printf["  Setting the value of the such that on line %d\n", {ln}]
+      end if
+      u$isTypeVariable <- true
+      ssym$mysym$value <- u
+    elseif s = "opname (<-)" then
+      % this is a WHERE
+      if self$xsym$isNotManifest then
+d93 1
+a93 1
+	  env.printf["  The forall on line %d is not manifest\n", {ln}]
+d95 8
+a102 3
+      else
+	const ssym <- (view self$xsym as Sym)$mysym
+	assert ! self$xtype$IsNotManifest
+d104 1
+a104 1
+	  env.printf["  Setting the value of the where on line %d\n", {ln}]
+d106 14
+a119 2
+	if ssym$value == nil then
+	  ssym$value <- self$xtype.execute
+d121 5
+a125 2
+	    if env$traceevaluatemanifests then
+	      env.printf["  Setting the value of the where on line %d\n", {ln}]
+d129 2
+a131 2
+    else
+      assert false
+@
+
+
+1.3
+log
+@Get rid of objectflags, use otree
+@
+text
+@d86 1
+d91 3
+d102 3
+d109 5
+a113 1
+      if ! self$xsym$isNotManifest then
+d116 3
+d121 5
+@
+
+
+1.2
+log
+@type -> typeobject sed
+@
+text
+@a84 3
+    const hasF <- typeobject hasF
+      operation getF -> [ObjectFlags]
+    end hasF
+d87 1
+a87 2
+      const u <- self$xtype
+      const f <- (view u as hasF)$f
+d90 1
+a90 1
+      f$isTypeVariable <- true
+d95 1
+a95 2
+      const u <- t.copy[1]
+      const f <- (view u as hasF)$f
+d98 1
+a98 1
+      f$isTypeVariable <- true
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 9
+import Tree, FTree, Printable from "Jekyll"
+import Symbol, SymbolTable, STKind from "Jekyll"
+import Sym from "Jekyll"
+import ObjectFlags from "Jekyll"
+import Atlit from "Jekyll"
+import Stringlit from "Jekyll"
+import Symdef from "Jekyll"
+import Environment from "Jekyll"
+import Seq from "Jekyll"
+d2 1
+a2 1
+export Wherewidgit to "Jekyll"
+d85 1
+a85 1
+    const hasF <- type hasF
+@
